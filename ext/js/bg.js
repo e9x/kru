@@ -1,31 +1,39 @@
 'use strict';
 var sploit = {
-		updates: 'https://e9x.github.io/kru/static/updates.json?ts=' + Date.now(),
+		manifest: 'https://e9x.github.io/kru/ext/manifest.json',
+		zip: 'https://e9x.github.io/kru/ext.zip',
 		write_interval: 5000,
 		update_interval: 5000,
 		active: true,
 		update_prompted: false,
 	},
-	check_for_updates = manifest => fetch(sploit.updates).then(res => res.json()).then(updates => {
+	check_for_updates = manifest => fetch(sploit.manifest + '?ts=' + Date.now()).then(res => res.json()).then(new_manifest => {
 		if(sploit.update_prompted)return;
 		
 		var current_ver = +(manifest.version.replace(/\D/g, '')),
-			latest_ver = +(updates.extension.version.replace(/\D/g, ''));
+			latest_ver = +(new_manifest.version.replace(/\D/g, ''));
 		
-		// updated or past latest release
+		// latest or newer
 		if(current_ver >= latest_ver)return;
 		
 		// outdated
-		if(!confirm('Sploit is outdated (' + updates.extension.version + ' available), do you wish to update?'))return sploit.update_prompted = true;
+		if(!confirm('Sploit is outdated (' + new_manifest.version + ' available), do you wish to update?'))return sploit.update_prompted = true;
 		
 		sploit.update_prompted = true;
 		
-		// add url to download queue
-		chrome.downloads.download({
-			url: updates.extension.install,
+		var zip = new JSZip(),
+			root = 'ext/',
+			walk_dir = url => new Promise(resolve => fetch(url).then(res => res.json()).then(data => {
+				if(!Array.isArray(data))return resolve(zip.file(data.path.substr(root.length), data.content, { base64: true }));
+				
+				Promise.all(data.map(data => walk_dir(data.url))).then(resolve);
+			}));
+		
+		walk_dir('https://api.github.com/repos/e9x/kru/contents/ext?ref=master&ts=' + Date.now()).then(() => zip.generateAsync({ type: 'blob' }).then(blob => chrome.downloads.download({
+			url: URL.createObjectURL(blob),
 			filename: 'sploit-ext.zip',
 		}, download => {
-			// take user to chrome://extensions
+			// take user to chrome://extensions then uninstall self
 			
 			chrome.tabs.create({ url: 'chrome://extensions' });
 			
@@ -33,7 +41,7 @@ var sploit = {
 			
 			// remove extension
 			chrome.management.uninstallSelf();
-		});
+		})));
 	}),
 	_bundler = class {
 		constructor(modules, padding = ['', '']){

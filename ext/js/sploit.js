@@ -4,20 +4,14 @@ var add = Symbol(),
 	cheat = parent.cheat = {
 		add: add,
 		assign_deep: (e,...a)=>(a.forEach(a=>Object.keys(a).forEach(r=>typeof a[r]=='object'&&!Array.isArray(a[r])&&r in e?cheat.assign_deep(e[r],a[r]):e[r]=a[r])),e),
-		wf: check => new Promise((resolve, reject) => {
-			var interval = setInterval(() => {
-				var checked = check();
-				
-				if(checked)clearInterval(interval); else return;
-				
-				resolve(checked);
-				interval = null;
-			}, 15);
+		wf: check => new Promise((resolve, reject, interval) => (interval = setInterval(() => {
+			var checked = check();
 			
-			/*setTimeout(() => {
-				if(interval)return clearInterval(interval), reject('timeout');
-			}, timeout);*/
-		}),
+			if(checked)clearInterval(interval); else return;
+			
+			resolve(checked);
+			interval = null;
+		}, 15))),
 		syms: new Proxy({}, {
 			get(target, prop){
 				if(!target[prop])target[prop] = Symbol();
@@ -334,31 +328,6 @@ var add = Symbol(),
 				else if(cheat.has_instruct('click to play') && (!cheat.player || !cheat.player[cheat.add] || !cheat.player[cheat.add].active || !cheat.player[cheat.add].health))cheat.controls.toggle(true);
 			}
 		}, 100),
-		updates: {
-			updates: 'https://e9x.github.io/kru/static/updates.json?ts=' + Date.now(),
-			write_interval: 3000,
-			update_interval: 5000,
-			active: true,
-			update_prompted: false,
-		},
-		check_for_updates(){
-			if(cheat.updates.update_prompted)return;
-			
-			fetch(cheat.updates.updates).then(res => res.json()).then(updates => {
-				var current_ver =+(manifest.version.replace(/\D/g, '')),
-					latest_ver = +(updates.userscript.version.replace(/\D/g, ''));
-				
-				if(current_ver == latest_ver || current_ver > latest_ver)return; // newer than latest release / up-to-date
-				
-				// out-of-date
-				
-				if(!confirm('Sploit is out-of-date (' + updates.userscript.version + ' available), do you wish to update?'))return cheat.updates.update_prompted = true;
-				
-				cheat.updates.update_prompted = true;
-				
-				parent.location.assign(updates.userscript.install);
-			});
-		},
 		api: 'https://api.brownstation.pw/',
 	};
 
@@ -371,10 +340,10 @@ cheat.ui = new (require('./ui.js').init)({
 	config: {
 		key: 'krk_custcSops',
 		save(){
-			localStorage.setItem(this.key, JSON.stringify(cheat.config));
+			parent.localStorage.setItem(this.key, JSON.stringify(cheat.config));
 		},
 		load(){
-			cheat.assign_deep(cheat.config, JSON.parse(localStorage.getItem(this.key) || '{}'));
+			cheat.assign_deep(cheat.config, JSON.parse(parent.localStorage.getItem(this.key) || '{}'));
 		},
 	},
 	values: [{
@@ -582,9 +551,45 @@ cheat.wf(() => parent.zip).then(() => fetch(new URL('/token', cheat.api)).then(r
 	cheat.patches.forEach(([ regex, replace ]) => vries = vries.replace(regex, replace));
 	cheat.find_vars.forEach(([ name, regex, index ]) => cheat.vars[name] = (vries.match(regex)||[])[index]);
 	
-	cheat.wf(() => document.readyState == 'complete').then(() => new parent.Function('WP_fetchMMToken', 'WebSocket', 'fetch', 'ssd', 'Proxy', vries)(new Promise(r => r(data.token)), cheat.config.game.proxy ? class extends WebSocket { constructor(url, opts){ super('wss://krunker.space/c5580cf2af/ws', encodeURIComponent(btoa(url))) } } : WebSocket, fetch, cheat.storage, class { constructor(input){ return input } }));
+	var args = {
+		ssd: cheat.storage,
+		fetch: fetch,
+		WebSocket: cheat.config.game.proxy ? class extends WebSocket {
+			constructor(url, opts){
+				super('wss://krunker.space/c5580cf2af/ws', encodeURIComponent(btoa(url)));
+			}
+		} : WebSocket,
+		Proxy: function(input){
+			return input;
+		},
+		localStorage: new Proxy(parent.localStorage, {
+			get(target, prop){
+				var ret = Reflect.get(target, prop);
+				
+				return typeof ret == 'function' ? ret.bind(target) : target.getItem.call(target, prop);
+			},
+			set(target, prop, value){
+				var ret = Reflect.get(target, prop);
+				
+				return typeof ret == 'function' ? ret.bind(target) : target.setItem.call(target, prop, value);
+			},
+		}),
+		WP_fetchMMToken: new Promise(r => r(data.token)),
+	};
+	
+	
+	parent.Storage.prototype.getItem = new Proxy(parent.Storage.prototype.getItem, {
+		apply: (target, that, [ prop ]) => prop == cheat.ui.data.config.key ? cheat.key_test : Reflect.apply(target, that, [ prop ]),
+	});
+	
+	parent.Storage.prototype.setItem = new Proxy(parent.Storage.prototype.setItem, {
+		apply: (target, that, [ prop, value ]) => prop == cheat.ui.data.config.key ? (cheat.key_test = value, undefined) : Reflect.apply(target, that, [ prop, value ]),
+	});
+	
+	cheat.wf(() => document.readyState == 'complete').then(() => new parent.Function(...Object.keys(args), vries)(...Object.values(args)));
 })));
 
+/*
 if(module.userscript){ // running in tampermonkey
 	cheat.check_for_updates();
 	
@@ -596,6 +601,7 @@ if(typeof nrequire == 'function'){ // in client
 	
 	// todo: integrate with client further
 }
+*/
 
 parent.AudioParam.prototype.setTargetAtTime = function(...args){
 	try{ Reflect.apply(AudioParam.prototype.setTargetAtTime, this, args) }catch(err){}
