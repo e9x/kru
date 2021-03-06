@@ -1,0 +1,24 @@
+{
+	"name": "io.sploit.desktop",
+	"version": "1.0.0",
+	"description": "Desktop Client For Sploit",
+	"author": {
+		"name": "Gaming Gurus",
+		"email": "skidlamer@mail.com"
+	},
+	"repository": {
+		"url": "https://github.com/e9x/e9x.github.io/",
+		"type": "git"
+	},
+	"scripts": {
+		"start": "nw --remote-debugging-port=9222"
+	},
+	"chromium-args": "--disable-frame-rate-limit --enable-zero-copy --enable-quic --high-dpi-support 1 --ignore-gpu-blacklist",
+	"main": "main.js",
+	"domain": "sploit",
+	"homepage": "https://e9x.github.io/kru/",
+	"license": "BSD-3-Clause",
+	"dependencies": {
+		"nw": "^0.51.0-sdk"
+	}
+}
