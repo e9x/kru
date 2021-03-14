@@ -1,7 +1,6 @@
 'use strict';
 var sploit = {
-		manifest: 'https://e9x.github.io/kru/ext/manifest.json',
-		zip: 'https://e9x.github.io/kru/ext.zip',
+		manifest_url: 'https://e9x.github.io/kru/ext/manifest.json',
 		write_interval: 5000,
 		update_interval: 5000,
 		active: true,
@@ -47,7 +46,7 @@ var sploit = {
 			}, resolve));
 		},
 	},
-	check_for_updates = manifest => fetch(sploit.manifest + '?ts=' + Date.now()).then(res => res.json()).then(new_manifest => {
+	check_for_updates = manifest => fetch(sploit.manifest_url + '?ts=' + Date.now()).then(res => res.json()).then(new_manifest => {
 		if(sploit.update_prompted)return;
 		
 		var current_ver = +(manifest.version.replace(/\D/g, '')),
@@ -119,6 +118,8 @@ var sploit = {
 // .replace(/(?<![a-zA-Z0-9])var /g, 'let ')
 
 fetch(chrome.runtime.getURL('manifest.json')).then(res => res.json()).then(manifest => {
+	sploit.manifest = manifest;
+	
 	// 1. prevent krunker wasm from being loaded
 	chrome.webRequest.onBeforeRequest.addListener(details => ({ cancel: sploit.active && details.url.includes('.wasm') }), { urls: manifest.permissions.filter(perm => perm.startsWith('http')) }, [ 'blocking' ]);
 	
@@ -139,8 +140,6 @@ fetch(chrome.runtime.getURL('manifest.json')).then(res => res.json()).then(manif
 		
 		port.onMessage.addListener(data => {
 			var event = data.splice(0, 1)[0];
-			
-			console.log(event);
 			
 			switch(event){
 				case'zip':

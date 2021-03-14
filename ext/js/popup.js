@@ -1,7 +1,8 @@
 var port = chrome.extension.connect({ name: 'popup' }),
 	userscript = document.querySelector('.userscript'),
 	zip = document.querySelector('.zip'),
-	toggle = document.querySelector('.toggle');
+	toggle = document.querySelector('.toggle'),
+	bar = document.querySelector('.bar');
 
 userscript.addEventListener('click', () => port.postMessage([ 'userscript' ]));
 zip.addEventListener('click', () => port.postMessage([ 'zip' ]));
@@ -17,6 +18,8 @@ port.onMessage.addListener(data => {
 			toggle.value = data[0].active;
 			
 			toggle.addEventListener('tick', event => port.postMessage([ 'sploit', 'active', toggle.value ]));
+			
+			bar.textContent = 'Shitsploit v' + data[0].manifest.version;
 			
 			break;
 	}

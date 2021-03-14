@@ -336,7 +336,8 @@ cheat.raycaster = new cheat.three.Raycaster();
 
 cheat.ui = new (require('./ui.js').init)({
 	title: 'Shitsploit',
-	footer: 'Press [F1] or [C] to toggle menu',
+	footer: 'Press [F1] or [C] to toggle',
+	toggle: ['KeyC', 'F1'],
 	config: {
 		key: 'krk_custcSops',
 		save(){
@@ -433,9 +434,6 @@ cheat.ui = new (require('./ui.js').init)({
 	},{
 		name: 'Game',
 		contents: [{
-			name: 'You need to be signed in for the skin hack',
-			type: 'text-small',
-		},{
 			name: 'Skins',
 			type: 'bool',
 			get: _ => cheat.config.game.skins,
@@ -483,9 +481,7 @@ cheat.ui = new (require('./ui.js').init)({
 			type: 'slider',
 			get: _ => cheat.config.aim.smooth.value,
 			set: v => cheat.config.aim.smooth.value = v,
-			min_val: 0,
-			max_val: 50,
-			unit: 10,
+			range: [ 5, 50 ],
 		},{
 			name: 'Smooth',
 			type: 'bool',
@@ -530,9 +526,7 @@ cheat.ui = new (require('./ui.js').init)({
 			type: 'slider',
 			get: _ => cheat.config.esp.walls.value,
 			set: v => cheat.config.esp.walls.value = v,
-			min_val: 0.1,
-			max_val: 1,
-			unit: 1,
+			range: [ 0.1, 1 ],
 		}]
 	},{
 		name: 'Settings',

@@ -10,14 +10,6 @@ exports.rnds = new Proxy({}, {
 	}
 });
 
-exports.chr_ins = str => {
-	var output = '';
-	
-	(str + '').split(' ').forEach((word, word_index) => (word.split('').forEach((chr, chr_index) => output += (!chr_index || chr_index == word.length) ? '<s class="' + exports.rnds.chr + '">&#' + chr.charCodeAt() + '</s>' : '<s class="' + exports.rnds.chr + '">&#8203;<s class="' + exports.rnds.chr1 + '"></s>&#' + chr.charCodeAt() + '</s>'), output += word_index != (str + '').split(' ').length - 1 ? ' ' : ''));
-	
-	return output
-};
-
 exports.wrap = str => JSON.stringify([ str ]).slice(1, -1);
 
 exports.clone_obj = obj => JSON.parse(JSON.stringify(obj));
@@ -25,138 +17,121 @@ exports.clone_obj = obj => JSON.parse(JSON.stringify(obj));
 exports.reload = () => this.control_updates.forEach(val => val());
 
 exports.css = `
-.con {
-	border-radius: 2px;
-	border: 2px solid #eee;
+.ss-panel {
+	--primary: #eee;
+	--secondary: #445;
+	--background: #112;
+	--background-split: 17, 17, 34;
+	--true: #2A0;
+	--false: #A00;
+	--control-height: 36px;
+	--blue: #29F;
+	border: 2px solid var(--primary);
 	z-index: 9000000;
 	position: absolute;
 	display: flex;
-	width: 420px;
-	height: 294px;
-	background: #112B;
+	width: 375px;
+	background: rgba(var(--background-split), 0.8);
 	flex-direction: column;
-	transition: opacity .15s ease-in-out, color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out;
 	user-select: none;
 	opacity: 0.8;
 }
 
-.con[data-open~='1'] {
+.ss-panel * {
+	color: var(--primary);
+	font: 13px Inconsolata, monospace;
+	outline: none;
+}
+
+.ss-panel.close {
 	display: none;
 }
 
-.con:hover {
+.ss-panel:hover {
 	opacity: 1;
 }
 
-.con, .con * {
-	color: #eee;
-	font: 13px Inconsolata, monospace;
-}
-
-.cons {
+.ss-panel > .title, .ss-panel > .footer {
+	text-align: center;
+	padding: 8px 0px;
+	z-index: 5;
+	position: relative;
 	display: flex;
-	flex: 1 1 0;
-	border-top: 2px solid #eee;
+	justify-content: center;
 }
 
-.bar {
-	height: 32px;
-	min-height: 32px;
-	line-height: 28px;
+.ss-panel > .title > .version {
+	position: absolute;
+	right: 10px;
+	margin: auto;
 	text-align: center;
 }
 
-.bar-top {
-	transition: opacity .15s ease-in-out, color .15s ease-in-out, background-color .15s ease-in-out, border-color .15s ease-in-out, box-shadow .15s ease-in-out;
-	z-index: 20;
+.ss-panel > .sections {
+	display: flex;
+	border-top: 2px solid var(--primary);
+	min-height: 226px;
+	border-bottom: 2px solid var(--secondary);
 }
 
-.bar-top:hover {
-	box-shadow: 0px 0px 0px 2px #29F;
-}
-
-.bar-top:active {
-	background: #224;
-}
-
-.sidebar-con {
+.ss-panel > .sections > .sidebar {
 	width: 30%;
 	height: auto;
 	display: block;
 	flex: none;
-	border-right: 2px solid #445;
-	border-bottom: 2px solid #445
+	border-right: 2px solid var(--secondary);
 }
 
-.tab-button {
-	height: 36px;
-	line-height: 36px;
+.ss-panel > .sections > .sidebar > .section {
+	height: var(--control-height);
+	line-height: var(--control-height);
 	text-align: center;
-	border-bottom: 2px solid #445;
-	transition: color .15s ease-in-out,background-color .15s ease-in-out, border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+	border-bottom: 2px solid var(--secondary);
 }
 
-.tab-button:hover {
+.ss-panel > .sections > .sidebar > .section:hover {
 	background: #666;
 }
 
-.tab-button:active {
-	background: #333;
-	box-shadow: -3px -1px 0px 3px #CCC6;
+.ss-panel > .sections > .sidebar > .section:last-of-type {
+	border-bottom: none;
 }
 
-.content-con {
-	flex: 1 1 0;
+.ss-panel > .sections > .section {
 	display: flex;
 	flex-direction: column;
+	width: 100%;
 	height: 100%;
 }
 
-.content-con::-webkit-scrollbar {
-	width: 10px;
-}
-
-.content-con::-webkit-scrollbar-thumb {
-	background-color: #EEE;
-}
-
-.content {
-	min-height: 36px;
-	border-bottom: 2px solid #445;
+.ss-panel > .sections > .section > .control {
+	min-height: var(--control-height);
+	border-bottom: 2px solid var(--secondary);
 	display: flex;
 	flex-direction: row;
 }
 
-.control-button {
-	width: 36px;
-	text-align: center;
-	line-height: 36px;
-	transition: color .15s ease-in-out,background-color .15s ease-in-out, border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+.ss-panel > .sections > .section > .control:last-of-type {
+	border-bottom: none;
 }
 
-.control-button:hover {
+.ss-panel > .sections > .section > .control > .toggle {
+	width: var(--control-height);
+	text-align: center;
+	line-height: var(--control-height) !important;
+}
+
+.ss-panel > .sections > .section > .control > .toggle:hover {
 	background: #333;
 	filter: brightness(125%);
 }
 
-.control-button:active {
-	box-shadow: 0px 0px 0px 3px #CCC6;
+.ss-panel > .sections > .section > .control > .toggle.true {
+	background: var(--true);
 }
 
-.control-button.true {
-	background: #2A0;
-}
-
-.control-button.true:active {
-	box-shadow: 0px 0px 0px 3px #2A06;
-}
-
-.control-button.false {
-	background: #A00;
-}
-
-.control-button.false:active {
-	box-shadow: 0px 0px 0px 3px #A006;
+.ss-panel > .sections > .section > .control > .toggle.false {
+	background: var(--false);
 }
 
 .control-textbox {
@@ -165,7 +140,6 @@ exports.css = `
 	font: 14px Inconsolata, monospace;
 	padding: 0px .75rem 0px 0px;
 	text-align: right;
-	transition: color .15s ease-in-out,background-color .15s ease-in-out, border-color .15s ease-in-out,box-shadow .15s ease-in-out;
 	border: 1px solid #2B4194;
 	margin: auto 3px;
 	color: black;
@@ -178,18 +152,16 @@ exports.css = `
 .control-label {
 	flex: 1 1 0;
 	padding-left: 15px;
-	line-height: 36px;
-	border-left: 2px solid #445;
+	line-height: var(--control-height) !important;
+	border-left: 2px solid var(--secondary);
 }
 
 .control-slider {
-	-webkit-appearance: none;
-	appearance: none;
 	flex: 1 1 0;
 	height: 28px;
-	margin: 4px 0 4px 5px;
 	cursor: w-resize;
-	background: #333
+	background: #333;
+	margin: auto 3px;
 }
 
 .control-slider:hover {
@@ -210,38 +182,24 @@ exports.css = `
 	height: 100%;
 	text-align: center;
 	display: block;
-	line-height: 28px;
+	line-height: 28px !important;
 	top: -28px;
-	content: attr(data)
-}
-
-.tab-desc {
-	text-align: center;
-	font-size: 12px;
-	width: 100%;
-	line-height: 34px;
-	height: 34px;
-}
-
-.ver {
-	position: absolute;
-	top: 0px;
-	right: 0px;
-	width: 60px;
-	margin: auto;
-	line-height: 34px;
-	height: 34px;
-	text-align: center;
-}
-
-* {
-	outline: none;
+	content: attr(data-value)
 }
 `;
 
 exports.init = class {
-	css_class(c){
-		return exports.rnds['.' + c];
+	char_ins(str = ''){
+		/*if(!this.css_rng)*/return str;
+		
+		var output = '';
+		
+		(str + '').split(' ').forEach((word, word_index) => (word.split('').forEach((chr, chr_index) => output += (!chr_index || chr_index == word.length) ? '<s class="' + exports.rnds.chr + '">&#' + chr.charCodeAt() + '</s>' : '<s class="' + exports.rnds.chr + '">&#8203;<s class="' + exports.rnds.chr1 + '"></s>&#' + chr.charCodeAt() + '</s>'), output += word_index != (str + '').split(' ').length - 1 ? ' ' : ''));
+		
+		return output
+	}
+	css_class(classn){
+		return /* this.css_rng ? classn.toString().split(' ').map(cl => exports.rnds['.' + cl]) : */ classn;
 	}
 	add_ele(node_name, parent, attributes){
 		if(node_name == 'div')node_name = this.div;
@@ -250,7 +208,7 @@ exports.init = class {
 	}
 	process_controls(control, tab, tab_button, tab_ele){
 		if(control.type == 'nested_menu'){
-			control.tab_ele = this.add_ele('div', this.cons, { className: this.css_class('content-con'), style: 'display: none' });
+			control.tab_ele = this.add_ele('div', this.sections, { className: this.css_class('section'), style: 'display: none' });
 			
 			this.tabs.push(control.tab_ele);
 			
@@ -260,7 +218,7 @@ exports.init = class {
 		}
 		
 		var content = this.add_ele('div', tab_ele, {
-				className: this.css_class('content'),
+				className: this.css_class('control'),
 			}),
 			content_name = document.createElement(this.div), // append after stuff
 			label_appended = false;
@@ -294,14 +252,14 @@ exports.init = class {
 		};
 		
 		control.update = () => {
-			if(control.button)control.button.innerHTML = exports.chr_ins('[' + (control.key == 'unset' ? '-' : control.key) + ']');
+			if(control.button)control.button.innerHTML = this.char_ins('[' + (control.key == 'unset' ? '-' : control.key) + ']');
 			
 			switch(control.type){
 				case'bool':
-					control.button.className = this.css_class('control-button') + ' ' + this.css_class(!!control.get());
+					control.button.className = this.css_class('toggle') + ' ' + this.css_class(!!control.get());
 					break;
 				case'bool_rot':
-					content_name.innerHTML = exports.chr_ins(control.name + ': ' + control.vals[control.aval].display);
+					content_name.innerHTML = this.char_ins(control.name + ': ' + control.vals[control.aval].display);
 					break;
 				case'text-small':
 					content_name.style.border = 'none';
@@ -327,8 +285,8 @@ exports.init = class {
 					control.input.value = ('' + control.get()).substr(0, control.max_length);
 					break;
 				case'slider':
-					control.slider_bg.style.width = ((control.get() / control.max_val) * 100) + '%'
-					control.slider.setAttribute('data', Number(control.get().toString().substr(0, 10)));
+					control.slider_bg.style.width = ((control.get() / control.range[1]) * 100) + '%'
+					control.slider.setAttribute('data-value', Number(control.get().toString().substr(0, 10)));
 					break;
 			}
 			
@@ -338,13 +296,11 @@ exports.init = class {
 		this.control_updates.push(control.update);
 		
 		if(control.key){
-			control.button = this.add_ele('div', content, {
-				className: this.css_class('control-button'),
-			});
+			control.button = this.add_ele('div', content, { className: this.css_class('toggle') });
 			
 			control.button.addEventListener('click', control.interact);
 			
-			control.button.innerHTML = exports.chr_ins(control.key == 'unset' ? '[-]' : '[' + control.key + ']');
+			control.button.innerHTML = this.char_ins(control.key == 'unset' ? '[-]' : '[' + control.key + ']');
 		}
 		
 		
@@ -352,12 +308,12 @@ exports.init = class {
 			case'textbox':
 				Object.assign(content.appendChild(content_name), {
 					className: this.css_class('control-label'),
-					innerHTML: exports.chr_ins(control.name),
+					innerHTML: this.char_ins(control.name),
 				});
 				
 				content_name.style.padding = '0px 10px';
 				content_name.style['border-left'] = 'none';
-				content_name.style['border-right'] = '2px solid #445';
+				content_name.style['border-right'] = '2px solid var(--secondary)';
 				
 				control.input = this.add_ele('input', content, { className: this.css_class('control-textbox'), placeholder: control.placeholder, spellcheck: false, value: control.get() });
 				
@@ -375,19 +331,14 @@ exports.init = class {
 						if(!movement.held)return;
 						
 						var slider_box = control.slider.getBoundingClientRect(),
-							perc = (event.offsetX / control.slider.offsetWidth * 100).toFixed(2),
-							perc_rounded = rtn(perc, control.unit / 10).toFixed(2),
-							value = ((control.max_val / 100) * perc_rounded).toFixed(2);
+							perc = ((event.pageX - slider_box.x) / slider_box.width) * 100,
+							perc_rounded = rtn(perc, control.range[1] / 5).toFixed(2),
+							value = ((control.range[1] / 100) * perc_rounded).toFixed(2);
 						
-						if(event.clientX <= slider_box.x){
-							value = 0;
-							perc_rounded = 0;
-						}else if(event.clientX >= slider_box.x + slider_box.width){
-							value = control.max_val;
-							perc_rounded = 100;
-						}
+						if(event.clientX <= slider_box.x)value = perc_rounded = 0;
+						else if(event.clientX >= slider_box.x + slider_box.width)value = control.range[1], perc_rounded = 100;
 						
-						if(perc_rounded <= 100 && value >= control.min_val){
+						if(perc_rounded <= 100 && value >= control.range[0]){
 							control.set(Number(value));
 							control.update();
 							
@@ -395,22 +346,19 @@ exports.init = class {
 						}
 					};
 				
-				control.slider = content.appendChild(document.createElement('div'));
-				control.slider_bg = control.slider.appendChild(document.createElement('div'));
-				control.slider.className = this.css_class('control-slider');
-				control.slider_bg.className = this.css_class('control-slider-bg');
+				control.slider = this.add_ele('div', content, { className: this.css_class('control-slider') });
+				control.slider_bg = this.add_ele('div', control.slider, { className: this.css_class('control-slider-bg'), style: 'width:' + (control.get() / control.range[1] * 100 + '%') });
 				
-				control.slider_bg.style.width = control.get() / control.max_val * 100 + '%'
-				control.slider.setAttribute('data', control.get());
+				control.slider.setAttribute('data-value', control.get());
 				
 				control.slider.addEventListener('mousedown', event=>{
 					movement = { held: true, x: event.layerX, y: event.layerY }
 					update_slider(event);
 				});
 				
-				parent.addEventListener('mouseup', _=> movement.held = false );
+				parent.addEventListener('mouseup', () => movement.held = false );
 				
-				parent.addEventListener('mousemove', event=> update_slider(event));
+				parent.addEventListener('mousemove', event => update_slider(event));
 				
 				break
 			case'bool_rot':
@@ -424,7 +372,7 @@ exports.init = class {
 		if(!label_appended){
 			content.appendChild(content_name);
 			content_name.className = this.css_class('control-label');
-			content_name.innerHTML = exports.chr_ins(control.name);
+			content_name.innerHTML = this.char_ins(control.name);
 		}
 		
 		control.update();
@@ -451,7 +399,8 @@ exports.init = class {
 		});
 	}
 	constructor(data){
-		this.div = exports.rnds.div + '-' + exports.rnds.div1;
+		/*this.css_rng = true;*/
+		this.div = /*this.css_rng ? exports.rnds.div + '-' + exports.rnds.div1 :*/ 'div';
 		
 		this.data = data;
 		this.pos = { x: 0, y: 0 };
@@ -482,10 +431,10 @@ exports.init = class {
 		parent.addEventListener('keyup', event => this.inputs[event.code] = false);
 		
 		this.keybinds.push({
-			code: ['KeyC', 'F1'],
+			code: this.data.toggle,
 			interact: () => {
 				event.preventDefault();
-				this.container.dataset.open ^= 1;
+				this.panel.classList.toggle('close');
 			},
 		});
 		
@@ -512,27 +461,27 @@ exports.init = class {
 				unicodeRange: 'U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD',
 			}).load().then(font => parent.document.fonts.add(font));
 			
-			this.add_ele('link', parent.document.head, { rel: 'stylesheet', href: parent.URL.createObjectURL(new Blob([ `.${exports.rnds.chr}{white-space: nowrap;text-decoration: none}.${exports.rnds.chr1}{display:none;font-size:0px}${this.div}{display:block}` + exports.css.replace(/\.((?:(?!\[|\d|:|,|\.)\S)+)/g, (m, cl) => '.' + this.css_class(cl)) ], { type: 'text/css' })) });
+			this.add_ele('link', parent.document.head, { rel: 'stylesheet', href: parent.URL.createObjectURL(new Blob([ `.${exports.rnds.chr}{white-space:nowrap;text-decoration: none}.${exports.rnds.chr1}{display:none;font-size:0px}${this.div}{display:block}` + exports.css.replace(/\.((?:(?!\[|\d|:|,|\.)\S)+)/g, (m, cl) => '.' + this.css_class(cl)) ], { type: 'text/css' })) });
 			
-			customElements.define(this.div, class extends HTMLDivElement {}, { extends: 'div' });
+			/*if(this.css_rng)customElements.define(this.div, class extends HTMLDivElement {}, { extends: 'div' });*/
 			
-			this.container = this.add_ele('div', parent.document.body, { className: this.css_class('con') });
+			this.panel = this.add_ele('div', parent.document.body, { className: this.css_class('ss-panel') });
 			
-			this.top_bar = this.add_ele('div', this.container, { innerHTML: exports.chr_ins(data.title), className: this.css_class('bar') + ' ' + this.css_class('bar-top') });
+			this.title = this.add_ele('div', this.panel, { innerHTML: this.char_ins(data.title), className: this.css_class('title') });
 			
-			this.cons = this.add_ele('div', this.container, { className: this.css_class('cons') });
-			this.sidebar_con = this.add_ele('div', this.cons, { className: this.css_class('sidebar-con' ) });
+			this.add_ele('div', this.title, { className: this.css_class('version'), innerHTML: this.char_ins('v' + manifest.version) });
 			
-			this.add_ele('div', this.top_bar, { className: this.css_class('ver'), innerHTML: exports.chr_ins('v' + manifest.version) });
+			this.title.addEventListener('mousedown', () => this.bar_pressed = true);
 			
-			this.top_bar.addEventListener('mousedown', () => this.bar_pressed = true);
+			this.sections = this.add_ele('div', this.panel, { className: this.css_class('sections') });
+			this.sidebar_con = this.add_ele('div', this.sections, { className: this.css_class('sidebar' ) });
 			
 			data.values.forEach((tab, index) => {
 				var tab_button = this.add_ele('div', this.sidebar_con, {
-						className: this.css_class('tab-button'),
+						className: this.css_class('section'),
 					}),
-					tab_ele = this.add_ele('div', this.cons, {
-						className: this.css_class('content-con'),
+					tab_ele = this.add_ele('div', this.sections, {
+						className: this.css_class('section'),
 						style: index > 0 ? 'display:none' : '',
 					});
 				
@@ -540,33 +489,23 @@ exports.init = class {
 				
 				tab_button.addEventListener('click', () => (this.tabs.forEach(ele => ele.style.display = 'none'), tab_ele.removeAttribute('style')));
 				
-				tab_button.innerHTML = exports.chr_ins(tab.name);
+				tab_button.innerHTML = this.char_ins(tab.name);
 				
 				if(tab.load)tab.load(tab_ele);
 				
 				tab.contents.forEach(control => { try{ this.process_controls(control, tab, tab_button, tab_ele) }catch(err){ console.error('Encountered error at %c' + control.name + ' (' + control.val + ')', 'color: #FFF', err) }});
-				
-				if(tab.bottom_text){
-					var bottom_text = tab_ele.appendChild(document.createElement('div'));
-					
-					bottom_text.className = this.css_class('tab-desc');
-					bottom_text.innerHTML = exports.chr_ins(tab.bottom_text);
-				}
 			});
 			
 			// add footer last
-			this.add_ele('div', this.container, { className: this.css_class('bar'), innerHTML: exports.chr_ins(data.footer) });
+			if(this.data.footer)this.add_ele('div', this.panel, { className: this.css_class('footer'), innerHTML: this.char_ins(this.data.footer) });
 			
-			setTimeout(() => (this.pos = { x: 20, y: (parent.innerHeight / 2) - (this.container.getBoundingClientRect().height / 2) }, this.apply_bounds()));
+			setTimeout(() => (this.pos = { x: 20, y: (parent.innerHeight / 2) - (this.panel.getBoundingClientRect().height / 2) }, this.apply_bounds()));
 		});
 	}
 	apply_bounds(){
-		var size = this.container.getBoundingClientRect();
+		var size = this.panel.getBoundingClientRect();
 		
-		this.pos.x = Math.min(Math.max(this.pos.x, 0), parent.innerWidth - size.width);
-		this.pos.y = Math.min(Math.max(this.pos.y, 0), parent.innerHeight - size.height);
-		
-		this.container.style.left = this.pos.x + 'px';
-		this.container.style.top = this.pos.y + 'px';
+		this.panel.style.left = Math.min(Math.max(this.pos.x, 0), parent.innerWidth - size.width) + 'px';
+		this.panel.style.top = Math.min(Math.max(this.pos.y, 0), parent.innerHeight - size.height) + 'px';
 	}
 };

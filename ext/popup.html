@@ -6,48 +6,50 @@
 	<body>
 		<style>
 @font-face {
-	font-family: 'Michroma';
+	font-family: 'Inconsolata';
 	font-style: normal;
 	font-weight: 400;
+	font-stretch: 100%;
 	font-display: swap;
-	src:url('https://c.sys32.dev/assets/fonts/michroma.woff2') format('woff2'),
-		url('https://c.sys32.dev/assets/fonts/michroma.woff') format('woff'),
-		url('https://c.sys32.dev/assets/fonts/michroma.ttf') format('ttf'),
-		url('https://c.sys32.dev/assets/fonts/michroma.eot') format('eot'),
-		url('https://c.sys32.dev/assets/fonts/michroma.svg') format('svg');
+	src: url(inconsolata.woff2) format('woff2');
 	unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
 body {
-	--primary: #5BF;
+	--background: #112;
+	--primary: #eee;
+	--primary-apart: 238, 238, 238;
+	--border: #445;
 	width: 200px;
-	background: #000 url('data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2266%22%20height%3D%2266%22%20viewBox%3D%220%200%2066.000001%2066.000001%22%3E%3Crect%20ry%3D%220%22%20rx%3D%220%22%20y%3D%2264%22%20x%3D%2264%22%20height%3D%222%22%20width%3D%222%22%20opacity%3D%22.25%22%20fill%3D%22%238edbf2%22%2F%3E%3Crect%20width%3D%222%22%20height%3D%222%22%20x%3D%2232%22%20y%3D%2264%22%20rx%3D%220%22%20ry%3D%220%22%20opacity%3D%22.12%22%20fill%3D%22%238edbf2%22%2F%3E%3Crect%20ry%3D%220%22%20rx%3D%220%22%20y%3D%2232%22%20x%3D%2232%22%20height%3D%222%22%20width%3D%222%22%20opacity%3D%22.12%22%20fill%3D%22%238edbf2%22%2F%3E%3Crect%20width%3D%222%22%20height%3D%222%22%20x%3D%2264%22%20y%3D%2232%22%20rx%3D%220%22%20ry%3D%220%22%20opacity%3D%22.12%22%20fill%3D%22%238edbf2%22%2F%3E%3C%2Fsvg%3E');
+	background: var(--background);
 	text-align: center;
-	margin: 0px;
-	padding: 5px;
 	border: 2px var(--primary) solid;
+	margin: 0px;
+	padding: 0px;
 }
 
 :focus {
 	outline: none;
 }
 
-.title {
-	font-family: Michroma, Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;
-	text-transform: uppercase;
+.bar {
+	font-family: Inconsolata, monospace;
 	color: var(--primary);
 	word-spacing: 5px;
-	font-size: 17px;
-	font-weight: 600;
-	margin-bottom: 7px;
+	font-size: 13px;
+	font-weight: 400;
 	user-select: none;
+	display: flex;
+	justify-content: center;
+	border-bottom: 2px var(--primary) solid;
+	height: 30px;
+	line-height: 30px;
 }
 
 .button {
-	--color: 34, 153, 221;
 	cursor: pointer;
-	color: rgb(var(--color));
-	border: 1px solid rgb(var(--color));
+	color: rgb(var(--primary-apart));
+	border: 1px solid rgb(var(--primary-apart));
 	border-radius: .25rem;
 	background: transparent;
 	font-size: 15px;
@@ -60,12 +62,12 @@ body {
 }
 
 .button:hover {
-    background-color: rgb(var(--color));
+    background-color: rgb(var(--primary-apart));
     color: #000;
 }
 
-.button:active {
-	box-shadow: 0px 0px 0px 3px rgba(var(--color), 0.5);
+.tick:active, .button:active {
+	box-shadow: 0px 0px 0px 3px rgba(var(--primary-apart), 0.5);
 }
 
 .control {
@@ -88,6 +90,7 @@ body {
 	border-radius: 15%;
 	border: 2px var(--primary) solid;
 	position: relative;
+	transition: box-shadow .10s ease-in-out;
 }
 
 .tick::after {
@@ -110,18 +113,19 @@ body {
 	height: 7px;
 }
 
-.footer {
+footer {
 	color: var(--primary);
 	font-size: 12px;
 	font-weight: 400;
 	margin-top: 10px;
+	margin-bottom: 10px;
 }
 		</style>
-		<div class='title'>Shitsploit</div>
+		<div class='bar'>Shitsploit v1.0.0</div>
 		<div class='control'><div class='button userscript'>Extract userscript</div></div>
 		<div class='control'><div class='button zip'>Extract zip</div></div>
 		<div class='control'><div class='label'>Active:</div><div class='tick toggle'></div></div>
-		<div class='footer'>Gaming Gurus</div>
+		<footer>Gaming Gurus</footer>
 		<script src='./js/popup.js'></script>
 	</body>
 </html>
