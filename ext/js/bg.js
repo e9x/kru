@@ -20,7 +20,7 @@ var sploit = {
 			},
 			whitespace = Object.keys(obj).sort((a, b) => b.length - a.length)[0].length + 8;
 			
-			var url = URL.createObjectURL(new Blob([ '// ==UserScript==\n' + Object.entries(obj).map(([ key, val ]) => ('// @' + key).padEnd(whitespace, ' ') + val).join('\n') + '\n// ==/UserScript==\n\n' + bundled + '(true,typeof require=="function"?require:null)' ], { type: 'application/javascript' }));
+			var url = URL.createObjectURL(new Blob([ '// ==UserScript==\n' + Object.entries(obj).map(([ key, val ]) => ('// @' + key).padEnd(whitespace, ' ') + val).join('\n') + '\n// ==/UserScript==\n\n' + bundled ], { type: 'application/javascript' }));
 			
 			await new Promise(resolve => chrome.downloads.download({
 				url: url,
@@ -111,30 +111,26 @@ var sploit = {
 		chrome.runtime.getURL('js/ui.js'),
 		chrome.runtime.getURL('js/util.js'),
 		chrome.runtime.getURL('manifest.json'),
-	], [ '', 'require("./js/sploit.js")' ]),
+	], [ '(()=>{', 'require("./js/sploit.js")})()' ]),
 	bundled,
-	bundle = () => bundler.run().then(data => bundled = 'new(Object.assign(document.documentElement.appendChild(document.createElement("iframe")),{style:"display:none"}).contentWindow.Function)("userscript","nrequire","("+(_=>{' + data + '})+")()")');
-
-// .replace(/(?<![a-zA-Z0-9])var /g, 'let ')
+	bundle = () => bundler.run().then(data => bundled = data);
 
 fetch(chrome.runtime.getURL('manifest.json')).then(res => res.json()).then(manifest => {
 	sploit.manifest = manifest;
 	
-	// 1. prevent krunker wasm from being loaded
-	chrome.webRequest.onBeforeRequest.addListener(details => ({ cancel: sploit.active && details.url.includes('.wasm') }), { urls: manifest.permissions.filter(perm => perm.startsWith('http')) }, [ 'blocking' ]);
+	chrome.webNavigation.onDOMContentLoaded.addListener(details => {
+		var url = new URL(details.url);
+		
+		if(sploit.active && (url.hostname == 'krunker.io' || url.hostname.endsWith('.krunker.io')))chrome.tabs.executeScript(details.tabId, {
+			code: `var a=document.createElement('script');a.innerHTML=${bundler.wrap('document.currentScript.remove();' + bundled)};document.documentElement.appendChild(a);a=null`,
+			runAt: 'document_start',
+		});
+	});
 	
-	// 2. inject sploit code
-	chrome.webNavigation.onCompleted.addListener((details, url = new URL(details.url)) => sploit.active && url.host.endsWith('krunker.io') && url.pathname == '/' && chrome.tabs.executeScript(details.tabId, {
-		code: 'document.documentElement.setAttribute("onreset",' + bundler.wrap(bundled + '(false)') + '),document.documentElement.dispatchEvent(new Event("reset")),setTimeout(_=>document.documentElement.removeAttribute("onreset"),75)',
-		runAt: 'document_start',
-	}));
-	
-	// 3. check for updates
 	check_for_updates(manifest);
 	
 	setInterval(() => check_for_updates(manifest), sploit.update_interval);
 	
-	// 4. bundle then listen on interface port
 	bundle().then(() => chrome.extension.onConnect.addListener(port => {
 		port.postMessage([ 'sploit', sploit ]);
 		
@@ -154,7 +150,6 @@ fetch(chrome.runtime.getURL('manifest.json')).then(res => res.json()).then(manif
 					break;
 				case'sploit':
 					
-					// writing config
 					sploit[data[0]] = data[1];
 					
 					break;

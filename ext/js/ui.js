@@ -356,9 +356,9 @@ exports.init = class {
 					update_slider(event);
 				});
 				
-				parent.addEventListener('mouseup', () => movement.held = false );
+				window.addEventListener('mouseup', () => movement.held = false );
 				
-				parent.addEventListener('mousemove', event => update_slider(event));
+				window.addEventListener('mousemove', event => update_slider(event));
 				
 				break
 			case'bool_rot':
@@ -412,10 +412,10 @@ exports.init = class {
 		this.data.config.load();
 		
 		// clear all inputs when window is not focused
-		parent.addEventListener('blur', () => this.inputs= []);
+		window.addEventListener('blur', () => this.inputs= []);
 		
-		parent.addEventListener('keydown', event => {
-			if(event.repeat || parent.document.activeElement && parent.document.activeElement.tagName == 'INPUT')return;
+		window.addEventListener('keydown', event => {
+			if(event.repeat || document.activeElement && document.activeElement.tagName == 'INPUT')return;
 			
 			this.inputs[event.code] = true;
 			
@@ -428,7 +428,7 @@ exports.init = class {
 			keybind.interact(event);
 		});
 		
-		parent.addEventListener('keyup', event => this.inputs[event.code] = false);
+		window.addEventListener('keyup', event => this.inputs[event.code] = false);
 		
 		this.keybinds.push({
 			code: this.data.toggle,
@@ -438,74 +438,72 @@ exports.init = class {
 			},
 		});
 		
-		this.wait_for(() => parent.document.body).then(() => {
-			parent.document.addEventListener('mouseup', () => this.bar_pressed = false);
-			
-			parent.document.addEventListener('mousemove', event => {
-				if(this.prev_pos && this.bar_pressed){
-					this.pos.x += event.pageX - this.prev_pos.x;
-					this.pos.y += event.pageY - this.prev_pos.y;
-					
-					this.apply_bounds();
-				}
+		document.addEventListener('mouseup', () => this.bar_pressed = false);
+		
+		document.addEventListener('mousemove', event => {
+			if(this.prev_pos && this.bar_pressed){
+				this.pos.x += event.pageX - this.prev_pos.x;
+				this.pos.y += event.pageY - this.prev_pos.y;
 				
-				this.prev_pos = { x: event.pageX, y: event.pageY };
-			});
+				this.apply_bounds();
+			}
 			
-			// load font
-			new FontFace('Inconsolata', 'url("https://fonts.gstatic.com/s/inconsolata/v20/QldgNThLqRwH-OJ1UHjlKENVzkWGVkL3GZQmAwLYxYWI2qfdm7Lpp4U8WR32lw.woff2")', {
-				family: 'Inconsolata',
-				style: 'normal',
-				weight: 400,
-				stretch: '100%',
-				unicodeRange: 'U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD',
-			}).load().then(font => parent.document.fonts.add(font));
-			
-			this.add_ele('link', parent.document.head, { rel: 'stylesheet', href: parent.URL.createObjectURL(new Blob([ `.${exports.rnds.chr}{white-space:nowrap;text-decoration: none}.${exports.rnds.chr1}{display:none;font-size:0px}${this.div}{display:block}` + exports.css.replace(/\.((?:(?!\[|\d|:|,|\.)\S)+)/g, (m, cl) => '.' + this.css_class(cl)) ], { type: 'text/css' })) });
-			
-			/*if(this.css_rng)customElements.define(this.div, class extends HTMLDivElement {}, { extends: 'div' });*/
-			
-			this.panel = this.add_ele('div', parent.document.body, { className: this.css_class('ss-panel') });
-			
-			this.title = this.add_ele('div', this.panel, { innerHTML: this.char_ins(data.title), className: this.css_class('title') });
-			
-			this.add_ele('div', this.title, { className: this.css_class('version'), innerHTML: this.char_ins('v' + manifest.version) });
-			
-			this.title.addEventListener('mousedown', () => this.bar_pressed = true);
-			
-			this.sections = this.add_ele('div', this.panel, { className: this.css_class('sections') });
-			this.sidebar_con = this.add_ele('div', this.sections, { className: this.css_class('sidebar' ) });
-			
-			data.values.forEach((tab, index) => {
-				var tab_button = this.add_ele('div', this.sidebar_con, {
-						className: this.css_class('section'),
-					}),
-					tab_ele = this.add_ele('div', this.sections, {
-						className: this.css_class('section'),
-						style: index > 0 ? 'display:none' : '',
-					});
-				
-				this.tabs.push(tab_ele);
-				
-				tab_button.addEventListener('click', () => (this.tabs.forEach(ele => ele.style.display = 'none'), tab_ele.removeAttribute('style')));
-				
-				tab_button.innerHTML = this.char_ins(tab.name);
-				
-				if(tab.load)tab.load(tab_ele);
-				
-				tab.contents.forEach(control => { try{ this.process_controls(control, tab, tab_button, tab_ele) }catch(err){ console.error('Encountered error at %c' + control.name + ' (' + control.val + ')', 'color: #FFF', err) }});
-			});
-			
-			// add footer last
-			if(this.data.footer)this.add_ele('div', this.panel, { className: this.css_class('footer'), innerHTML: this.char_ins(this.data.footer) });
-			
-			setTimeout(() => (this.pos = { x: 20, y: (parent.innerHeight / 2) - (this.panel.getBoundingClientRect().height / 2) }, this.apply_bounds()));
+			this.prev_pos = { x: event.pageX, y: event.pageY };
 		});
+		
+		// load font
+		new FontFace('Inconsolata', 'url("https://fonts.gstatic.com/s/inconsolata/v20/QldgNThLqRwH-OJ1UHjlKENVzkWGVkL3GZQmAwLYxYWI2qfdm7Lpp4U8WR32lw.woff2")', {
+			family: 'Inconsolata',
+			style: 'normal',
+			weight: 400,
+			stretch: '100%',
+			unicodeRange: 'U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD',
+		}).load().then(font => document.fonts.add(font));
+		
+		this.add_ele('link', document.head, { rel: 'stylesheet', href: URL.createObjectURL(new Blob([ `.${exports.rnds.chr}{white-space:nowrap;text-decoration: none}.${exports.rnds.chr1}{display:none;font-size:0px}${this.div}{display:block}` + exports.css.replace(/\.((?:(?!\[|\d|:|,|\.)\S)+)/g, (m, cl) => '.' + this.css_class(cl)) ], { type: 'text/css' })) });
+		
+		/*if(this.css_rng)customElements.define(this.div, class extends HTMLDivElement {}, { extends: 'div' });*/
+		
+		this.panel = this.add_ele('div', document.documentElement, { className: this.css_class('ss-panel') });
+		
+		this.title = this.add_ele('div', this.panel, { innerHTML: this.char_ins(data.title), className: this.css_class('title') });
+		
+		this.add_ele('div', this.title, { className: this.css_class('version'), innerHTML: this.char_ins('v' + manifest.version) });
+		
+		this.title.addEventListener('mousedown', () => this.bar_pressed = true);
+		
+		this.sections = this.add_ele('div', this.panel, { className: this.css_class('sections') });
+		this.sidebar_con = this.add_ele('div', this.sections, { className: this.css_class('sidebar' ) });
+		
+		data.values.forEach((tab, index) => {
+			var tab_button = this.add_ele('div', this.sidebar_con, {
+					className: this.css_class('section'),
+				}),
+				tab_ele = this.add_ele('div', this.sections, {
+					className: this.css_class('section'),
+					style: index > 0 ? 'display:none' : '',
+				});
+			
+			this.tabs.push(tab_ele);
+			
+			tab_button.addEventListener('click', () => (this.tabs.forEach(ele => ele.style.display = 'none'), tab_ele.removeAttribute('style')));
+			
+			tab_button.innerHTML = this.char_ins(tab.name);
+			
+			if(tab.load)tab.load(tab_ele);
+			
+			tab.contents.forEach(control => { try{ this.process_controls(control, tab, tab_button, tab_ele) }catch(err){ console.error('Encountered error at %c' + control.name + ' (' + control.val + ')', 'color: #FFF', err) }});
+		});
+		
+		// add footer last
+		if(this.data.footer)this.add_ele('div', this.panel, { className: this.css_class('footer'), innerHTML: this.char_ins(this.data.footer) });
+		
+		setTimeout(() => (this.pos = { x: 20, y: (window.innerHeight / 2) - (this.panel.getBoundingClientRect().height / 2) }, this.apply_bounds()));
 	}
 	apply_bounds(){
 		var size = this.panel.getBoundingClientRect();
 		
-		this.panel.style.left = Math.min(Math.max(this.pos.x, 0), parent.innerWidth - size.width) + 'px';
-		this.panel.style.top = Math.min(Math.max(this.pos.y, 0), parent.innerHeight - size.height) + 'px';
+		this.panel.style.left = Math.min(Math.max(this.pos.x, 0), window.innerWidth - size.width) + 'px';
+		this.panel.style.top = Math.min(Math.max(this.pos.y, 0), window.innerHeight - size.height) + 'px';
 	}
 };

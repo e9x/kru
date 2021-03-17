@@ -1,17 +1,9 @@
 'use strict';
 var add = Symbol(),
 	manifest = require('../manifest.json'),
-	cheat = parent.cheat = {
+	cheat = cheat = {
 		add: add,
 		assign_deep: (e,...a)=>(a.forEach(a=>Object.keys(a).forEach(r=>typeof a[r]=='object'&&!Array.isArray(a[r])&&r in e?cheat.assign_deep(e[r],a[r]):e[r]=a[r])),e),
-		wf: check => new Promise((resolve, reject, interval) => (interval = setInterval(() => {
-			var checked = check();
-			
-			if(checked)clearInterval(interval); else return;
-			
-			resolve(checked);
-			interval = null;
-		}, 15))),
 		syms: new Proxy({}, {
 			get(target, prop){
 				if(!target[prop])target[prop] = Symbol();
@@ -22,13 +14,6 @@ var add = Symbol(),
 		rnds: new Proxy({}, {
 			get(target, prop){
 				if(!target[prop])target[prop] = [...Array(16)].map(() => Math.random().toString(36)[2]).join('').replace(/(\d|\s)/, 'V').toLowerCase().substr(0, 6);
-				
-				return target[prop];
-			}
-		}),
-		objs: new Proxy({}, {
-			get(target, prop){
-				if(!target[prop])target[prop] = cheat.object_list[~~(Math.random() * cheat.object_list.length)];
 				
 				return target[prop];
 			}
@@ -46,7 +31,6 @@ var add = Symbol(),
 			},
 		}),
 		three: require('./three.js'),
-		object_list: Object.getOwnPropertyNames(window).filter(key => !(/webkit/gi.test(key)) && typeof window[key] == 'function' && String(window[key]) == 'function ' + key + '() { [native code] }' && Object.isExtensible(window[key]) && Object.getOwnPropertyDescriptor(window, key).configurable),
 		log(...args){
 			console.log('%cShitsploit', 'background: #27F; color: white; border-radius: 3px; padding: 3px 2px; font-weight: 600', ...args);
 			
@@ -144,70 +128,13 @@ var add = Symbol(),
 				
 				if(cheat.world)cheat.world.scene.onBeforeRender = cheat.process;
 				
-				if(cheat.ws && !cheat.ws[cheat.syms.hooked] && cheat.ws.send){
-					cheat.ws[cheat.syms.hooked] = true;
-					
-					var osend = cheat.ws.send.bind(cheat.ws),
-						odispatch = cheat.ws._dispatchEvent.bind(cheat.ws);
-
-					cheat.ws.send = (label, ...data) => {
-						if(label == 'en' && cheat.config.game.skins)cheat.skin_conf = {
-							weapon: data[0][2],
-							hat: data[0][3],
-							body: data[0][4],
-							knife: data[0][9],
-							dye: data[0][14],
-							waist: data[0][17],
-						};
-						
-						return osend(label, ...data);
-					}
-					
-					cheat.ws._dispatchEvent = (label, data) => {
-						var pd = data[0], player_size = 38;
-						
-						if(cheat.config.game.skins && label[0] == 0 && cheat.skin_conf){
-							for(;pd.length % player_size != 0;)player_size++;
-							
-							for(var i = 0; i < pd.length; i += player_size)if(pd[i] == cheat.ws.socketId){
-								pd[i + 12] = cheat.skin_conf.weapon;
-								pd[i + 13] = cheat.skin_conf.hat;
-								pd[i + 14] = cheat.skin_conf.body;
-								pd[i + 19] = cheat.skin_conf.knife;
-								pd[i + 25] = cheat.skin_conf.dye;
-								pd[i + 33] = cheat.skin_conf.waist;
-							}
-						}
-						
-						data[0] = pd;
-						
-						return odispatch(label, data);
-					}
-				}
-				
-				/*if(cheat.controls && !cheat.controls[cheat.syms.hooked]){
-					cheat.controls[cheat.syms.hooked] = true;
-					
-					var camChaseSpd = 0.0012, target;
-					
-					if(cheat.gconfig)Object.defineProperty(cheat.gconfig, cheat.vars.camChaseSpd, {
-						get: _ => cheat.moving_camera ? ((50 - cheat.config.aim.smooth.value) / 5000) : camChaseSpd,
-						set: v => camChaseSpd = v,
-					});
-					
-					Object.defineProperty(cheat.controls, 'target', {
-						get: _ => cheat.moving_camera ? cheat.moving_camera : target,
-						set: v => target = v,
-					});
-				}*/
-				
 				cheat.visual(cheat);
 				
 				return Reflect.apply(frame, parent, [ func ]);
 			},
 		},
 		dist_center(pos){
-			return Math.hypot((parent.innerWidth / 2) - pos.x, (parent.innerHeight / 2) - pos.y);
+			return Math.hypot((innerWidth / 2) - pos.x, (innerHeight / 2) - pos.y);
 		},
 		sorts: {
 			//  * (ent_1[add].frustum == ent_2[add].frustum ? 1 : 0.5);
@@ -255,7 +182,7 @@ var add = Symbol(),
 			
 			ent[add].crouch = ent[cheat.vars.crouchVal];
 			
-			ent[add].obj = ent && ent.lowerBody && ent.lowerBody.parent && ent.lowerBody.parent ? ent.lowerBody.parent.parent : null;
+			ent[add].obj = ent && ent.lowerBody && ent.lowerBody.parent && ent.lowerBody.parent ? ent.lowerBody.parent : null;
 			
 			ent[add].health = ent.health;
 			ent[add].max_health = ent[cheat.vars.maxHealth];
@@ -317,18 +244,17 @@ var add = Symbol(),
 			return Reflect.apply(CanvasRenderingContext2D.prototype[label], cheat.ctx, args);
 		},
 		input: require('./input.js'),
-		has_instruct: (str, inst) => (inst = parent.document.querySelector('#instructionHolder'), inst && inst.textContent.trim().toLowerCase().includes(str)),
+		has_instruct: (str, inst) => (inst = document.querySelector('#instructionHolder'), inst && inst.textContent.trim().toLowerCase().includes(str)),
 		process_interval: setInterval(() => {
 			// automatic stuff
 			
 			if(cheat.config.game.auto_respawn){
-				if(cheat.has_instruct('connection banned'))clearInterval(cheat.process_interval), cheat.config.game.proxy = true, cheat.ui.data.config.save(), parent.location.assign('https://krunker.io');
-				else if(cheat.has_instruct('game is full'))clearInterval(cheat.process_interval), parent.location.assign('https://krunker.io');
-				else if(cheat.has_instruct('disconnected'))clearInterval(cheat.process_interval), parent.location.assign('https://krunker.io');
+				if(cheat.has_instruct('connection banned'))clearInterval(cheat.process_interval), cheat.config.game.proxy = true, cheat.ui.data.config.save(), location.assign('https://krunker.io');
+				else if(cheat.has_instruct('game is full'))clearInterval(cheat.process_interval), location.assign('https://krunker.io');
+				else if(cheat.has_instruct('disconnected'))clearInterval(cheat.process_interval), location.assign('https://krunker.io');
 				else if(cheat.has_instruct('click to play') && (!cheat.player || !cheat.player[cheat.add] || !cheat.player[cheat.add].active || !cheat.player[cheat.add].health))cheat.controls.toggle(true);
 			}
 		}, 100),
-		api: 'https://api.brownstation.pw/',
 	};
 
 cheat.util.cheat = cheat;
@@ -341,10 +267,10 @@ cheat.ui = new (require('./ui.js').init)({
 	config: {
 		key: 'krk_custcSops',
 		save(){
-			parent.localStorage.setItem(this.key, JSON.stringify(cheat.config));
+			localStorage.setItem(this.key, JSON.stringify(cheat.config));
 		},
 		load(){
-			cheat.assign_deep(cheat.config, JSON.parse(parent.localStorage.getItem(this.key) || '{}'));
+			cheat.assign_deep(cheat.config, JSON.parse(localStorage.getItem(this.key) || '{}'));
 		},
 	},
 	values: [{
@@ -539,66 +465,14 @@ cheat.ui = new (require('./ui.js').init)({
 	}],
 });
 
-parent.fetch = (url, opts) => new Promise((resolve, reject) => { throw new TypeError('Failed to fetch') });
-
-cheat.wf(() => parent.zip).then(() => fetch(new URL('/token', cheat.api)).then(res => res.json()).then(data => fetch(new URL('/data/game.' + data.build + '.js', cheat.api)).then(res => res.text()).then(vries => {
+fetch('https://api.sys32.dev/latest.js', { cache: 'no-store' }).then(res => res.text()).then(vries => {
+	// find variables
+	cheat.find_vars.forEach(([ name, regex, index ]) => cheat.vars[name] = (vries.match(regex)||[])[index]||console.error('Could not find', name, regex, 'at index', index));
+	
+	// apply patches
 	cheat.patches.forEach(([ regex, replace ]) => vries = vries.replace(regex, replace));
-	cheat.find_vars.forEach(([ name, regex, index ]) => cheat.vars[name] = (vries.match(regex)||[])[index]);
 	
-	var args = {
-		ssd: cheat.storage,
-		fetch: fetch,
-		WebSocket: cheat.config.game.proxy ? class extends WebSocket {
-			constructor(url, opts){
-				super('wss://krunker.space/c5580cf2af/ws', encodeURIComponent(btoa(url)));
-			}
-		} : WebSocket,
-		Proxy: function(input){
-			return input;
-		},
-		localStorage: new Proxy(parent.localStorage, {
-			get(target, prop){
-				var ret = Reflect.get(target, prop);
-				
-				return typeof ret == 'function' ? ret.bind(target) : target.getItem.call(target, prop);
-			},
-			set(target, prop, value){
-				var ret = Reflect.get(target, prop);
-				
-				return typeof ret == 'function' ? ret.bind(target) : target.setItem.call(target, prop, value);
-			},
-		}),
-		WP_fetchMMToken: new Promise(r => r(data.token)),
-	};
-	
-	
-	parent.Storage.prototype.getItem = new Proxy(parent.Storage.prototype.getItem, {
-		apply: (target, that, [ prop ]) => prop == cheat.ui.data.config.key ? cheat.key_test : Reflect.apply(target, that, [ prop ]),
-	});
-	
-	parent.Storage.prototype.setItem = new Proxy(parent.Storage.prototype.setItem, {
-		apply: (target, that, [ prop, value ]) => prop == cheat.ui.data.config.key ? (cheat.key_test = value, undefined) : Reflect.apply(target, that, [ prop, value ]),
-	});
-	
-	cheat.wf(() => document.readyState == 'complete').then(() => new parent.Function(...Object.keys(args), vries)(...Object.values(args)));
-})));
+	new Function('ssd', vries)(cheat.storage);
+})
 
-/*
-if(module.userscript){ // running in tampermonkey
-	cheat.check_for_updates();
-	
-	setInterval(cheat.check_for_updates, cheat.updates.update_interval);
-}
-
-if(typeof nrequire == 'function'){ // in client
-	// var fs = nrequire('fs');
-	
-	// todo: integrate with client further
-}
-*/
-
-parent.AudioParam.prototype.setTargetAtTime = function(...args){
-	try{ Reflect.apply(AudioParam.prototype.setTargetAtTime, this, args) }catch(err){}
-	
-	return this;
-}
+delete window.WebAssembly;
