@@ -127,8 +127,6 @@ var add = Symbol(),
 					cheat.player[cheat.vars.procInputs] = cheat.procInputs;
 				}
 				
-				if(cheat.world)cheat.world.scene.onBeforeRender = cheat.process;
-				
 				cheat.visual(cheat);
 				
 				return frame(func);
@@ -232,6 +230,8 @@ var add = Symbol(),
 		},
 		visual: require('./visual.js'),
 		process(){
+			requestAnimationFrame(cheat.process);
+			
 			if(!cheat.game || !cheat.controls || !cheat.world || !cheat.player)return;
 			
 			cheat.game.players.list.forEach(cheat.ent_vals);
@@ -291,6 +291,8 @@ var add = Symbol(),
 			});
 		},
 	};
+
+cheat.process();
 
 cheat.util.cheat = cheat;
 cheat.raycaster = new cheat.three.Raycaster();
