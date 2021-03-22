@@ -118,7 +118,7 @@ var sploit = {
 fetch(chrome.runtime.getURL('manifest.json')).then(res => res.json()).then(manifest => {
 	sploit.manifest = manifest;
 	
-	chrome.webNavigation.onDOMContentLoaded.addListener(details => {
+	chrome.webNavigation.onCommitted.addListener(details => {
 		var url = new URL(details.url);
 		
 		if(sploit.active && (url.hostname == 'krunker.io' || url.hostname.endsWith('.krunker.io')))chrome.tabs.executeScript(details.tabId, {

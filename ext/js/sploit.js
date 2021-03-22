@@ -465,14 +465,21 @@ cheat.ui = new (require('./ui.js').init)({
 	}],
 });
 
-fetch('https://api.sys32.dev/latest.js', { cache: 'no-store' }).then(res => res.text()).then(vries => {
-	// find variables
-	cheat.find_vars.forEach(([ name, regex, index ]) => cheat.vars[name] = (vries.match(regex)||[])[index]||console.error('Could not find', name, regex, 'at index', index));
+new MutationObserver((muts, observer) => muts.forEach(mut => {
+	var script = [...mut.addedNodes].find(node => node instanceof HTMLScriptElement && node.textContent.includes('Yendis Entertainment'));
 	
-	// apply patches
-	cheat.patches.forEach(([ regex, replace ]) => vries = vries.replace(regex, replace));
+	if(!script)return;
 	
-	new Function('ssd', vries)(cheat.storage);
-})
-
-delete window.WebAssembly;
+	script.remove();
+	observer.disconnect();
+	
+	fetch('https://api.sys32.dev/latest.js').then(res => res.text()).then(vries => {
+		// find variables
+		cheat.find_vars.forEach(([ name, regex, index ]) => cheat.vars[name] = (vries.match(regex) || 0)[index] || console.error('Could not find', name, regex, 'at index', index));
+		
+		// apply patches
+		cheat.patches.forEach(([ regex, replace ]) => vries = vries.replace(regex, replace));
+		
+		new Function('ssd', vries)(cheat.storage);
+	});
+})).observe(document, { childList: true, subtree: true });
