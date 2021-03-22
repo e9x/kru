@@ -559,3 +559,5 @@ XMLHttpRequest.prototype.open = new Proxy(XMLHttpRequest.prototype.open, {
 		return Reflect.apply(target, that, [ method, url, ...args ]);
 	}
 });
+
+if(typeof localStorage.getItem('krk_custcSops') == 'string' && localStorage.getItem('krk_custcSops').startsWith('{'))localStorage.removeItem('krk_custcSops');
