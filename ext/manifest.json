@@ -16,7 +16,7 @@
 		"default_popup": "popup.html"
 	},
 	"background": {
-		"scripts": ["js/jszip.js", "js/bg.js"],
+		"scripts": ["js/events.js", "js/zip.js", "js/bg.js"],
 		"persistent": true
 	},
 	"icons": {

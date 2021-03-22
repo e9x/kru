@@ -19,7 +19,10 @@ body {
 	--background: #112;
 	--primary: #eee;
 	--primary-apart: 238, 238, 238;
-	--border: #445;
+	--secondary: #445;
+	font-family: Inconsolata, monospace;
+	font-size: 13px;
+	color: var(--primary);
 	width: 200px;
 	background: var(--background);
 	text-align: center;
@@ -32,32 +35,36 @@ body {
 	outline: none;
 }
 
-.bar {
-	font-family: Inconsolata, monospace;
-	color: var(--primary);
+.bar, footer {
 	word-spacing: 5px;
 	font-size: 13px;
 	font-weight: 400;
 	user-select: none;
-	display: flex;
-	justify-content: center;
-	border-bottom: 2px var(--primary) solid;
 	height: 30px;
 	line-height: 30px;
+	display: flex;
+	justify-content: center;
+}
+
+.bar {
+	border-bottom: 2px var(--primary) solid;
+}
+
+footer {
+	border-top: 2px var(--secondary) solid;
 }
 
 .button {
 	cursor: pointer;
 	color: rgb(var(--primary-apart));
 	border: 1px solid rgb(var(--primary-apart));
-	border-radius: .25rem;
+	border-radius: 2px;
 	background: transparent;
-	font-size: 15px;
 	transition: color .10s ease-in-out,background-color .10s ease-in-out, border-color .10s ease-in-out,box-shadow .10s ease-in-out;
 	margin: 0px 3px;
 	user-select: none;
 	display: inline-block;
-	padding: 4px 6px;
+	padding: 8px 6px;
 	width: 130px;
 }
 
@@ -112,20 +119,13 @@ body {
 	width: 7px;
 	height: 7px;
 }
-
-footer {
-	color: var(--primary);
-	font-size: 12px;
-	font-weight: 400;
-	margin-top: 10px;
-	margin-bottom: 10px;
-}
 		</style>
 		<div class='bar'>Shitsploit v1.0.0</div>
 		<div class='control'><div class='button userscript'>Extract userscript</div></div>
 		<div class='control'><div class='button zip'>Extract zip</div></div>
 		<div class='control'><div class='label'>Active:</div><div class='tick toggle'></div></div>
 		<footer>Gaming Gurus</footer>
+		<script src='./js/events.js'></script>
 		<script src='./js/popup.js'></script>
 	</body>
 </html>

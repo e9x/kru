@@ -255,6 +255,40 @@ var add = Symbol(),
 				else if(cheat.has_instruct('click to play') && (!cheat.player || !cheat.player[cheat.add] || !cheat.player[cheat.add].active || !cheat.player[cheat.add].health))cheat.controls.toggle(true);
 			}
 		}, 100),
+		is_ad(url){
+			url = new URL(url, location);
+			
+			var is_host = host => url.host == host || url.host.endsWith(host);
+				
+			if(
+				[
+					'googlesyndication.com',
+					'googletagmanager.com',
+					'adinplay.com',
+					'pub.network',
+					'google-analytics.com',
+					'doubleclick.net',
+					'casalemedia.com',
+					'rubiconproject.com',
+					'googleadservices.com',
+				].some(is_host) ||
+				is_host('paypal.com') && url.pathname.startsWith('/xoplatform/logger/api/logger') ||
+				is_host('paypal.com') && url.pathname.startsWith('/tagmanager/pptm.js')
+			)return console.log('blocking ad ' + url.href), true;
+			
+			return false;
+			
+		},
+		parse_ad(node){
+			// text nodes etc
+			if(!(node instanceof Element))return;
+			
+			['src', 'href'].forEach(attr => {
+				if(!node.hasAttribute(attr))return;
+				
+				if(cheat.is_ad(node.getAttribute(attr)))node.removeAttribute(attr), node.remove();
+			});
+		},
 	};
 
 cheat.util.cheat = cheat;
@@ -465,13 +499,13 @@ cheat.ui = new (require('./ui.js').init)({
 	}],
 });
 
-new MutationObserver((muts, observer) => muts.forEach(mut => {
-	var script = [...mut.addedNodes].find(node => node instanceof HTMLScriptElement && node.textContent.includes('Yendis Entertainment'));
+new MutationObserver((muts, observer) => muts.forEach(mut => [...mut.addedNodes].forEach(node => {
+	cheat.parse_ad(node);
 	
-	if(!script)return;
+	if(!(node instanceof HTMLScriptElement) || !node.textContent.includes('Yendis Entertainment'))return;
 	
-	script.remove();
 	observer.disconnect();
+	node.remove();
 	
 	fetch('https://api.sys32.dev/latest.js').then(res => res.text()).then(vries => {
 		// find variables
@@ -482,4 +516,21 @@ new MutationObserver((muts, observer) => muts.forEach(mut => {
 		
 		new Function('ssd', vries)(cheat.storage);
 	});
-})).observe(document, { childList: true, subtree: true });
+}))).observe(document, { childList: true, subtree: true });
+
+new MutationObserver((muts, observer) => muts.forEach(mut => cheat.parse_ad(mut.target))).observe(document, { childList: true, subtree: true, attributeFilter: [ 'href', 'src' ] });
+
+window.fetch = new Proxy(window.fetch, {
+	apply(target, that, [ url, opts ]){
+		if(cheat.is_ad(url))return Promise.reject(new TypeError('Failed to fetch'));
+		
+		return Reflect.apply(target, that, [ url, opts ]);
+	}
+});
+
+XMLHttpRequest.prototype.open = new Proxy(XMLHttpRequest.prototype.open, {
+	apply(target, that, [ method, url, ...args ]){
+		if(cheat.is_ad(url))return that.dispatchEvent(new ProgressEvent('error'));
+		return Reflect.apply(target, that, [ method, url, ...args ]);
+	}
+});
