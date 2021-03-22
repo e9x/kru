@@ -1,5 +1,6 @@
 'use strict';
 var add = Symbol(),
+	events = require('./events.js'),
 	manifest = require('../manifest.json'),
 	cheat = cheat = {
 		add: add,
@@ -294,17 +295,39 @@ var add = Symbol(),
 cheat.util.cheat = cheat;
 cheat.raycaster = new cheat.three.Raycaster();
 
+var port;
+
+if(typeof secret != 'undefined'){
+	port = new events((...data) => document.dispatchEvent(new CustomEvent(secret + 'outgoing', { detail: JSON.stringify(data) })));
+	
+	document.addEventListener(secret + 'incoming', event => port.emit(...JSON.parse(event.detail)));
+};
+
 cheat.ui = new (require('./ui.js').init)({
 	title: 'Shitsploit',
 	footer: 'Press [F1] or [C] to toggle',
 	toggle: ['KeyC', 'F1'],
 	config: {
 		key: 'krk_custcSops',
-		save(){
-			localStorage.setItem(this.key, JSON.stringify(cheat.config));
+		async save(){
+			return typeof GM_setValue != 'undefined'
+				? await GM_setValue('config', JSON.stringify(cheat.config))
+				: port ?
+					port.send('config_save', cheat.config)
+					: localStorage.setItem(this.key, JSON.stringify(cheat.config)) + console.warn('Using localStorage, not userscript or extension?');
 		},
-		load(){
-			cheat.assign_deep(cheat.config, JSON.parse(localStorage.getItem(this.key) || '{}'));
+		async load(){
+			if(typeof GM_getValue != 'undefined')return cheat.assign_deep(cheat.config, await GM_getValue('config'));
+			else if(port){
+				var id = Math.random();
+				
+				port.send('config_load', id);
+				
+				return await new Promise((resolve, reject) => port.once(id, config => resolve(cheat.assign_deep(cheat.config,  config))));
+			}else{
+				console.warn('Using localStorage, not userscript or extension?');
+				return cheat.assign_deep(cheat.config, JSON.parse(localStorage.getItem(this.key) || '{}'));
+			}
 		},
 	},
 	values: [{

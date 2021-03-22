@@ -11,10 +11,10 @@ document.querySelectorAll('.tick').forEach((node, oval) => (oval = node.getAttri
 
 _port.onMessage.addListener(data => port.emit(...data));
 
-port.on('config', config => {
+port.on('meta', config => {
 	toggle.value = config.active;
 	
-	toggle.addEventListener('tick', event => port.send('config', 'active', toggle.value));
+	toggle.addEventListener('tick', event => port.send('meta', 'active', toggle.value));
 	
 	document.querySelector('.bar').textContent = 'Shitsploit v' + config.manifest.version;
 });

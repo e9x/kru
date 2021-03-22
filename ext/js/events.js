@@ -6,7 +6,7 @@ var events = class {
 	send(event, ...data){
 		if(!this._send)throw new TypeError('no send function is defined, add a function when constructing events');
 		
-		this._send(event, ...data);
+		this._send.call(this, event, ...data);
 		
 		return true;
 	}

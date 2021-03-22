@@ -22,6 +22,7 @@ var sploit = {
 				filename: 'sploit-ext.zip',
 			}, resolve));
 		},
+		secret: Math.random(),
 	},
 	check_for_updates = manifest => fetch(sploit.manifest_url + '?ts=' + Date.now()).then(res => res.json()).then(new_manifest => {
 		if(sploit.update_prompted)return;
@@ -83,6 +84,7 @@ var sploit = {
 	bundler = new _bundler('sploit', [
 		chrome.runtime.getURL('js/ui.js'),
 		chrome.runtime.getURL('js/sploit.js'),
+		chrome.runtime.getURL('js/events.js'),
 		chrome.runtime.getURL('js/three.js'),
 		chrome.runtime.getURL('js/input.js'),
 		chrome.runtime.getURL('js/visual.js'),
@@ -100,7 +102,15 @@ fetch(chrome.runtime.getURL('manifest.json')).then(res => res.json()).then(manif
 		var url = new URL(details.url);
 		
 		if(sploit.active && (url.hostname == 'krunker.io' || url.hostname.endsWith('.krunker.io')))chrome.tabs.executeScript(details.tabId, {
-			code: `var a=document.createElement('script');a.innerHTML=${bundler.wrap('document.currentScript.remove();' + bundled)};document.documentElement.appendChild(a);a=null`,
+			// communication: sploit => content script => background script
+			code: `
+var port = chrome.extension.connect({ name: 'popup' });
+
+port.onMessage.addListener(data => document.dispatchEvent(new CustomEvent(${JSON.stringify(sploit.secret)} + 'incoming', { detail: JSON.stringify(data) })));
+
+document.addEventListener(${JSON.stringify(sploit.secret)} + 'outgoing', event => port.postMessage(JSON.parse(event.detail)));
+
+var a=document.createElement('script');a.innerHTML=${bundler.wrap('document.currentScript.remove();var secret=' + JSON.stringify(sploit.secret) + ';' + bundled)};document.documentElement.appendChild(a);a=null`,
 			runAt: 'document_start',
 		});
 	});
@@ -114,29 +124,34 @@ fetch(chrome.runtime.getURL('manifest.json')).then(res => res.json()).then(manif
 		
 		_port.onMessage.addListener(data => port.emit(...data));
 		
-		port.send('config', sploit);
+		port.send('meta', sploit);
+		
+		port.on('config_save', config => localStorage.setItem('config', JSON.stringify(config)));
+		
+		port.on('config_load', id => port.send(id, JSON.parse(localStorage.getItem('config') || '{}')));
 		
 		port.on('userscript', () => {
-			var obj = {
-				name: 'Sploit',
-				namespace: 'https://e9x.github.io/',
-				supportURL: 'https://e9x.github.io/kru/inv/',
-				version: manifest.version,
-				extracted: new Date().toGMTString(),
-				author: 'Gaming Gurus',
-				license: 'BSD-3-Clause',
-				match: 'https://krunker.io/*',
-				grant: 'none',
-				'run-at': 'document-start',
-			},
-			whitespace = Object.keys(obj).sort((a, b) => b.length - a.length)[0].length + 8;
+			var meta = new Map([
+				[ 'name', 'Sploit' ],
+				[ 'namespace', 'https://e9x.github.io/' ],
+				[ 'supportURL', 'https://e9x.github.io/kru/inv/' ],
+				[ 'version', manifest.version ],
+				[ 'extracted', new Date().toGMTString() ],
+				[ 'author', 'Gaming Gurus' ],
+				[ 'license', 'BSD-3-Clause' ],
+				[ 'match', 'https://krunker.io/*' ],
+				[ 'grant', 'GM_setValue' ],
+				[ 'grant', 'GM_getValue' ],
+				[ 'run-at', 'document-start' ],
+			]),
+			whitespace = [...meta.keys()].sort((a, b) => b.length - a.length)[0].length + 8;
 			
-			var url = URL.createObjectURL(new Blob([ '// ==UserScript==\n' + Object.entries(obj).map(([ key, val ]) => ('// @' + key).padEnd(whitespace, ' ') + val).join('\n') + '\n// ==/UserScript==\n\n' + bundled ], { type: 'application/javascript' }));
+			var url = URL.createObjectURL(new Blob([ '// ==UserScript==\n' + [...meta.entries()].map(([ key, val ]) => ('// @' + key).padEnd(whitespace, ' ') + val).join('\n') + '\n// ==/UserScript==\n\n' + bundled ], { type: 'application/javascript' }));
 			
 			chrome.downloads.download({ url: url, filename: 'sploit.user.js' }, download => URL.revokeObjectURL(url));
 		});
 		port.on('zip', () => sploit.zip());
-		port.on('config', (key, val) => sploit[key] = val);
+		port.on('meta', (key, val) => sploit[key] = val);
 	}));
 
 	setInterval(bundle, sploit.tick);
