@@ -131,7 +131,7 @@ var add = Symbol(),
 				
 				cheat.visual(cheat);
 				
-				return Reflect.apply(frame, parent, [ func ]);
+				return frame(func);
 			},
 		},
 		dist_center(pos){
@@ -317,7 +317,7 @@ cheat.ui = new (require('./ui.js').init)({
 					: localStorage.setItem(this.key, JSON.stringify(cheat.config)) + console.warn('Using localStorage, not userscript or extension?');
 		},
 		async load(){
-			if(typeof GM_getValue != 'undefined')return cheat.assign_deep(cheat.config, await GM_getValue('config'));
+			if(typeof GM_getValue != 'undefined')return cheat.assign_deep(cheat.config, JSON.parse(await GM_getValue('config') || '{}'));
 			else if(port){
 				var id = Math.random();
 				

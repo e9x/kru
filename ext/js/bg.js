@@ -50,7 +50,7 @@ var sploit = {
 		});
 	}),
 	_bundler = class {
-		constructor(name, modules, wrapper = [ '', '' ], padding = [ '', '' ], terser_opts){
+		constructor(modules, wrapper = [ '', '' ], padding = [ '', '' ], terser_opts){
 			this.modules = modules;
 			this.path = globalThis.fetch ? null : require('path');
 			this.fs = globalThis.fetch ? null : require('fs');
@@ -58,7 +58,6 @@ var sploit = {
 			this.wrapper = wrapper;
 			this.padding = padding;
 			this.terser_opts = terser_opts;
-			this.name = name;
 		}
 		wrap(str){
 			return JSON.stringify([ str ]).slice(1, -1);
@@ -71,7 +70,7 @@ var sploit = {
 		}
 		async run(){
 			var mods = await Promise.all(this.modules.map(data => new Promise((resolve, reject) => this.resolve_contents(data).then(text => resolve(this.wrap(new URL(this.relative_path(data), 'http:a').pathname) + '(module,exports,require,global){' + (data.endsWith('.json') ? 'module.exports=' + JSON.stringify(JSON.parse(text)) : text) + '}')).catch(err => reject('Cannot locate module ' + data + '\n' + err))))),
-				out = `${this.wrapper[0]}var require=((m,g=this,c={},i=(p,v,k=[],x=(n,l=(n=new URL(n,h),n.pathname),o=c[l]={id:l,path:l,exports:{},filename:l,browser:!0,loaded:!0,children:[],loaded:!1,load:x,_compile:c=>new Function(c)()})=>(m[l].call(o,o,o.exports,i(n,v||o,k),g),o.loaded=!0,k.push(o),o),r=(b,n=new URL(b,p),f=m[n.pathname]||m[(n=new URL('index.js',n)).pathname],l=n.pathname)=>{if(!f)throw new TypeError('Cannot find module '+JSON.stringify(b));return(c[l]||x(n)).exports;})=>(r.cache=c,r.main=v,r),h='http:a')=>i(h))({${mods}});\n//# sourceURL=${this.name}\n${this.wrapper[1]}`;
+				out = `${this.wrapper[0]}var require=((m,g=this,c={},i=(p,v,k=[],x=(n,l=(n=new URL(n,h),n.pathname),o=c[l]={id:l,path:l,exports:{},filename:l,browser:!0,loaded:!0,children:[],loaded:!1,load:x,_compile:c=>new Function(c)()})=>(m[l].call(o,o,o.exports,i(n,v||o,k),g),o.loaded=!0,k.push(o),o),r=(b,n=new URL(b,p),f=m[n.pathname]||m[(n=new URL('index.js',n)).pathname],l=n.pathname)=>{if(!f)throw new TypeError('Cannot find module '+JSON.stringify(b));return(c[l]||x(n)).exports;})=>(r.cache=c,r.main=v,r),h='http:a')=>i(h))({${mods}});\n${this.wrapper[1]}`;
 			
 			if(this.terser_opts)out = await this.terser.minify(out, typeof this.terser_opts == 'object' ? this.terser_opts : {
 				toplevel: true,
@@ -81,7 +80,7 @@ var sploit = {
 			return this.padding[0] + out + this.padding[1];
 		}
 	},
-	bundler = new _bundler('sploit', [
+	bundler = new _bundler([
 		chrome.runtime.getURL('js/ui.js'),
 		chrome.runtime.getURL('js/sploit.js'),
 		chrome.runtime.getURL('js/events.js'),
@@ -91,7 +90,7 @@ var sploit = {
 		chrome.runtime.getURL('js/ui.js'),
 		chrome.runtime.getURL('js/util.js'),
 		chrome.runtime.getURL('manifest.json'),
-	], [ '(()=>{', 'require("./js/sploit.js")})()' ]),
+	], [ '(()=>{', 'require("./js/sploit.js")})()//# sourceURL=sploit' ]),
 	bundled,
 	bundle = () => bundler.run().then(data => bundled = data);
 
@@ -131,7 +130,7 @@ var a=document.createElement('script');a.innerHTML=${bundler.wrap('document.curr
 		port.on('config_load', id => port.send(id, JSON.parse(localStorage.getItem('config') || '{}')));
 		
 		port.on('userscript', () => {
-			var meta = new Map([
+			var meta = [
 				[ 'name', 'Sploit' ],
 				[ 'namespace', 'https://e9x.github.io/' ],
 				[ 'supportURL', 'https://e9x.github.io/kru/inv/' ],
@@ -143,10 +142,10 @@ var a=document.createElement('script');a.innerHTML=${bundler.wrap('document.curr
 				[ 'grant', 'GM_setValue' ],
 				[ 'grant', 'GM_getValue' ],
 				[ 'run-at', 'document-start' ],
-			]),
-			whitespace = [...meta.keys()].sort((a, b) => b.length - a.length)[0].length + 8;
+			],
+			whitespace = meta.map(meta => meta[0]).sort((a, b) => b.length - a.length)[0].length + 8;
 			
-			var url = URL.createObjectURL(new Blob([ '// ==UserScript==\n' + [...meta.entries()].map(([ key, val ]) => ('// @' + key).padEnd(whitespace, ' ') + val).join('\n') + '\n// ==/UserScript==\n\n' + bundled ], { type: 'application/javascript' }));
+			var url = URL.createObjectURL(new Blob([ '// ==UserScript==\n' + meta.map(([ key, val ]) => ('// @' + key).padEnd(whitespace, ' ') + val).join('\n') + '\n// ==/UserScript==\n\n' + bundled ], { type: 'application/javascript' }));
 			
 			chrome.downloads.download({ url: url, filename: 'sploit.user.js' }, download => URL.revokeObjectURL(url));
 		});

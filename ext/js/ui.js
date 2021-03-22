@@ -223,7 +223,7 @@ exports.init = class {
 			content_name = document.createElement(this.div), // append after stuff
 			label_appended = false;
 		
-		control.interact = data => {
+		control.interact = () => {
 			switch(control.type){
 				case'bool':
 					control.set(!control.get())
@@ -247,8 +247,9 @@ exports.init = class {
 					control.set(control.input.value.substr(0, control.max_length));
 					break
 			}
+			
 			control.update();
-			this.data.config.save();
+			this.data.config.save()
 		};
 		
 		control.update = () => {
@@ -289,8 +290,6 @@ exports.init = class {
 					control.slider.setAttribute('data-value', Number(control.get().toString().substr(0, 10)));
 					break;
 			}
-			
-			this.data.config.save();
 		};
 		
 		this.control_updates.push(control.update);
@@ -302,7 +301,6 @@ exports.init = class {
 			
 			control.button.innerHTML = this.char_ins(control.key == 'unset' ? '[-]' : '[' + control.key + ']');
 		}
-		
 		
 		switch(control.type){
 			case'textbox':
@@ -317,7 +315,6 @@ exports.init = class {
 				
 				control.input = this.add_ele('input', content, { className: this.css_class('control-textbox'), placeholder: control.placeholder, spellcheck: false, value: control.get() });
 				
-				// .style.display = 'none';
 				label_appended = true;
 				
 				control.input.addEventListener('input', control.interact);
@@ -375,7 +372,7 @@ exports.init = class {
 			content_name.innerHTML = this.char_ins(control.name);
 		}
 		
-		control.update();
+		control.update(false);
 		
 		if(control.key && control.key != 'unset')this.keybinds.push({
 			get code(){ return !isNaN(Number(control.key)) ? 'Digit' + control.key : 'Key' + control.key.toUpperCase() },
@@ -424,7 +421,7 @@ exports.init = class {
 				
 				if(!keybind)return;
 				
-				keybind.interact(event);
+				keybind.interact();
 			});
 			
 			window.addEventListener('keyup', event => this.inputs[event.code] = false);
