@@ -545,18 +545,19 @@ new MutationObserver((muts, observer) => muts.forEach(mut => [...mut.addedNodes]
 				this.addEventListener('message', event => {
 					var decoded = msgpack.decode(new Uint8Array(event.data));
 					
-					if(!event[dont_catch] && cheat.config.game.skins && decoded[0] == 0 && cheat.skin_cache && cheat.ws){
-						var start_client_info = decoded[1].indexOf(cheat.ws.socketId || 0);
+					// cheat.config.game.skins && 
+					if(!event[dont_catch] && decoded[0] == 0 && cheat.skin_cache && cheat.ws){
+						var start_client = decoded[1].indexOf(cheat.ws.socketId || 0);
 						
-						if(start_client_info != -1){
-							console.log(cheat.skin_cache.primary);
-							decoded[1][start_client_info + 12] = [ cheat.skin_cache.primary, cheat.skin_cache.secondary ];
-							decoded[1][start_client_info + 13] = cheat.skin_cache.hat;
-							decoded[1][start_client_info + 14] = cheat.skin_cache.body;
-							decoded[1][start_client_info + 19] = cheat.skin_cache.knife;
-							decoded[1][start_client_info + 24] = cheat.skin_cache.dye;
-							decoded[1][start_client_info + 33] = cheat.skin_cache.waist;
+						if(start_client != -1){
+							decoded[1][start_client + 12] = cheat.skin_cache.loadout;
+							decoded[1][start_client + 13] = cheat.skin_cache.hat;
+							decoded[1][start_client + 14] = cheat.skin_cache.body;
+							decoded[1][start_client + 19] = cheat.skin_cache.knife;
+							decoded[1][start_client + 24] = cheat.skin_cache.dye;
+							decoded[1][start_client + 33] = cheat.skin_cache.waist;
 							
+							event.preventDefault();
 							event.stopPropagation();
 							event.stopImmediatePropagation();
 							
@@ -575,14 +576,13 @@ new MutationObserver((muts, observer) => muts.forEach(mut => [...mut.addedNodes]
 				var decoded = msgpack.decode(data.slice(0, -2));
 				
 				if(decoded[0] == 'en')cheat.skin_cache = {
-					primary: decoded[1][2][0],
-					secondary: decoded[1][2][1],
+					loadout: decoded[1][2],
 					hat: decoded[1][3],
 					body: decoded[1][4],
 					knife: decoded[1][9],
 					dye: decoded[1][14],
 					waist: decoded[1][17],
-				}
+				}, console.log(cheat.skin_cache);
 			}
 		});
 	});
