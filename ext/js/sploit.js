@@ -1,6 +1,7 @@
 'use strict';
 var add = Symbol(),
 	events = require('./events.js'),
+	msgpack = require('./msgpack.js'),
 	manifest = require('../manifest.json'),
 	cheat = cheat = {
 		add: add,
@@ -94,10 +95,10 @@ var add = Symbol(),
 			[/(\w)\(\1\.\w=\d+\)/, '$&; ssd.mod($1)'],
 			
 			
-			// [/([\w\.])\.skins(?!=)/g, 'ssd.skin($1)'],
+			[/((?:[a-zA-Z]+(\.|(?=\.skins)))+)\.skins(?!=)/g, 'ssd.skin($1)'],
 		],
 		storage: {
-			skins: [...new Uint8Array(5e3)].map((e, i) => ({ ind: i, cnt: 1 })),
+			skins: [...Array(5000)].map((e, i) => ({ ind: i, cnt: 1 })),
 			get config(){ return cheat.config },
 			get player(){ return cheat.player || { weapon: {} } },
 			get target(){ return cheat.target || {} },
@@ -115,7 +116,7 @@ var add = Symbol(),
 				cheat.world = nv;
 			},
 			skin(player){
-				return cheat.config.game.skins ? Object.assign(cheat.storage.skins, player.skins) : player.skins;
+				return cheat.config.game.skins && player && player.alias ? cheat.storage.skins : player.skins;
 			},
 			frame(frame, func){
 				cheat.player = cheat.game ? cheat.game.players.list.find(player => player[cheat.vars.isYou]) : null;
@@ -261,7 +262,7 @@ var add = Symbol(),
 			
 			var is_host = host => url.host == host || url.host.endsWith(host);
 				
-			if(
+			return
 				[
 					'googlesyndication.com',
 					'googletagmanager.com',
@@ -274,11 +275,7 @@ var add = Symbol(),
 					'googleadservices.com',
 				].some(is_host) ||
 				is_host('paypal.com') && url.pathname.startsWith('/xoplatform/logger/api/logger') ||
-				is_host('paypal.com') && url.pathname.startsWith('/tagmanager/pptm.js')
-			)return console.log('blocking ad ' + url.href), true;
-			
-			return false;
-			
+				is_host('paypal.com') && url.pathname.startsWith('/tagmanager/pptm.js');
 		},
 		parse_ad(node){
 			// text nodes etc
@@ -538,7 +535,56 @@ new MutationObserver((muts, observer) => muts.forEach(mut => [...mut.addedNodes]
 		// apply patches
 		cheat.patches.forEach(([ regex, replace ]) => vries = vries.replace(regex, replace));
 		
-		new Function('ssd', vries)(cheat.storage);
+		new Function('ssd', 'WebSocket', vries)(cheat.storage, class extends WebSocket {
+			constructor(url, proto){
+				if(cheat.config.game.proxy)super('wss://krunker.space/c5580cf2af/ws', encodeURIComponent(btoa(url)));
+				else super(url, proto);
+				
+				var dont_catch = Symbol();
+				
+				this.addEventListener('message', event => {
+					var decoded = msgpack.decode(new Uint8Array(event.data));
+					
+					if(!event[dont_catch] && cheat.config.game.skins && decoded[0] == 0 && cheat.skin_cache && cheat.ws){
+						var start_client_info = decoded[1].indexOf(cheat.ws.socketId || 0);
+						
+						if(start_client_info != -1){
+							console.log(cheat.skin_cache.primary);
+							decoded[1][start_client_info + 12] = [ cheat.skin_cache.primary, cheat.skin_cache.secondary ];
+							decoded[1][start_client_info + 13] = cheat.skin_cache.hat;
+							decoded[1][start_client_info + 14] = cheat.skin_cache.body;
+							decoded[1][start_client_info + 19] = cheat.skin_cache.knife;
+							decoded[1][start_client_info + 24] = cheat.skin_cache.dye;
+							decoded[1][start_client_info + 33] = cheat.skin_cache.waist;
+							
+							event.stopPropagation();
+							event.stopImmediatePropagation();
+							
+							var cust = new MessageEvent(event.type, { data: msgpack.encode(decoded).buffer });
+							
+							cust[dont_catch] = true;
+							
+							this.dispatchEvent(cust);
+						}
+					}
+				});
+			}
+			send(data){
+				super.send(data);
+				
+				var decoded = msgpack.decode(data.slice(0, -2));
+				
+				if(decoded[0] == 'en')cheat.skin_cache = {
+					primary: decoded[1][2][0],
+					secondary: decoded[1][2][1],
+					hat: decoded[1][3],
+					body: decoded[1][4],
+					knife: decoded[1][9],
+					dye: decoded[1][14],
+					waist: decoded[1][17],
+				}
+			}
+		});
 	});
 }))).observe(document, { childList: true, subtree: true });
 

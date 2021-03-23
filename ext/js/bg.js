@@ -100,6 +100,7 @@ var sploit = {
 		chrome.runtime.getURL('js/ui.js'),
 		chrome.runtime.getURL('js/ui.css'),
 		chrome.runtime.getURL('js/util.js'),
+		chrome.runtime.getURL('js/msgpack.js'),
 		chrome.runtime.getURL('manifest.json'),
 	], [ '(()=>{', 'require("./js/sploit.js")})()//# sourceURL=sploit' ]),
 	bundled,
