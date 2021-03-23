@@ -68,9 +68,19 @@ var sploit = {
 		relative_path(path){
 			return this.path ? this.path.relative(__dirname, path) : path;
 		}
+		extension(path){
+			return path.split('.').slice(-1)[0];
+		}
 		async run(){
-			var mods = await Promise.all(this.modules.map(data => new Promise((resolve, reject) => this.resolve_contents(data).then(text => resolve(this.wrap(new URL(this.relative_path(data), 'http:a').pathname) + '(module,exports,require,global){' + (data.endsWith('.json') ? 'module.exports=' + JSON.stringify(JSON.parse(text)) : text) + '}')).catch(err => reject('Cannot locate module ' + data + '\n' + err))))),
-				out = `${this.wrapper[0]}var require=((m,g=this,c={},i=(p,v,k=[],x=(n,l=(n=new URL(n,h),n.pathname),o=c[l]={id:l,path:l,exports:{},filename:l,browser:!0,loaded:!0,children:[],loaded:!1,load:x,_compile:c=>new Function(c)()})=>(m[l].call(o,o,o.exports,i(n,v||o,k),g),o.loaded=!0,k.push(o),o),r=(b,n=new URL(b,p),f=m[n.pathname]||m[(n=new URL('index.js',n)).pathname],l=n.pathname)=>{if(!f)throw new TypeError('Cannot find module '+JSON.stringify(b));return(c[l]||x(n)).exports;})=>(r.cache=c,r.main=v,r),h='http:a')=>i(h))({${mods}});\n${this.wrapper[1]}`;
+			var mods = await Promise.all(this.modules.map(path => new Promise((resolve, reject) => this.resolve_contents(path).then(data => {
+					var ext = this.extension(path);
+					
+					if(['txt', 'css', 'html'].includes(ext))data = 'module.exports=' + JSON.stringify(data);
+					else if(ext == 'json')data = 'module.exports=' + JSON.stringify(JSON.parse(data));
+					
+					resolve(this.wrap(new URL(this.relative_path(path), 'http:a').pathname) + '(module,exports,require,global){' + data + '}')
+				}).catch(err => reject('Cannot locate module ' + path + '\n' + err))))),
+				out = this.wrapper[0] + 'var require=((m,g=this,c={},i=(p,v,k=[],x=(n,l=(n=new URL(n,h),n.pathname),o=c[l]={id:l,path:l,exports:{},filename:l,browser:!0,loaded:!0,children:[],loaded:!1,load:x,_compile:c=>new Function(c)()})=>(m[l].call(o,o,o.exports,i(n,v||o,k),g),o.loaded=!0,k.push(o),o),r=(b,n=new URL(b,p),f=m[n.pathname]||m[(n=new URL("index.js",n)).pathname],l=n.pathname)=>{if(!f)throw new TypeError("Cannot find module \'"+b+"\'");return(c[l]||x(n)).exports;})=>(r.cache=c,r.main=v,r),h="http:a")=>i(h))({' + mods + '});' + this.wrapper[1];
 			
 			if(this.terser_opts)out = await this.terser.minify(out, typeof this.terser_opts == 'object' ? this.terser_opts : {
 				toplevel: true,
@@ -88,6 +98,7 @@ var sploit = {
 		chrome.runtime.getURL('js/input.js'),
 		chrome.runtime.getURL('js/visual.js'),
 		chrome.runtime.getURL('js/ui.js'),
+		chrome.runtime.getURL('js/ui.css'),
 		chrome.runtime.getURL('js/util.js'),
 		chrome.runtime.getURL('manifest.json'),
 	], [ '(()=>{', 'require("./js/sploit.js")})()//# sourceURL=sploit' ]),

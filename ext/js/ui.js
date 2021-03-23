@@ -16,190 +16,14 @@ exports.clone_obj = obj => JSON.parse(JSON.stringify(obj));
 
 exports.reload = () => this.control_updates.forEach(val => val());
 
-exports.css = `
-.ss-panel {
-	--primary: #eee;
-	--secondary: #445;
-	--background: #112;
-	--background-split: 17, 17, 34;
-	--true: #2A0;
-	--false: #A00;
-	--control-height: 36px;
-	--blue: #29F;
-	border: 2px solid var(--primary);
-	z-index: 9000000;
-	position: absolute;
-	display: flex;
-	width: 375px;
-	background: rgba(var(--background-split), 0.8);
-	flex-direction: column;
-	user-select: none;
-	opacity: 0.8;
-}
-
-.ss-panel * {
-	color: var(--primary);
-	font: 13px Inconsolata, monospace;
-	outline: none;
-}
-
-.ss-panel.close {
-	display: none;
-}
-
-.ss-panel:hover {
-	opacity: 1;
-}
-
-.ss-panel > .title, .ss-panel > .footer {
-	text-align: center;
-	padding: 8px 0px;
-	z-index: 5;
-	position: relative;
-	display: flex;
-	justify-content: center;
-}
-
-.ss-panel > .title > .version {
-	position: absolute;
-	right: 10px;
-	margin: auto;
-	text-align: center;
-}
-
-.ss-panel > .sections {
-	display: flex;
-	border-top: 2px solid var(--primary);
-	min-height: 226px;
-	border-bottom: 2px solid var(--secondary);
-}
-
-.ss-panel > .sections > .sidebar {
-	width: 30%;
-	height: auto;
-	display: block;
-	flex: none;
-	border-right: 2px solid var(--secondary);
-}
-
-.ss-panel > .sections > .sidebar > .section {
-	height: var(--control-height);
-	line-height: var(--control-height);
-	text-align: center;
-	border-bottom: 2px solid var(--secondary);
-}
-
-.ss-panel > .sections > .sidebar > .section:hover {
-	background: #666;
-}
-
-.ss-panel > .sections > .sidebar > .section:last-of-type {
-	border-bottom: none;
-}
-
-.ss-panel > .sections > .section {
-	display: flex;
-	flex-direction: column;
-	width: 100%;
-	height: 100%;
-}
-
-.ss-panel > .sections > .section > .control {
-	min-height: var(--control-height);
-	border-bottom: 2px solid var(--secondary);
-	display: flex;
-	flex-direction: row;
-}
-
-.ss-panel > .sections > .section > .control:last-of-type {
-	border-bottom: none;
-}
-
-.ss-panel > .sections > .section > .control > .toggle {
-	width: var(--control-height);
-	text-align: center;
-	line-height: var(--control-height) !important;
-}
-
-.ss-panel > .sections > .section > .control > .toggle:hover {
-	background: #333;
-	filter: brightness(125%);
-}
-
-.ss-panel > .sections > .section > .control > .toggle.true {
-	background: var(--true);
-}
-
-.ss-panel > .sections > .section > .control > .toggle.false {
-	background: var(--false);
-}
-
-.control-textbox {
-	height: 28px;
-	display: block;
-	font: 14px Inconsolata, monospace;
-	padding: 0px .75rem 0px 0px;
-	text-align: right;
-	border: 1px solid #2B4194;
-	margin: auto 3px;
-	color: black;
-}
-
-.control-textbox:focus {
-	box-shadow: 0px 0px 0px 3px #037;
-}
-
-.control-label {
-	flex: 1 1 0;
-	padding-left: 15px;
-	line-height: var(--control-height) !important;
-	border-left: 2px solid var(--secondary);
-}
-
-.control-slider {
-	flex: 1 1 0;
-	height: 28px;
-	cursor: w-resize;
-	background: #333;
-	margin: auto 3px;
-}
-
-.control-slider:hover {
-	background: #333
-}
-
-.control-slider-bg {
-	background: #2ad;
-	height: 100%
-}
-
-.control-slider:hover .control-slider-bg {
-	background: #4ad
-}
-
-.control-slider::after {
-	position: relative;
-	height: 100%;
-	text-align: center;
-	display: block;
-	line-height: 28px !important;
-	top: -28px;
-	content: attr(data-value)
-}
-`;
+exports.css = require('./ui.css');
 
 exports.init = class {
 	char_ins(str = ''){
-		/*if(!this.css_rng)*/return str;
-		
-		var output = '';
-		
-		(str + '').split(' ').forEach((word, word_index) => (word.split('').forEach((chr, chr_index) => output += (!chr_index || chr_index == word.length) ? '<s class="' + exports.rnds.chr + '">&#' + chr.charCodeAt() + '</s>' : '<s class="' + exports.rnds.chr + '">&#8203;<s class="' + exports.rnds.chr1 + '"></s>&#' + chr.charCodeAt() + '</s>'), output += word_index != (str + '').split(' ').length - 1 ? ' ' : ''));
-		
-		return output
+		return str;
 	}
 	css_class(classn){
-		return /* this.css_rng ? classn.toString().split(' ').map(cl => exports.rnds['.' + cl]) : */ classn;
+		return classn;
 	}
 	add_ele(node_name, parent, attributes){
 		if(node_name == 'div')node_name = this.div;
@@ -396,15 +220,13 @@ exports.init = class {
 		});
 	}
 	constructor(data){
-		/*this.css_rng = true;*/
-		this.div = /*this.css_rng ? exports.rnds.div + '-' + exports.rnds.div1 :*/ 'div';
-		
 		this.data = data;
 		this.pos = { x: 0, y: 0 };
 		this.tabs = [];
 		this.inputs = {};
 		this.keybinds = [];
 		this.control_updates = [];
+		this.div = 'div';
 		
 		this.data.config.load().then(() => {
 			// clear all inputs when window is not focused
@@ -456,9 +278,20 @@ exports.init = class {
 				unicodeRange: 'U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD',
 			}).load().then(font => document.fonts.add(font));
 			
-			this.add_ele('link', document.head, { rel: 'stylesheet', href: URL.createObjectURL(new Blob([ `.${exports.rnds.chr}{white-space:nowrap;text-decoration: none}.${exports.rnds.chr1}{display:none;font-size:0px}${this.div}{display:block}` + exports.css.replace(/\.((?:(?!\[|\d|:|,|\.)\S)+)/g, (m, cl) => '.' + this.css_class(cl)) ], { type: 'text/css' })) });
+			/*
+			`.${exports.rnds.chr}{white-space:nowrap;text-decoration: none}.${exports.rnds.chr1}{display:none;font-size:0px}${this.div}{display:block}`
 			
-			/*if(this.css_rng)customElements.define(this.div, class extends HTMLDivElement {}, { extends: 'div' });*/
+			if(this.css_rng)customElements.define(this.div, class extends HTMLDivElement {}, { extends: 'div' });
+			
+			this.css_rng = true;
+			this.div = this.css_rng ? exports.rnds.div + '-' + exports.rnds.div1 : 'div';
+			
+			css_class(classn){ this.css_rng ? classn.toString().split(' ').map(cl => exports.rnds['.' + cl]) : classn;
+			
+			char_ins(str = ''){ var output = ''; (str + '').split(' ').forEach((word, word_index) => (word.split('').forEach((chr, chr_index) => output += (!chr_index || chr_index == word.length) ? '<s class="' + exports.rnds.chr + '">&#' + chr.charCodeAt() + '</s>' : '<s class="' + exports.rnds.chr + '">&#8203;<s class="' + exports.rnds.chr1 + '"></s>&#' + chr.charCodeAt() + '</s>'), output += word_index != (str + '').split(' ').length - 1 ? ' ' : '')); return output }
+			*/
+			
+			this.add_ele('link', document.head, { rel: 'stylesheet', href: URL.createObjectURL(new Blob([ exports.css.replace(/\.((?:(?!\[|\d|:|,|\.)\S)+)/g, (m, cl) => '.' + this.css_class(cl)) ], { type: 'text/css' })) });
 			
 			this.panel = this.add_ele('div', document.documentElement, { className: this.css_class('ss-panel') });
 			

@@ -310,13 +310,12 @@ cheat.ui = new (require('./ui.js').init)({
 	footer: 'Press [F1] or [C] to toggle',
 	toggle: ['KeyC', 'F1'],
 	config: {
-		key: 'krk_custcSops',
 		async save(){
 			return typeof GM_setValue != 'undefined'
 				? await GM_setValue('config', JSON.stringify(cheat.config))
 				: port ?
 					port.send('config_save', cheat.config)
-					: localStorage.setItem(this.key, JSON.stringify(cheat.config)) + console.warn('Using localStorage, not userscript or extension?');
+					: localStorage.setItem('krk_custcSops', JSON.stringify(cheat.config)) + console.warn('Using localStorage, not userscript or extension?');
 		},
 		async load(){
 			if(typeof GM_getValue != 'undefined')return cheat.assign_deep(cheat.config, JSON.parse(await GM_getValue('config') || '{}'));
@@ -328,7 +327,7 @@ cheat.ui = new (require('./ui.js').init)({
 				return await new Promise((resolve, reject) => port.once(id, config => resolve(cheat.assign_deep(cheat.config,  config))));
 			}else{
 				console.warn('Using localStorage, not userscript or extension?');
-				return cheat.assign_deep(cheat.config, JSON.parse(localStorage.getItem(this.key) || '{}'));
+				return cheat.assign_deep(cheat.config, JSON.parse(localStorage.getItem('krk_custcSops') || '{}'));
 			}
 		},
 	},
