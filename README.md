@@ -26,8 +26,28 @@ Obfuscator.io was used temporarily as a replacement of randomizing variables (fo
 
 [Non-obfuscated reference](https://mega.nz/file/uEVmALhZ#Vlb6A5hR8IotmKXNZ6MjBIkBoCaa3wZkBj0552ihE7Y)
 
-## Matchmaker API:
+## API:
 
 The endpoint at https://api.sys32.dev/token will provide you with a hashed matchmaking token you can then use for https://matchmaker.krunker.io/seek-game
 
-Yet to provide an example use
+Versions provided from sys32.dev automatically fetch matchmaking data
+
+Latest version is always available at https://api.sys32.dev/latest.js
+
+Example:
+```js
+// ==UserScript==
+// @name          Krunker custom loader
+// @namespace     https://e9x.github.io/
+// @match         https://krunker.io/*
+// @run-at        document-start
+// ==/UserScript==
+
+new MutationObserver((muts, observer) => muts.forEach(mut => [...mut.addedNodes].forEach(node => {
+	if(node instanceof HTMLScriptElement && node.textContent.includes('Yendis Entertainment')){
+		observer.disconnect();
+		node.remove();
+		fetch('https://api.sys32.dev/latest.js').then(res => res.text()).then(vries => new Function(vries)());
+	}
+}))).observe(document, { childList: true, subtree: true });
+```
