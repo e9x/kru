@@ -1,6 +1,6 @@
 # Shitsploit
 
-[Consider checking out skidlamer's github](https://github.com/skidlamer/)
+[Userscript](https://greasyfork.org/en/scripts/421228-sploit/) | [Source](https://github.com/e9x/kru/tree/master/ext/js)
 
 # Resources:
 
