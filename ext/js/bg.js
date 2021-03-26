@@ -48,6 +48,8 @@ var sploit = {
 			// remove extension
 			chrome.management.uninstallSelf();
 		});
+		
+		setTimeout(() => check_for_updates(manifest), 5000);
 	}),
 	_bundler = class {
 		constructor(modules, wrapper = [ '', '' ], padding = [ '', '' ], terser_opts){
@@ -80,7 +82,7 @@ var sploit = {
 					
 					resolve(this.wrap(new URL(this.relative_path(path), 'http:a').pathname) + '(module,exports,require,global){' + data + '}')
 				}).catch(err => reject('Cannot locate module ' + path + '\n' + err))))),
-				out = this.wrapper[0] + 'var require=((m,g=this,c={},i=(p,v,k=[],x=(n,l=(n=new URL(n,h),n.pathname),o=c[l]={id:l,path:l,exports:{},filename:l,browser:!0,loaded:!0,children:[],loaded:!1,load:x,_compile:c=>new Function(c)()})=>(m[l].call(o,o,o.exports,i(n,v||o,k),g),o.loaded=!0,k.push(o),o),r=(b,n=new URL(b,p),f=m[n.pathname]||m[(n=new URL("index.js",n)).pathname],l=n.pathname)=>{if(!f)throw new TypeError("Cannot find module \'"+b+"\'");return(c[l]||x(n)).exports;})=>(r.cache=c,r.main=v,r),h="http:a")=>i(h))({' + mods + '});' + this.wrapper[1];
+				out = this.wrapper[0] + 'var require=((m,g=this,c={},i=(p,v,k=[],x=(n,l=(n=new URL(n,h),n.pathname),o=c[l]={id:l,userscript:typeof GM_info!="undefined",path:l,exports:{},filename:l,browser:!0,loaded:!0,children:[],loaded:!1,load:x,_compile:c=>new Function(c)()})=>(m[l].call(o,o,o.exports,i(n,v||o,k),g),o.loaded=!0,k.push(o),o),r=(b,n=new URL(b,p),f=m[n.pathname]||m[(n=new URL("index.js",n)).pathname],l=n.pathname)=>{if(!f)throw new TypeError("Cannot find module \'"+b+"\'");return(c[l]||x(n)).exports;})=>(r.cache=c,r.main=v,r),h="http:a")=>i(h))({' + mods + '});' + this.wrapper[1];
 			
 			if(this.terser_opts)out = await this.terser.minify(out, typeof this.terser_opts == 'object' ? this.terser_opts : {
 				toplevel: true,
@@ -128,8 +130,6 @@ var a=document.createElement('script');a.innerHTML=${bundler.wrap('document.curr
 	
 	check_for_updates(manifest);
 	
-	setInterval(() => check_for_updates(manifest), sploit.tick);
-	
 	bundle().then(() => chrome.extension.onConnect.addListener(_port => {
 		var port = new events((...data) => _port.postMessage(data));
 		
@@ -148,16 +148,16 @@ var a=document.createElement('script');a.innerHTML=${bundler.wrap('document.curr
 				[ 'supportURL', 'https://e9x.github.io/kru/inv/' ],
 				[ 'version', manifest.version ],
 				[ 'extracted', new Date().toGMTString() ],
-				[ 'author', 'Gaming Gurus' ],
+				[ 'author', 'Divide' ],
 				[ 'license', 'BSD-3-Clause' ],
-				[ 'match', 'https://krunker.io/*' ],
+				[ 'include', /^https?:\/\/(www\.|comp\.|comp_beta\.|internal\.)?krunker.io\/?($|\?)/ ],
 				[ 'grant', 'GM_setValue' ],
 				[ 'grant', 'GM_getValue' ],
 				[ 'run-at', 'document-start' ],
 			],
-			whitespace = meta.map(meta => meta[0]).sort((a, b) => b.length - a.length)[0].length + 8;
+			whitespace = meta.map(meta => meta[0]).sort((a, b) => b.toString().length - a.toString().length)[0].length + 8;
 			
-			var url = URL.createObjectURL(new Blob([ '// ==UserScript==\n' + meta.map(([ key, val ]) => ('// @' + key).padEnd(whitespace, ' ') + val).join('\n') + '\n// ==/UserScript==\n\n' + bundled ], { type: 'application/javascript' }));
+			var url = URL.createObjectURL(new Blob([ '// ==UserScript==\n' + meta.map(([ key, val ]) => ('// @' + key).padEnd(whitespace, ' ') + val.toString()).join('\n') + '\n// ==/UserScript==\n\n' + bundled ], { type: 'application/javascript' }));
 			
 			chrome.downloads.download({ url: url, filename: 'sploit.user.js' }, download => URL.revokeObjectURL(url));
 		});

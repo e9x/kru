@@ -597,3 +597,21 @@ XMLHttpRequest.prototype.open = new Proxy(XMLHttpRequest.prototype.open, {
 });
 
 if(typeof localStorage.getItem('krk_custcSops') == 'string' && localStorage.getItem('krk_custcSops').startsWith('{'))localStorage.removeItem('krk_custcSops');
+
+if(module.userscript)var update_interval = setInterval(async () => {
+	var new_manifest = await fetch('https://e9x.github.io/kru/ext/manifest.json').then(res => res.text()),
+		current_ver = +(manifest.version.replace(/\D/g, '')),
+		latest_ver = +(new_manifest.version.replace(/\D/g, ''));
+	
+	// latest or newer
+	if(current_ver >= latest_ver)return;
+	
+	cheat.update_prompted = true;
+	
+	clearInterval(update_interval);
+	
+	// outdated
+	if(!confirm('Sploit is outdated (' + new_manifest.version + ' available), do you wish to update?'))return;
+	
+	window.open('https://greasyfork.org/en/scripts/421228-sploit');
+}, 3000);
