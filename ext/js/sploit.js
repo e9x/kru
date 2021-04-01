@@ -80,7 +80,7 @@ var add = Symbol(),
 			['maxHealth', /\.regenDelay,this\.(\w+)=\w+\.mode&&\w+\.mode\.\1/, 1],
 			['yVel', /\w+\.(\w+)&&\(\w+\.y\+=\w+\.\1\*/, 1],
 			['mouseDownR', /this\.(\w+)=0,this\.keys=/, 1], 
-			['recoilAnimY', /this\.reward=0,this\.\w+=0,this\.(\w+)=0,this\.\w+=0,this\.\w+=1,this\.slideLegV/, 1],
+			['recoilAnimY', /\.\w+=0,this\.(\w+)=0,this\.\w+=0,this\.\w+=1,this\.slide/, 1],
 			['procInputs', /this\.(\w+)=function\(\w+,\w+,\w+,\w+\){this\.recon/, 1],
 		],
 		patches: [
