@@ -599,7 +599,7 @@ XMLHttpRequest.prototype.open = new Proxy(XMLHttpRequest.prototype.open, {
 if(typeof localStorage.getItem('krk_custcSops') == 'string' && localStorage.getItem('krk_custcSops').startsWith('{'))localStorage.removeItem('krk_custcSops');
 
 if(module.userscript)var update_interval = setInterval(async () => {
-	var new_manifest = await fetch('https://e9x.github.io/kru/ext/manifest.json').then(res => res.json()),
+	var new_manifest = await fetch('https://e9x.github.io/kru/ext/manifest.json?' + Date.now()).then(res => res.json()),
 		current_ver = +(manifest.version.replace(/\D/g, '')),
 		latest_ver = +(new_manifest.version.replace(/\D/g, ''));
 	
