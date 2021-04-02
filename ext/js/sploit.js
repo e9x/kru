@@ -59,7 +59,6 @@ var add = Symbol(),
 				},
 			},
 			game: {
-				proxy: false,
 				bhop: 'off',
 				wireframe: false,
 				auto_respawn: false,
@@ -251,8 +250,7 @@ var add = Symbol(),
 			// automatic stuff
 			
 			if(cheat.config.game.auto_respawn){
-				if(cheat.has_instruct('connection banned'))clearInterval(cheat.process_interval), cheat.config.game.proxy = true, cheat.ui.data.config.save(), location.assign('https://krunker.io');
-				else if(cheat.has_instruct('game is full'))clearInterval(cheat.process_interval), location.assign('https://krunker.io');
+				if(cheat.has_instruct('game is full'))clearInterval(cheat.process_interval), location.assign('https://krunker.io');
 				else if(cheat.has_instruct('disconnected'))clearInterval(cheat.process_interval), location.assign('https://krunker.io');
 				else if(cheat.has_instruct('click to play') && (!cheat.player || !cheat.player[cheat.add] || !cheat.player[cheat.add].active || !cheat.player[cheat.add].health))cheat.controls.toggle(true);
 			}
@@ -432,12 +430,6 @@ cheat.ui = new (require('./ui.js').init)({
 			get: _ => cheat.config.game.auto_respawn,
 			set: v => cheat.config.game.auto_respawn = v,
 			key: 'unset',
-		},{
-			name: 'IPBan bypass',
-			type: 'bool',
-			get: _ => cheat.config.game.proxy,
-			set: v => cheat.config.game.proxy = v,
-			key: 'unset',
 		}],
 	},{
 		name: 'Aim',
@@ -537,8 +529,7 @@ new MutationObserver((muts, observer) => muts.forEach(mut => [...mut.addedNodes]
 		
 		new Function('ssd', 'WebSocket', vries)(cheat.storage, class extends WebSocket {
 			constructor(url, proto){
-				if(cheat.config.game.proxy)super('wss://krunker.space/c5580cf2af/ws', encodeURIComponent(btoa(url)));
-				else super(url, proto);
+				super(url, proto);
 				
 				this.addEventListener('message', event => {
 					var decoded = msgpack.decode(new Uint8Array(event.data)), start_client;
