@@ -1,7 +1,7 @@
 # Shitsploit
 
-||||
-| --- | --- |
+|||||
+| --- | --- | --- |
 | [Userscript](https://greasyfork.org/en/scripts/421228-sploit/) | [Discord](inv) | [Build quickstart](#building) |
 
 # Resources:
