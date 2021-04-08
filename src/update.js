@@ -1,4 +1,4 @@
-var latest = 'https://raw.githubusercontent.com/e9x/kru/master/sploit.user.js';
+var latest_script = 'https://raw.githubusercontent.com/e9x/kru/master/sploit.user.js';
 
 var parse_headers = script => {
 	var out = {};
@@ -10,7 +10,7 @@ var parse_headers = script => {
 
 var update_interval = setInterval(async () => {
 	var current = new Date(parse_headers(GM_info.scriptSource).extracted).getTime(),
-		latest = new Date(parse_headers((await fetch(latest_script).then(res => res.text()))).extracted).getTime();
+		latest = new Date(parse_headers(await fetch(latest_script).then(res => res.text())).extracted).getTime();
 	
 	if(current >= latest)return;
 	
