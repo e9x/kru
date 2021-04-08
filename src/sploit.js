@@ -1,4 +1,10 @@
 'use strict';
+
+if(typeof GM_getValue == 'undefined'){
+	var GM_getValue = key => localStorage.getItem('ss' + key),
+		GM_setValue = (key, val) => localStorage.setItem('ss' + key, val);
+}
+
 var add = Symbol(),
 	events = require('./events.js'),
 	spackage = require('../package.json'),

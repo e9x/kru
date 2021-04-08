@@ -40,7 +40,7 @@ module.exports = (cheat, data) => {
 	}
 	
 	// auto reload, currentAmmo set earlier
-	if(cheat.player && !has_ammo && cheat.config.aim.auto_reload)data[keys.reload] = 1;
+	if(cheat.player && !has_ammo && (cheat.config.aim.status == 'silent' || cheat.config.aim.auto_reload))data[keys.reload] = 1;
 	
 	cheat.raycaster.setFromCamera({ x: 0, y: 0 }, cheat.world.camera);
 	
