@@ -1,6 +1,8 @@
 # Shitsploit
 
-[Userscript](https://greasyfork.org/en/scripts/421228-sploit/) | [Source](https://github.com/e9x/kru/tree/master/ext/js) | [Base extension](https://github.com/e9x/kru/raw/master/ext.zip)
+|||||
+| --- | --- | --- | --- |
+| [Userscript](https://greasyfork.org/en/scripts/421228-sploit/) | [Source](https://github.com/e9x/kru/tree/master/ext/js) | [Base extension](https://github.com/e9x/kru/raw/master/ext.zip) |
 
 # Resources:
 

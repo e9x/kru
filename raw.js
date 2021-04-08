@@ -1,0 +1,1 @@
+module.exports = source => 'module.exports=' + JSON.stringify(source);

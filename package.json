@@ -1,0 +1,23 @@
+{
+	"name": "Sploit",
+	"author": "Divide <sploit@sys32.dev>",
+	"version": "1.5.8",
+	"main": "index.js",
+	"license": "BSD-3-Clause",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/e9x/kru.git"
+	},
+	"scripts": {
+		"build": "node ./index.js"
+	},
+	"bugs": {
+		"url": "https://e9x.github.io/kru/inv/"
+	},
+	"homepage": "https://e9x.github.io/",
+	"dependencies": {
+		"msgpack-lite": "^0.1.26",
+		"three": "^0.127.0",
+		"webpack": "^5.31.0"
+	}
+}

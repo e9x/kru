@@ -1,25 +1,25 @@
-var smooth = (cheat, target) => {
-	var aj = 17,
-		turn = 0.0022,
-		speed = (50 - cheat.config.aim.smooth.value) / 5000,
-		ang = cheat.util.getAngleDst(cheat.controls.object.rotation.y, target.yD);
-	
-	cheat.controls.object.rotation.y += ang * aj * turn, ang = cheat.util.getAngleDst(cheat.controls[cheat.vars.pchObjc].rotation.x, target.xD), 
-	
-	cheat.controls[cheat.vars.pchObjc].rotation.x += ang * aj * turn, ang = cheat.util.getD3D(cheat.controls.object.position.x, cheat.controls.object.position.y, cheat.controls.object.position.z, target.x, target.y, target.z) * aj * speed;
-	
-	var al = cheat.util.getDir(cheat.controls.object.position.z, cheat.controls.object.position.x, target.z, target.x),
-		am = cheat.util.getXDire(cheat.controls.object.position.x, cheat.controls.object.position.y, cheat.controls.object.position.z, target.x, target.y, target.z);
-	
-	cheat.controls.object.position.x -= ang * Math.sin(al) * Math.cos(am), cheat.controls.object.position.y += ang * Math.sin(am), 
-	cheat.controls.object.position.z -= ang * Math.cos(al) * Math.cos(am), cheat.world.updateFrustum();
-};
+var keys = {frame: 0, delta: 1, xdir: 2, ydir: 3, moveDir: 4, shoot: 5, scope: 6, jump: 7, reload: 8, crouch: 9, weaponScroll: 10, weaponSwap: 11, moveLock: 12},
+	smooth = (cheat, target) => {
+		var aj = 17,
+			turn = 0.0022,
+			speed = (50 - cheat.config.aim.smooth.value) / 5000,
+			ang = cheat.util.getAngleDst(cheat.controls.object.rotation.y, target.yD);
+		
+		cheat.controls.object.rotation.y += ang * aj * turn, ang = cheat.util.getAngleDst(cheat.controls[cheat.vars.pchObjc].rotation.x, target.xD), 
+		
+		cheat.controls[cheat.vars.pchObjc].rotation.x += ang * aj * turn, ang = cheat.util.getD3D(cheat.controls.object.position.x, cheat.controls.object.position.y, cheat.controls.object.position.z, target.x, target.y, target.z) * aj * speed;
+		
+		var al = cheat.util.getDir(cheat.controls.object.position.z, cheat.controls.object.position.x, target.z, target.x),
+			am = cheat.util.getXDire(cheat.controls.object.position.x, cheat.controls.object.position.y, cheat.controls.object.position.z, target.x, target.y, target.z);
+		
+		cheat.controls.object.position.x -= ang * Math.sin(al) * Math.cos(am), cheat.controls.object.position.y += ang * Math.sin(am), 
+		cheat.controls.object.position.z -= ang * Math.cos(al) * Math.cos(am), cheat.world.updateFrustum();
+	};
 
 module.exports = (cheat, data) => {
-	var keys = {frame: 0, delta: 1, xdir: 2, ydir: 3, moveDir: 4, shoot: 5, scope: 6, jump: 7, reload: 8, crouch: 9, weaponScroll: 10, weaponSwap: 11, moveLock: 12},
-		move_dirs = { idle: -1, forward: 1, back: 5, left: 7, right: 3 },
-		target = cheat.target = cheat.game.players.list.filter(ent => ent[cheat.add] && !ent[cheat.add].is_you && ent[cheat.add].canSee && ent[cheat.add].active && ent[cheat.add].enemy && (cheat.config.aim.frustrum_check ? ent[cheat.add].frustum : true)).sort(cheat.sorts.norm)[0],
-		pm = cheat.game.players.list.filter(ent => ent && ent[cheat.add] && ent[cheat.add].active && ent[cheat.add].enemy && ent[cheat.add].canSee).map(ent => ent[cheat.add].obj);
+	var target = cheat.target = cheat.game.players.list.filter(ent => ent[cheat.add] && !ent[cheat.add].is_you && ent[cheat.add].canSee && ent[cheat.add].active && ent[cheat.add].enemy && (cheat.config.aim.frustrum_check ? ent[cheat.add].frustum : true)).sort(cheat.sorts.norm)[0],
+		pm = cheat.game.players.list.filter(ent => ent && ent[cheat.add] && ent[cheat.add].active && ent[cheat.add].enemy && ent[cheat.add].canSee).map(ent => ent[cheat.add].obj),
+		has_ammo = cheat.player[cheat.vars.ammos][cheat.player[cheat.vars.weaponIndex]];
 	
 	// arrow controls
 	cheat.controls[cheat.vars.pchObjc].rotation.x -= cheat.ui.inputs.ArrowDown ? 0.006 : 0;
@@ -40,11 +40,11 @@ module.exports = (cheat, data) => {
 	}
 	
 	// auto reload, currentAmmo set earlier
-	if(cheat.player && !cheat.player[cheat.vars.ammos][cheat.player[cheat.vars.weaponIndex]] && cheat.config.aim.auto_reload)data[keys.reload] = 1;
+	if(cheat.player && !has_ammo && cheat.config.aim.auto_reload)data[keys.reload] = 1;
 	
 	cheat.raycaster.setFromCamera({ x: 0, y: 0 }, cheat.world.camera);
 	
-	if(cheat.config.aim.status != 'off' && cheat.target && cheat.player.health && !data[keys.reload]){
+	if(has_ammo && cheat.config.aim.status != 'off' && cheat.target && cheat.player.health && !data[keys.reload]){
 		var yVal = target.y + (target[cheat.syms.isAI] ? -(target.dat.mSize / 2) : (target.jumpBobY * 0.072) + 1 - target[cheat.add].crouch * 3),
 			yDire = cheat.util.getDir(cheat.player[cheat.add].pos.z, cheat.player[cheat.add].pos.x, target.z, target.x),
 			xDire = cheat.util.getXDire(cheat.player[cheat.add].pos.x, cheat.player[cheat.add].pos.y, cheat.player[cheat.add].pos.z, target.x, yVal, target.z),
@@ -61,7 +61,29 @@ module.exports = (cheat, data) => {
 		
 		var do_aim = cheat.config.aim.status == 'silent' && !data[keys.reload] || cheat.config.aim.status == 'assist' && (cheat.controls[cheat.vars.mouseDownR] || cheat.controls.keys[cheat.controls.binds.aimKey.val]);
 		
+		if(cheat.player[cheat.add].shot){
+			data[keys.shoot] = data[keys.scope] = 0;
+			cheat.player.inspecting = false;
+			cheat.player.inspectX = 0;
+		}
+		
 		switch(cheat.config.aim.status){
+			case'hidden':
+				
+				// wip
+				
+				console.log(cheat.player);
+				
+				if(cheat.player[cheat.add].shot && !cheat.weapon_aimed){
+					data[keys.xdir] = rot.x * 1000;
+					data[keys.ydir] = rot.y * 1000;
+					
+					cheat.weapon_aimed = true;
+					
+					setTimeout(() => cheat.weapon_aimed = false, cheat.player.weapon.rate);
+				}
+				
+				break;
 			case'assist':
 				
 				if(do_aim && cheat.config.aim.smooth.status)smooth(cheat, {

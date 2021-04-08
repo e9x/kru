@@ -1,8 +1,8 @@
 'use strict';
 var add = Symbol(),
 	events = require('./events.js'),
-	msgpack = require('./msgpack.js'),
-	manifest = require('../manifest.json'),
+	spackage = require('../package.json'),
+	msgpack = require('msgpack-lite'),
 	cheat = cheat = {
 		add: add,
 		assign_deep: (e,...a)=>(a.forEach(a=>Object.keys(a).forEach(r=>typeof a[r]=='object'&&!Array.isArray(a[r])&&r in e?cheat.assign_deep(e[r],a[r]):e[r]=a[r])),e),
@@ -32,7 +32,7 @@ var add = Symbol(),
 				return target[prop];
 			},
 		}),
-		three: require('./three.js'),
+		three: require('three'),
 		log(...args){
 			console.log('%cShitsploit', 'background: #27F; color: white; border-radius: 3px; padding: 3px 2px; font-weight: 600', ...args);
 			
@@ -124,7 +124,11 @@ var add = Symbol(),
 				if(cheat.player && cheat.player[cheat.vars.procInputs] && !cheat.player[cheat.syms.procInputs]){
 					cheat.player[cheat.syms.procInputs] = cheat.player[cheat.vars.procInputs];
 					
-					cheat.player[cheat.vars.procInputs] = cheat.procInputs;
+					cheat.player[cheat.vars.procInputs] = (data, ...args) => {
+						if(cheat.controls && cheat.player && cheat.player[add] && cheat.player.weapon)cheat.input(cheat, data);
+						
+						return cheat.player[cheat.syms.procInputs](data, ...args);
+					};
 				}
 				
 				cheat.visual(cheat);
@@ -149,13 +153,6 @@ var add = Symbol(),
 			norm(ent_1, ent_2){
 				return cheat.sorts[cheat.config.aim.target_sorting || 'dist2d'](ent_1, ent_2) * (ent_1[add].frustum == ent_2[add].frustum ? 1 : 0.5);
 			},
-		},
-		procInputs(data, ...args){
-			if(!cheat.controls || !cheat.player || !cheat.player[add])return;
-			
-			cheat.input(cheat, data);
-			
-			return this[cheat.syms.procInputs](data, ...args);
 		},
 		ent_pos: {
 			distanceTo(p2){return Math.hypot(this.x - p2.x, this.y - p2.y, this.z - p2.z)},
@@ -255,75 +252,41 @@ var add = Symbol(),
 				else if(cheat.has_instruct('click to play') && (!cheat.player || !cheat.player[cheat.add] || !cheat.player[cheat.add].active || !cheat.player[cheat.add].health))cheat.controls.toggle(true);
 			}
 		}, 100),
-		is_ad(url){
-			url = new URL(url, location);
-			
-			var is_host = host => url.host == host || url.host.endsWith(host);
-				
-			return
-				[
-					'googlesyndication.com',
-					'googletagmanager.com',
-					'adinplay.com',
-					'pub.network',
-					'google-analytics.com',
-					'doubleclick.net',
-					'casalemedia.com',
-					'rubiconproject.com',
-					'googleadservices.com',
-				].some(is_host) ||
-				is_host('paypal.com') && url.pathname.startsWith('/xoplatform/logger/api/logger') ||
-				is_host('paypal.com') && url.pathname.startsWith('/tagmanager/pptm.js');
-		},
-		parse_ad(node){
-			// text nodes etc
-			if(!(node instanceof Element))return;
-			
-			['src', 'href'].forEach(attr => {
-				if(!node.hasAttribute(attr))return;
-				
-				if(cheat.is_ad(node.getAttribute(attr)))node.removeAttribute(attr), node.remove();
-			});
-		},
 	};
-
-cheat.process();
 
 cheat.util.cheat = cheat;
 cheat.raycaster = new cheat.three.Raycaster();
+cheat.process();
 
-var port;
+/*
+port_client.on('config_save', config => {
+	if(module.userscript){
+		GM_setValue('config', JSON.stringify(cheat.config));
+	}else{
+		console.warn('Using localStorage, not userscript or extension?');
+		localStorage.setItem('krk_custcSops', JSON.stringify(cheat.config));
+	}
+});
 
-if(typeof secret != 'undefined'){
-	port = new events((...data) => document.dispatchEvent(new CustomEvent(secret + 'outgoing', { detail: JSON.stringify(data) })));
-	
-	document.addEventListener(secret + 'incoming', event => port.emit(...JSON.parse(event.detail)));
-};
+port_client.on('config_load', async id => {
+	if(module.userscript){
+		port.emit(id, cheat.assign_deep(cheat.config, JSON.parse(await GM_getValue('config') || '{}')));
+	}else{
+		console.warn('Using localStorage, not userscript or extension?');
+		return cheat.assign_deep(cheat.config, JSON.parse(localStorage.getItem('krk_custcSops') || '{}'));
+	}
+});
+*/
 
 cheat.ui = new (require('./ui.js').init)({
+	version: spackage.version,
 	title: 'Shitsploit',
 	footer: 'Press [F1] or [C] to toggle',
 	toggle: ['KeyC', 'F1'],
 	config: {
-		async save(){
-			return typeof GM_setValue != 'undefined'
-				? await GM_setValue('config', JSON.stringify(cheat.config))
-				: port ?
-					port.send('config_save', cheat.config)
-					: localStorage.setItem('krk_custcSops', JSON.stringify(cheat.config)) + console.warn('Using localStorage, not userscript or extension?');
-		},
+		save: () => GM_setValue('config', JSON.stringify(cheat.config)),
 		async load(){
-			if(typeof GM_getValue != 'undefined')return cheat.assign_deep(cheat.config, JSON.parse(await GM_getValue('config') || '{}'));
-			else if(port){
-				var id = Math.random();
-				
-				port.send('config_load', id);
-				
-				return await new Promise((resolve, reject) => port.once(id, config => resolve(cheat.assign_deep(cheat.config,  config))));
-			}else{
-				console.warn('Using localStorage, not userscript or extension?');
-				return cheat.assign_deep(cheat.config, JSON.parse(localStorage.getItem('krk_custcSops') || '{}'));
-			}
+			return cheat.assign_deep(cheat.config, JSON.parse(await GM_getValue('config') || '{}'));
 		},
 	},
 	values: [{
@@ -333,63 +296,40 @@ cheat.ui = new (require('./ui.js').init)({
 			type: 'bool_rot',
 			get: _ => cheat.config.aim.status,
 			set: v => cheat.config.aim.status = v,
-			vals: [{
-				val: 'off',
-				display: 'Off',
-			},{
-				val: 'triggerbot',
-				display: 'Triggerbot',
-			},{
-				val: 'assist',
-				display: 'Assist',
-			},{
-				val: 'silent',
-				display: 'Silent',
-			}],
+			vals: [
+				[ 'off', 'Off' ],
+				[ 'triggerbot', 'Triggerbot' ],
+				[ 'assist', 'Assist' ],
+				[ 'silent', 'Silent' ],
+				[ 'hidden', 'Hidden' ],
+			],
 			key: 3,
 		},{
 			name: 'Auto bhop',
 			type: 'bool_rot',
 			get: _ => cheat.config.game.bhop,
 			set: v => cheat.config.game.bhop = v,
-			vals: [{
-				val: 'off',
-				display: 'Off',
-			},{
-				val: 'keyjump',
-				display: 'Key jump',
-			},{
-				val: 'keyslide',
-				display: 'Key slide',
-			},{
-				val: 'autoslide',
-				display: 'Auto slide',
-			},{
-				val: 'autojump',
-				display: 'Auto jump',
-			}],
+			vals: [
+				[ 'off', 'Off' ],
+				[ 'keyjump', 'Key jump' ],
+				[ 'keyslide', 'Key slide' ],
+				[ 'autoslide', 'Auto slide' ],
+				[ 'off', 'Off' ],
+				[ 'autojump', 'Auto jump' ],
+			],
 			key: 4,
 		},{
 			name: 'ESP mode',
 			type: 'bool_rot',
 			get: _ => cheat.config.esp.status,
 			set: v => cheat.config.esp.status = v,
-			vals: [{
-				val: 'off',
-				display: 'Off',
-			},{
-				val: 'box',
-				display: 'Box',
-			},{
-				val: 'chams',
-				display: 'Chams',
-			},{
-				val: 'box_chams',
-				display: 'Box & chams',
-			},{
-				val: 'full',
-				display: 'Full',
-			}],
+			vals: [
+				[ 'off', 'Off' ],
+				[ 'box', 'Box' ],
+				[ 'chams', 'Chams' ],
+				[ 'box_chams', 'Box & chams' ],
+				[ 'full', 'Full' ],
+			],
 			key: 5,
 		},{
 			name: 'Tracers',
@@ -438,16 +378,11 @@ cheat.ui = new (require('./ui.js').init)({
 			type: 'bool_rot',
 			get: _ => cheat.config.game.target_sorting,
 			set: v => cheat.config.game.target_sorting = v,
-			vals: [{
-				val: 'dist2d',
-				display: 'Distance (2D)',
-			},{
-				val: 'dist3d',
-				display: 'Distance (3D)',
-			},{
-				val: 'hp',
-				display: 'Health',
-			}],
+			vals: [
+				[ 'dist2d', 'Distance (2D)' ],
+				[ 'dist3d', 'Distance (3D)' ],
+				[ 'hp', 'Health' ],
+			],
 			key: 'unset',
 		},{
 			name: 'Smoothness',
@@ -513,8 +448,6 @@ cheat.ui = new (require('./ui.js').init)({
 });
 
 new MutationObserver((muts, observer) => muts.forEach(mut => [...mut.addedNodes].forEach(node => {
-	cheat.parse_ad(node);
-	
 	if(!(node instanceof HTMLScriptElement) || !node.textContent.includes('Yendis Entertainment'))return;
 	
 	observer.disconnect();
@@ -570,39 +503,4 @@ new MutationObserver((muts, observer) => muts.forEach(mut => [...mut.addedNodes]
 	});
 }))).observe(document, { childList: true, subtree: true });
 
-new MutationObserver((muts, observer) => muts.forEach(mut => cheat.parse_ad(mut.target))).observe(document, { childList: true, subtree: true, attributeFilter: [ 'href', 'src' ] });
-
-window.fetch = new Proxy(window.fetch, {
-	apply(target, that, [ url, opts ]){
-		if(cheat.is_ad(url))return Promise.reject(new TypeError('Failed to fetch'));
-		
-		return Reflect.apply(target, that, [ url, opts ]);
-	}
-});
-
-XMLHttpRequest.prototype.open = new Proxy(XMLHttpRequest.prototype.open, {
-	apply(target, that, [ method, url, ...args ]){
-		if(cheat.is_ad(url))return that.dispatchEvent(new ProgressEvent('error'));
-		return Reflect.apply(target, that, [ method, url, ...args ]);
-	}
-});
-
-if(typeof localStorage.getItem('krk_custcSops') == 'string' && localStorage.getItem('krk_custcSops').startsWith('{'))localStorage.removeItem('krk_custcSops');
-
-if(module.userscript)var update_interval = setInterval(async () => {
-	var new_manifest = await fetch('https://e9x.github.io/kru/ext/manifest.json?' + Date.now()).then(res => res.json()),
-		current_ver = +(manifest.version.replace(/\D/g, '')),
-		latest_ver = +(new_manifest.version.replace(/\D/g, ''));
-	
-	// latest or newer
-	if(current_ver >= latest_ver)return;
-	
-	cheat.update_prompted = true;
-	
-	clearInterval(update_interval);
-	
-	// outdated
-	if(!confirm('Sploit is outdated (' + new_manifest.version + ' available), do you wish to update?'))return;
-	
-	window.open('https://greasyfork.org/en/scripts/421228-sploit');
-}, 3000);
+require('./update.js');

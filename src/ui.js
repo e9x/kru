@@ -1,7 +1,5 @@
 'use strict';
 
-var manifest = require('../manifest.json');
-
 exports.rnds = new Proxy({}, {
 	get(target, prop){
 		if(!target[prop])target[prop] = [...Array(16)].map(() => Math.random().toString(36)[2]).join('').replace(/(\d|\s)/, 'V').toLowerCase().substr(0, 6);
@@ -55,7 +53,7 @@ exports.init = class {
 				case'bool_rot':
 					control.aval = control.aval + 1
 					if(control.aval >= control.vals.length)control.aval = 0 // past length
-					control.set(control.vals[control.aval].val);
+					control.set(control.vals[control.aval][0]);
 					break
 				case'function':
 					control.get()();
@@ -84,7 +82,7 @@ exports.init = class {
 					control.button.className = this.css_class('toggle') + ' ' + this.css_class(!!control.get());
 					break;
 				case'bool_rot':
-					content_name.innerHTML = this.char_ins(control.name + ': ' + control.vals[control.aval].display);
+					content_name.innerHTML = this.char_ins(control.name + ': ' + control.vals[control.aval][1]);
 					break;
 				case'text-small':
 					content_name.style.border = 'none';
@@ -184,8 +182,8 @@ exports.init = class {
 				break
 			case'bool_rot':
 				
-				control.vals.forEach((entry, index) =>{ if(entry.val == control.get())control.aval = index })
-				if(!control.aval)control.aval = 0
+				control.aval = control.vals.findIndex(([ val ]) => val == control.get());
+				if(control.aval == -1)control.aval = 0;
 				
 				break
 		}
@@ -203,21 +201,15 @@ exports.init = class {
 			get interact(){ return control.interact; },
 		});
 	}
-	wait_for(check, timeout = 5000){
-		return new Promise((resolve, reject) => {
-			var interval = setInterval(() => {
-				var checked = check();
-				
-				if(checked)clearInterval(interval); else return;
-				
-				resolve(checked);
-				interval = null;
-			}, 15);
+	wait_for(check, interval){
+		return new Promise((resolve, reject) => interval = setInterval(() => {
+			var checked = check();
 			
-			setTimeout(() => {
-				if(interval)return clearInterval(interval), reject('timeout');
-			}, timeout);
-		});
+			if(checked)clearInterval(interval); else return;
+			
+			resolve(checked);
+			interval = null;
+		}, 15));
 	}
 	constructor(data){
 		this.data = data;
@@ -228,7 +220,7 @@ exports.init = class {
 		this.control_updates = [];
 		this.div = 'div';
 		
-		this.data.config.load().then(() => {
+		this.data.config.load().then(() => this.wait_for(() => document.head && document.documentElement)).then(() => {
 			// clear all inputs when window is not focused
 			window.addEventListener('blur', () => this.inputs= []);
 			
@@ -297,7 +289,7 @@ exports.init = class {
 			
 			this.title = this.add_ele('div', this.panel, { innerHTML: this.char_ins(data.title), className: this.css_class('title') });
 			
-			this.add_ele('div', this.title, { className: this.css_class('version'), innerHTML: this.char_ins('v' + manifest.version) });
+			this.add_ele('div', this.title, { className: this.css_class('version'), innerHTML: this.char_ins('v' + data.version) });
 			
 			this.title.addEventListener('mousedown', () => this.bar_pressed = true);
 			
