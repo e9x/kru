@@ -17,9 +17,9 @@ var fs = require('fs'),
 					[ 'extracted', new Date().toGMTString() ],
 					[ 'author', spackage.author ],
 					[ 'license', spackage.license ],
-					[ 'match', 'https://krunker.io' ],
-					[ 'match', 'https://comp.krunker.io' ],
-					[ 'match', 'https://internal.krunker.io' ], // 🤡
+					[ 'match', 'https://krunker.io/*' ],
+					[ 'match', 'https://comp.krunker.io/*' ],
+					[ 'match', 'https://internal.krunker.io/*' ], // 🤡
 					[ 'grant', 'GM_setValue' ],
 					[ 'grant', 'GM_getValue' ],
 					[ 'run-at', 'document-start' ],

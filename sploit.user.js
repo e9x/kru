@@ -3,12 +3,12 @@
 // @namespace     https://e9x.github.io/
 // @supportURL    https://e9x.github.io/kru/inv/
 // @version       1.5.8
-// @extracted     Thu, 08 Apr 2021 02:17:37 GMT
+// @extracted     Thu, 08 Apr 2021 02:21:23 GMT
 // @author        Divide <sploit@sys32.dev>
 // @license       BSD-3-Clause
-// @match         https://krunker.io
-// @match         https://comp.krunker.io
-// @match         https://internal.krunker.io
+// @match         https://krunker.io/*
+// @match         https://comp.krunker.io/*
+// @match         https://internal.krunker.io/*
 // @grant         GM_setValue
 // @grant         GM_getValue
 // @run-at        document-start
