@@ -16,7 +16,6 @@ var update_interval = setInterval(async () => {
 	
 	clearInterval(update_interval);
 	
-	if(!confirm('A new sploit version is available, do you wish to update?'))return ;
 	if(!confirm('A new sploit version is available, do you wish to update?'))return;
 	
 	window.open(latest);
