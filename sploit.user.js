@@ -1,19 +1,16 @@
 // ==UserScript==
 // @name          Sploit
+// @author        Divide <sploit@sys32.dev>
+// @source        https://github.com/e9x/kru/tree/master/src
+// @version       1.5.8
+// @license       BSD-3-Clause
 // @namespace     https://e9x.github.io/
 // @supportURL    https://e9x.github.io/kru/inv/
-// @version       1.5.8
-// @extracted     Thu, 08 Apr 2021 02:24:55 GMT
-// @author        Divide <sploit@sys32.dev>
-// @license       BSD-3-Clause
-// @match         https://krunker.io/*
-// @match         https://comp.krunker.io/*
-// @match         https://internal.krunker.io/*
-// @exclude       */social.html
+// @extracted     Thu, 08 Apr 2021 02:41:52 GMT
+// @include       /^https?:\/\/(internal\.|comp\.)?krunker\.io\/*?(index.html)?(\?|$)/
 // @grant         GM_setValue
 // @grant         GM_getValue
 // @run-at        document-start
-// @source        https://github.com/e9x/kru/tree/master/src
 // ==/UserScript==
 // For any concerns regarding minified code, you are encouraged to build from the source
 // For license information please see https://raw.githubusercontent.com/e9x/kru/master/sploit.user.js.LICENSE.txt

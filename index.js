@@ -9,23 +9,19 @@ var fs = require('fs'),
 		plugins: [ { apply: compiler => compiler.hooks.thisCompilation.tap('Replace', compilation => compilation.hooks.processAssets.tap({ name: 'Replace', stage: webpack.Compilation.PROCESS_ASSETS_STAGE_REPORT }, () => {
 			var file = compilation.getAsset('sploit.user.js');
 				spackage = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'))),
-				meta = [
-					[ 'name', spackage.name ],
-					[ 'namespace', spackage.homepage ],
-					[ 'supportURL', spackage.bugs.url ],
-					[ 'version', spackage.version ],
-					[ 'extracted', new Date().toGMTString() ],
-					[ 'author', spackage.author ],
-					[ 'license', spackage.license ],
-					[ 'match', 'https://krunker.io/*' ],
-					[ 'match', 'https://comp.krunker.io/*' ],
-					[ 'match', 'https://internal.krunker.io/*' ], // 🤡
-					[ 'exclude', '*/social.html' ],
-					[ 'grant', 'GM_setValue' ],
-					[ 'grant', 'GM_getValue' ],
-					[ 'run-at', 'document-start' ],
-					[ 'source', 'https://github.com/e9x/kru/tree/master/src' ],
-				],
+				meta = Object.entries({
+					name: spackage.name,
+					author: spackage.author,
+					source: 'https://github.com/e9x/kru/tree/master/src',
+					version: spackage.version,
+					license: spackage.license,
+					namespace: spackage.homepage,
+					supportURL: spackage.bugs.url,
+					extracted: new Date().toGMTString(),
+					include: /^https?:\/\/(internal\.|comp\.)?krunker\.io\/*?(index.html)?(\?|$)/,
+					grant: [ 'GM_setValue', 'GM_getValue' ],
+					'run-at': 'document-start',
+				}).flatMap(([ key, val ]) => Array.isArray(val) ? val.map(val => [ key, val ]) : [ [ key, val ] ]),
 				whitespace = meta.map(meta => meta[0]).sort((a, b) => b.toString().length - a.toString().length)[0].length + 8;
 			
 			compilation.updateAsset(file.name, new webpack.sources.RawSource(`// ==UserScript==
