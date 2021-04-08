@@ -72,9 +72,7 @@ module.exports = (cheat, data) => {
 				
 				// wip
 				
-				console.log(cheat.player);
-				
-				if(cheat.player[cheat.add].shot && !cheat.weapon_aimed){
+				if(cheat.player[cheat.add].shot && data[keys.shoot]){
 					data[keys.xdir] = rot.x * 1000;
 					data[keys.ydir] = rot.y * 1000;
 					
