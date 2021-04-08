@@ -20,6 +20,7 @@ var fs = require('fs'),
 					[ 'match', 'https://krunker.io/*' ],
 					[ 'match', 'https://comp.krunker.io/*' ],
 					[ 'match', 'https://internal.krunker.io/*' ], // 🤡
+					[ 'exclude', '*/social.html' ],
 					[ 'grant', 'GM_setValue' ],
 					[ 'grant', 'GM_getValue' ],
 					[ 'run-at', 'document-start' ],
