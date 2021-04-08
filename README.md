@@ -57,6 +57,7 @@ new MutationObserver((muts, observer) => muts.forEach(mut => [...mut.addedNodes]
 # Building
 
 To build the userscript, you will need [NodeJS](https://nodejs.org/en/download/)
+
 If you are on windows, download and unzip the repository and run `build.bat`
 
 ```sh
