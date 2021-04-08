@@ -1,5 +1,5 @@
 where npm
-if %ERRORLEVEL% NEQ 0 echo "NodeJS and NPM is required to build Sploit, downloads found at https://nodejs.org/en/download/" & goto :eof
+if %ERRORLEVEL% neq 0 echo "NodeJS and NPM is required to build Sploit, downloads found at https://nodejs.org/en/download/" & goto :eof
 
 echo Installing modules..
 
