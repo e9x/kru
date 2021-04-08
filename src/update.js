@@ -10,7 +10,7 @@ var parse_headers = script => {
 
 var update_interval = setInterval(async () => {
 	var current = new Date(parse_headers(GM_info.scriptSource).extracted).getTime(),
-		latest = new Date(parse_headers(await fetch(latest_script).then(res => res.text())).extracted).getTime();
+		latest = new Date(parse_headers((await fetch(latest_script).then(res => res.text()))).extracted).getTime();
 	
 	if(current >= latest)return;
 	
