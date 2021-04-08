@@ -1,0 +1,25 @@
+{
+	"name": "Sploit",
+	"version": "1.5.7",
+	"description": "Sploit loader",
+	"manifest_version": 2,
+	"permissions": [
+		"webNavigation",
+		"downloads",
+		"https://krunker.io/*",
+		"https://comp.krunker.io/*",
+		"webRequest",
+		"webRequestBlocking"
+	],
+	"browser_action": {
+		"default_title": "Sploit",
+		"default_popup": "popup.html"
+	},
+	"background": {
+		"scripts": ["js/events.js", "js/zip.js", "js/bg.js"],
+		"persistent": true
+	},
+	"icons": {
+		"48": "icon.png"
+	}
+}

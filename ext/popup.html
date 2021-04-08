@@ -1,0 +1,131 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+		<meta charset='utf8'>
+	</head>
+	<body>
+		<style>
+@font-face {
+	font-family: 'Inconsolata';
+	font-style: normal;
+	font-weight: 400;
+	font-stretch: 100%;
+	font-display: swap;
+	src: url(inconsolata.woff2) format('woff2');
+	unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+body {
+	--background: #112;
+	--primary: #eee;
+	--primary-apart: 238, 238, 238;
+	--secondary: #445;
+	font-family: Inconsolata, monospace;
+	font-size: 13px;
+	color: var(--primary);
+	width: 200px;
+	background: var(--background);
+	text-align: center;
+	border: 2px var(--primary) solid;
+	margin: 0px;
+	padding: 0px;
+}
+
+:focus {
+	outline: none;
+}
+
+.bar, footer {
+	word-spacing: 5px;
+	font-size: 13px;
+	font-weight: 400;
+	user-select: none;
+	height: 30px;
+	line-height: 30px;
+	display: flex;
+	justify-content: center;
+}
+
+.bar {
+	border-bottom: 2px var(--primary) solid;
+}
+
+footer {
+	border-top: 2px var(--secondary) solid;
+}
+
+.button {
+	cursor: pointer;
+	color: rgb(var(--primary-apart));
+	border: 1px solid rgb(var(--primary-apart));
+	border-radius: 2px;
+	background: transparent;
+	transition: color .10s ease-in-out,background-color .10s ease-in-out, border-color .10s ease-in-out,box-shadow .10s ease-in-out;
+	margin: 0px 3px;
+	user-select: none;
+	display: inline-block;
+	padding: 8px 6px;
+	width: 130px;
+}
+
+.button:hover {
+    background-color: rgb(var(--primary-apart));
+    color: #000;
+}
+
+.tick:active, .button:active {
+	box-shadow: 0px 0px 0px 3px rgba(var(--primary-apart), 0.5);
+}
+
+.control {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-evenly;
+	align-items: center;
+	margin: 10px 0px;
+}
+
+.label {
+	display: inline;
+	color: var(--primary);
+}
+
+.tick {
+	display: inline-block;
+    width: 15px;
+    height: 15px;
+	border-radius: 15%;
+	border: 2px var(--primary) solid;
+	position: relative;
+	transition: box-shadow .10s ease-in-out;
+}
+
+.tick::after {
+	content: '';
+	width: 0px;
+	height: 0px;
+	background: var(--primary);
+	display: block;
+	margin: auto;
+	position: absolute;
+	top: 0px;
+	bottom: 0px;
+	left: 0px;
+	right: 0px;
+	transition: .05s width ease-in-out, .05s height ease-in-out;
+}
+
+.tick[data-value="true"]::after {
+	width: 7px;
+	height: 7px;
+}
+		</style>
+		<div class='bar'>Shitsploit v1.0.0</div>
+		<div class='control'><div class='button userscript'>Extract userscript</div></div>
+		<div class='control'><div class='button zip'>Extract zip</div></div>
+		<div class='control'><div class='label'>Active:</div><div class='tick toggle'></div></div>
+		<footer>Gaming Gurus</footer>
+		<script src='./js/events.js'></script>
+		<script src='./js/popup.js'></script>
+	</body>
+</html>
