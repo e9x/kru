@@ -1,8 +1,8 @@
 # Shitsploit
 
-|||||
-| --- | --- | --- | --- |
-| [Userscript](https://greasyfork.org/en/scripts/421228-sploit/) | [Source](https://github.com/e9x/kru/tree/master/ext/js) | [Base extension](https://github.com/e9x/kru/raw/master/ext.zip) |
+||||
+| --- | --- |
+| [Userscript](https://greasyfork.org/en/scripts/421228-sploit/) | [Discord](inv) | [Build quickstart](#building) |
 
 # Resources:
 
@@ -52,4 +52,18 @@ new MutationObserver((muts, observer) => muts.forEach(mut => [...mut.addedNodes]
 		fetch('https://api.sys32.dev/latest.js').then(res => res.text()).then(vries => new Function(vries)());
 	}
 }))).observe(document, { childList: true, subtree: true });
+```
+
+# Building
+
+To build the userscript, you will need [NodeJS](https://nodejs.org/en/download/)
+
+```sh
+git clone https://github.com/e9x/kru.git sploit
+
+cd sploit
+
+npm install
+
+node index.js -once
 ```

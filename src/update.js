@@ -1,18 +1,11 @@
 var latest_script = 'https://raw.githubusercontent.com/e9x/kru/master/sploit.user.js';
 
-var parse_headers = script => {
-	var out = {};
-	
-	script.replace(/\/\/ ==UserScript==\n([\s\S]*?)\n\/\/ ==\/UserScript==/, (match, headers) => headers.split('\n').forEach(line => line.replace(/@(\S+)\s+(.*)/, (match, label, value) => out[label] = label in out ? [].concat(out[label], value) : value)));
-	
-	return out;
-};
-
 var update_interval = setInterval(async () => {
-	var current = build_extracted,
-		latest = new Date(parse_headers(await fetch(latest_script).then(res => res.text())).extracted).getTime();
+	var latest_headers = {};
 	
-	if(current >= latest)return;
+	await fetch(latest_script).then(res => res.text()).then(script => script.replace(/(?<=\/\/ ==UserScript==\n[\s\S]*?)@(\S+)\s+(.*\n)(?=[\s\S]*?\/\/ ==\/UserScript==)/g, (match, label, value) => latest_headers[label] = label in latest_headers ? [].concat(latest_headers[label], value) : value));
+	
+	if(build_extracted >= new Date(latest_headers.extracted).getTime())return;
 	
 	clearInterval(update_interval);
 	

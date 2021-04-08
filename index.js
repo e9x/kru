@@ -1,6 +1,16 @@
 var fs = require('fs'),
 	path = require('path'),
 	webpack = require('webpack'),
+	run_cb = (err, stats) => {
+		var error = !!(err || stats.compilation.errors.length);
+		
+		for(var ind = 0; ind < stats.compilation.errors.length; ind++)error = true, console.error(stats.compilation.errors[ind]);
+		if(err)console.error(err);
+		
+		if(error)return console.error('One or more errors occured during building, refer to above console output for more info');
+		
+		console.log('Build success, output at', path.join(compiler.options.output.path, compiler.options.output.filename));
+	},
 	compiler = webpack({
 		entry: path.join(__dirname, 'src', 'sploit.js'),
 		output: { path: __dirname, filename: 'sploit.user.js' },
@@ -8,7 +18,7 @@ var fs = require('fs'),
 		module: { rules: [ { test: /\.css$/, use: [ { loader: path.join(__dirname, 'raw.js'), options: {} } ] } ] },
 		plugins: [
 			{ apply: compiler => compiler.hooks.thisCompilation.tap('Replace', compilation => compilation.hooks.processAssets.tap({ name: 'Replace', stage: webpack.Compilation.PROCESS_ASSETS_STAGE_REPORT }, () => {
-				var file = compilation.getAsset('sploit.user.js');
+				var file = compilation.getAsset(compiler.options.output.filename);
 					spackage = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'))),
 					extracted = new Date(),
 					rmeta = {
@@ -38,14 +48,6 @@ ${meta.map(([ key, val ]) => ('// @' + key).padEnd(whitespace, ' ') + val.toStri
 	}, (err, stats) => {
 		if(err)return console.error(err);
 		
-		compiler.watch({}, (err, stats) => {
-			var error = !!(err || stats.compilation.errors.length);
-			
-			for(var ind = 0; ind < stats.compilation.errors.length; ind++)error = true, console.error(stats.compilation.errors[ind]);
-			if(err)console.error(err);
-			
-			if(error)return console.error('One or more errors occured during building, refer to above console output for more info');
-			
-			console.log('Build success');
-		});
+		if(process.argv.includes('-once'))compiler.run(run_cb);
+		else compiler.watch({}, run_cb);
 	});
