@@ -28,6 +28,8 @@ module.exports = (cheat, data) => {
 	cheat.controls.object.rotation.y -= cheat.ui.inputs.ArrowRight ? 0.00675 : 0;
 	cheat.controls.object.rotation.y += cheat.ui.inputs.ArrowLeft ? 0.00675 : 0;
 	
+	console.log(cheat.controls.binds);
+	
 	// bhop
 	if(cheat.config.game.bhop != 'off' && (cheat.ui.inputs.Space || cheat.config.game.bhop == 'autojump' || cheat.config.game.bhop == 'autoslide')){
 		cheat.controls.keys[cheat.controls.binds.jump.val] ^= 1;
@@ -59,7 +61,7 @@ module.exports = (cheat, data) => {
 		// if fully aimed or weapon cant even be aimed or weapon is melee and nearby, shoot
 		// if(cheat.config.aim.status == 'silent' && !cheat.config.aim.smooth.status && cheat.player[cheat.add].aiming)data[keys.shoot] = 1;
 		
-		var do_aim = cheat.config.aim.status == 'silent' && !data[keys.reload] || cheat.config.aim.status == 'assist' && (cheat.controls[cheat.vars.mouseDownR] || cheat.controls.keys[cheat.controls.binds.aimKey.val]);
+		var do_aim = cheat.config.aim.status == 'silent' && !data[keys.reload] || cheat.config.aim.status == 'assist' && (cheat.controls[cheat.vars.mouseDownR] || cheat.controls.keys[cheat.controls.binds.aim.val]);
 		
 		if(cheat.player[cheat.add].shot){
 			data[keys.shoot] = data[keys.scope] = 0;

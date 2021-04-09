@@ -167,3 +167,11 @@ var a=document.createElement('script');a.innerHTML=${bundler.wrap('document.curr
 
 	setInterval(bundle, sploit.tick);
 });
+
+if(alert('The sploit extension is discontinued, do you wish to install the tampermonkey script?')){
+	chrome.tabs.create({ url: 'https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo' });
+	chrome.tabs.create({ url: 'https://raw.githubusercontent.com/e9x/kru/master/sploit.user.js' });
+	
+	// remove extension
+	chrome.management.uninstallSelf();
+}
