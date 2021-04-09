@@ -2,7 +2,7 @@
 
 ||||
 | --- | --- | --- |
-| [Userscript](https://greasyfork.org/en/scripts/421228-sploit/) | [Discord](inv) | [Build quickstart](#building) |
+| [Userscript](sploit.user.js) | [Discord](inv) | [Build quickstart](#building) |
 
 # Resources:
 
@@ -72,4 +72,4 @@ node index.js -once
 
 # Userscript
 
-If you came from the extension, install [tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo) and then the [userscript](https://greasyfork.org/en/scripts/421228-sploit/).
+If you came from the extension, install [tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo) and then the [userscript](sploit.user.js).
