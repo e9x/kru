@@ -2,7 +2,7 @@
 
 ||||
 | --- | --- | --- |
-| [Userscript](sploit.user.js) | [Discord](inv) | [Build quickstart](#building) |
+| [Userscript](https://github.com/e9x/kru/raw/master/sploit.user.js) | [Discord](inv) | [Build quickstart](#building) |
 
 # Resources:
 
@@ -72,4 +72,4 @@ node index.js -once
 
 # Userscript
 
-If you came from the extension, install [tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo) and then the [userscript](sploit.user.js).
+If you came from the extension, install [tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo) and then the [userscript](https://github.com/e9x/kru/raw/master/sploit.user.js).
