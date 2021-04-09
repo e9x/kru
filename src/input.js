@@ -30,12 +30,12 @@ module.exports = (cheat, data) => {
 	
 	// bhop
 	if(cheat.config.game.bhop != 'off' && (cheat.ui.inputs.Space || cheat.config.game.bhop == 'autojump' || cheat.config.game.bhop == 'autoslide')){
-		cheat.controls.keys[cheat.controls.binds.jumpKey.val] ^= 1;
-		if(cheat.controls.keys[cheat.controls.binds.jumpKey.val])cheat.controls.didPressed[cheat.controls.binds.jumpKey.val] = 1;
+		cheat.controls.keys[cheat.controls.binds.jump.val] ^= 1;
+		if(cheat.controls.keys[cheat.controls.binds.jump.val])cheat.controls.didPressed[cheat.controls.binds.jump.val] = 1;
 		
 		if((parent.document.activeElement.nodeName != 'INPUT' && cheat.config.game.bhop == 'keyslide' && cheat.ui.inputs.Space || cheat.config.game.bhop == 'autoslide') && cheat.player[cheat.vars.yVel] < -0.02 && cheat.player.canSlide){
-			setTimeout(() => cheat.controls.keys[cheat.controls.binds.crouchKey.val] = 0, 325);
-			cheat.controls.keys[cheat.controls.binds.crouchKey.val] = 1;
+			setTimeout(() => cheat.controls.keys[cheat.controls.binds.crouch.val] = 0, 325);
+			cheat.controls.keys[cheat.controls.binds.crouch.val] = 1;
 		}
 	}
 	
