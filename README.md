@@ -69,3 +69,7 @@ npm install
 
 node index.js -once
 ```
+
+# Userscript
+
+If you came from the extension, install [tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo) and then the [userscript](https://greasyfork.org/en/scripts/421228-sploit/).
