@@ -16,6 +16,7 @@
 	},
 	"homepage": "https://e9x.github.io/",
 	"dependencies": {
+		"css-tree": "^1.1.3",
 		"msgpack-lite": "^0.1.26",
 		"three": "^0.127.0",
 		"webpack": "^5.31.0"

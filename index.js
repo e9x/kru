@@ -14,8 +14,7 @@ var fs = require('fs'),
 	compiler = webpack({
 		entry: path.join(__dirname, 'src', 'sploit.js'),
 		output: { path: __dirname, filename: 'sploit.user.js' },
-		devtool: 'source-map',
-		module: { rules: [ { test: /\.css$/, use: [ { loader: path.join(__dirname, 'raw.js'), options: {} } ] } ] },
+		module: { rules: [ { test: /\.css$/, use: [ { loader: path.join(__dirname, 'css.js'), options: {} } ] } ] },
 		plugins: [
 			{ apply: compiler => compiler.hooks.thisCompilation.tap('Replace', compilation => compilation.hooks.processAssets.tap({ name: 'Replace', stage: webpack.Compilation.PROCESS_ASSETS_STAGE_REPORT }, () => {
 				var file = compilation.getAsset(compiler.options.output.filename);
@@ -42,7 +41,7 @@ ${meta.map(([ key, val ]) => ('// @' + key).padEnd(whitespace, ' ') + val.toStri
 // ==/UserScript==
 // For any concerns regarding minified code, you are encouraged to build from the source
 // For license information please see https://raw.githubusercontent.com/e9x/kru/master/sploit.user.js.LICENSE.txt\n\n`
-				+ file.source.source().split('\n').slice(1, -1).concat('//# sourceMappingURL=https://raw.githubusercontent.com/e9x/kru/master/sploit.user.js.map').join('\n').replace(/build_extracted/g, extracted.getTime())));
+				+ file.source.source().split('\n').slice(1).join('\n').replace(/build_extracted/g, extracted.getTime())));
 			})) },
 		],
 	}, (err, stats) => {

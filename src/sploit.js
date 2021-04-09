@@ -8,7 +8,7 @@ var add = Symbol(),
 	events = require('./events.js'),
 	spackage = require('../package.json'),
 	msgpack = require('msgpack-lite'),
-	cheat = cheat = {
+	cheat = {
 		add: add,
 		assign_deep: (e,...a)=>(a.forEach(a=>Object.keys(a).forEach(r=>typeof a[r]=='object'&&!Array.isArray(a[r])&&r in e?cheat.assign_deep(e[r],a[r]):e[r]=a[r])),e),
 		syms: new Proxy({}, {
@@ -17,25 +17,6 @@ var add = Symbol(),
 				
 				return target[prop];
 			}
-		}),
-		rnds: new Proxy({}, {
-			get(target, prop){
-				if(!target[prop])target[prop] = [...Array(16)].map(() => Math.random().toString(36)[2]).join('').replace(/(\d|\s)/, 'V').toLowerCase().substr(0, 6);
-				
-				return target[prop];
-			}
-		}),
-		materials_esp: new Proxy({}, {
-			get(target, prop){
-				if(!target[prop])target[prop] = new cheat.three.MeshBasicMaterial({
-					transparent: true,
-					fog: false,
-					depthTest: false,
-					color: prop,
-				});
-				
-				return target[prop];
-			},
 		}),
 		three: require('three'),
 		log(...args){
@@ -232,11 +213,11 @@ var add = Symbol(),
 		},
 		visual: require('./visual.js'),
 		process(){
+			if(cheat.game && cheat.controls && cheat.world && cheat.player){
+				cheat.game.players.list.forEach(cheat.ent_vals);
+			}
+			
 			requestAnimationFrame(cheat.process);
-			
-			if(!cheat.game || !cheat.controls || !cheat.world || !cheat.player)return;
-			
-			cheat.game.players.list.forEach(cheat.ent_vals);
 		},
 		// axis
 		v3: ['x', 'y', 'z'],

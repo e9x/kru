@@ -1,4 +1,5 @@
-var obj_mat = (cheat, obj) => {
+var materials = {},
+	obj_mat = (cheat, obj) => {
 		if(obj.type != 'Mesh' || !obj.dSrc || obj.material[cheat.syms.hooked])return;
 		
 		obj.material[cheat.syms.hooked] = true;
@@ -43,9 +44,17 @@ var obj_mat = (cheat, obj) => {
 			var orig_mat = obj.material;
 			
 			Object.defineProperty(obj, 'material', {
-				get: _ => cheat.config.esp.status == 'chams' || cheat.config.esp.status == 'box_chams' || cheat.config.esp.status == 'full'
-					? cheat.materials_esp[ent[cheat.add].enemy ? ent[cheat.add].risk ? '#F70' : '#F00' : '#0F0']
-					: orig_mat,
+				get: _ => {
+					var color = ent[cheat.add].enemy ? ent[cheat.add].risk ? '#F70' : '#F00' : '#0F0';
+					
+					return cheat.config.esp.status == 'chams' || cheat.config.esp.status == 'box_chams' || cheat.config.esp.status == 'full'
+					? (materials[color] || (materials[color] = new cheat.three.MeshBasicMaterial({
+						transparent: true,
+						fog: false,
+						depthTest: false,
+						color: color,
+					}))) : orig_mat;
+				},
 				set: _ => orig_mat = _,
 			});
 		});

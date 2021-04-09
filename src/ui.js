@@ -1,13 +1,5 @@
 'use strict';
 
-exports.rnds = new Proxy({}, {
-	get(target, prop){
-		if(!target[prop])target[prop] = [...Array(16)].map(() => Math.random().toString(36)[2]).join('').replace(/(\d|\s)/, 'V').toLowerCase().substr(0, 6);
-		
-		return target[prop];
-	}
-});
-
 exports.wrap = str => JSON.stringify([ str ]).slice(1, -1);
 
 exports.clone_obj = obj => JSON.parse(JSON.stringify(obj));
@@ -269,19 +261,6 @@ exports.init = class {
 				stretch: '100%',
 				unicodeRange: 'U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD',
 			}).load().then(font => document.fonts.add(font));
-			
-			/*
-			`.${exports.rnds.chr}{white-space:nowrap;text-decoration: none}.${exports.rnds.chr1}{display:none;font-size:0px}${this.div}{display:block}`
-			
-			if(this.css_rng)customElements.define(this.div, class extends HTMLDivElement {}, { extends: 'div' });
-			
-			this.css_rng = true;
-			this.div = this.css_rng ? exports.rnds.div + '-' + exports.rnds.div1 : 'div';
-			
-			css_class(classn){ this.css_rng ? classn.toString().split(' ').map(cl => exports.rnds['.' + cl]) : classn;
-			
-			char_ins(str = ''){ var output = ''; (str + '').split(' ').forEach((word, word_index) => (word.split('').forEach((chr, chr_index) => output += (!chr_index || chr_index == word.length) ? '<s class="' + exports.rnds.chr + '">&#' + chr.charCodeAt() + '</s>' : '<s class="' + exports.rnds.chr + '">&#8203;<s class="' + exports.rnds.chr1 + '"></s>&#' + chr.charCodeAt() + '</s>'), output += word_index != (str + '').split(' ').length - 1 ? ' ' : '')); return output }
-			*/
 			
 			this.add_ele('link', document.head, { rel: 'stylesheet', href: URL.createObjectURL(new Blob([ exports.css.replace(/\.((?:(?!\[|\d|:|,|\.)\S)+)/g, (m, cl) => '.' + this.css_class(cl)) ], { type: 'text/css' })) });
 			
