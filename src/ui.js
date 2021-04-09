@@ -1,9 +1,5 @@
 'use strict';
 
-exports.wrap = str => JSON.stringify([ str ]).slice(1, -1);
-
-exports.clone_obj = obj => JSON.parse(JSON.stringify(obj));
-
 exports.reload = () => this.control_updates.forEach(val => val());
 
 exports.css = require('./ui.css');

@@ -12,7 +12,7 @@ var fs = require('fs'),
 		console.log('Build success, output at', path.join(compiler.options.output.path, compiler.options.output.filename));
 	},
 	compiler = webpack({
-		entry: path.join(__dirname, 'src', 'sploit.js'),
+		entry: path.join(__dirname, 'src', 'index.js'),
 		output: { path: __dirname, filename: 'sploit.user.js' },
 		module: { rules: [ { test: /\.css$/, use: [ { loader: path.join(__dirname, 'css.js'), options: {} } ] } ] },
 		plugins: [

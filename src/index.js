@@ -5,7 +5,6 @@ if(typeof GM_getValue == 'undefined'){
 }
 
 var add = Symbol(),
-	events = require('./events.js'),
 	spackage = require('../package.json'),
 	msgpack = require('msgpack-lite'),
 	cheat = {
@@ -408,7 +407,7 @@ cheat.ui = new (require('./ui.js').init)({
 			name: 'Join the Discord',
 			type: 'function_inline',
 			key: 'unset',
-			val: () => window.open('https://e9x.github.io/kru/inv/'),
+			val: () => window.open('https://e9x.github.io/kru/invite'),
 		}],
 	}],
 });
