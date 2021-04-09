@@ -244,26 +244,6 @@ cheat.util.cheat = cheat;
 cheat.raycaster = new cheat.three.Raycaster();
 cheat.process();
 
-/*
-port_client.on('config_save', config => {
-	if(module.userscript){
-		GM_setValue('config', JSON.stringify(cheat.config));
-	}else{
-		console.warn('Using localStorage, not userscript or extension?');
-		localStorage.setItem('krk_custcSops', JSON.stringify(cheat.config));
-	}
-});
-
-port_client.on('config_load', async id => {
-	if(module.userscript){
-		port.emit(id, cheat.assign_deep(cheat.config, JSON.parse(await GM_getValue('config') || '{}')));
-	}else{
-		console.warn('Using localStorage, not userscript or extension?');
-		return cheat.assign_deep(cheat.config, JSON.parse(localStorage.getItem('krk_custcSops') || '{}'));
-	}
-});
-*/
-
 cheat.ui = new (require('./ui.js').init)({
 	version: spackage.version,
 	title: 'Shitsploit',

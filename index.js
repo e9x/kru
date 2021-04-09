@@ -23,7 +23,7 @@ var fs = require('fs'),
 					rmeta = {
 						name: spackage.name,
 						author: spackage.author,
-						source: 'https://github.com/e9x/kru/tree/master/src',
+						source: 'https://github.com/e9x/kru',
 						version: spackage.version,
 						license: spackage.license,
 						namespace: spackage.homepage,
