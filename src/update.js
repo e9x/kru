@@ -10,9 +10,9 @@ var latest_script = 'https://raw.githubusercontent.com/e9x/kru/master/sploit.use
 	},
 	parse_headers = script => {
 		var out = {};
-
+		
 		script.replace(/\/\/ ==UserScript==\n([\s\S]*?)\n\/\/ ==\/UserScript==/, (match, headers) => headers.split('\n').forEach(line => line.replace(/@(\S+)\s+(.*)/, (match, label, value) => out[label] = label in out ? [].concat(out[label], value) : value)));
-
+		
 		return out;
 	},
 	update_interval = setInterval(check_update, 1000 * 60 * 5); // 5 minutes
