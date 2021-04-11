@@ -1,6 +1,6 @@
 # Sploit
 
-||||
+|||||
 | --- | --- | --- | --- |
 | [Userscript](#userscript) | [Discord](invite) | [Build quickstart](#building) | [IDKR script](sploit.idkr.js) |
 
