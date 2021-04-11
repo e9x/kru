@@ -28,8 +28,6 @@ module.exports = (cheat, data) => {
 	cheat.controls.object.rotation.y -= cheat.ui.inputs.ArrowRight ? 0.00675 : 0;
 	cheat.controls.object.rotation.y += cheat.ui.inputs.ArrowLeft ? 0.00675 : 0;
 	
-	console.log(cheat.controls.binds);
-	
 	// bhop
 	if(cheat.config.game.bhop != 'off' && (cheat.ui.inputs.Space || cheat.config.game.bhop == 'autojump' || cheat.config.game.bhop == 'autoslide')){
 		cheat.controls.keys[cheat.controls.binds.jump.val] ^= 1;
