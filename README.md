@@ -2,7 +2,7 @@
 
 ||||
 | --- | --- | --- |
-| [Userscript](#userscript) | [Discord](invite) | [Build quickstart](#building) |
+| [Userscript](#userscript) | [Discord](invite) | [Build quickstart](#building) | [IDKR script](sploit.idkr.js) |
 
 # Resources:
 
@@ -72,4 +72,4 @@ node index.js -once
 
 # Userscript
 
-Install [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo) then install the [Userscript](https://github.com/e9x/kru/raw/master/sploit.user.js)
+Install [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo) then install the [Userscript](https://raw.githubusercontent.com/e9x/kru/master/sploit.user.js)
