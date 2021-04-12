@@ -408,6 +408,11 @@ cheat.ui = new (require('./ui.js').init)({
 			type: 'function_inline',
 			key: 'unset',
 			val: () => window.open('https://e9x.github.io/kru/invite'),
+		},{
+			name: 'Source code',
+			type: 'function_inline',
+			key: 'unset',
+			val: () => window.open('https://github.com/e9x/kru'),
 		}],
 	}],
 });
