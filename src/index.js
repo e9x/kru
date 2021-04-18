@@ -110,13 +110,13 @@ var add = Symbol(),
 					cheat.player[cheat.syms.procInputs] = cheat.player[cheat.vars.procInputs];
 					
 					cheat.player[cheat.vars.procInputs] = (data, ...args) => {
-						if(cheat.controls && cheat.player && cheat.player[add] && cheat.player.weapon)cheat.input(cheat, data);
+						if(cheat.controls && cheat.player && cheat.player[add] && cheat.player[add].weapon)cheat.input(cheat, add, data);
 						
 						return cheat.player[cheat.syms.procInputs](data, ...args);
 					};
 				}
 				
-				cheat.visual(cheat);
+				cheat.visual(cheat, add);
 				
 				return frame(func);
 			},
@@ -151,6 +151,9 @@ var add = Symbol(),
 				};
 			}
 			
+			// todo: collect weapon json data and merge partially with encoded variables
+			ent[add].weapon = cheat.player.weapon;
+			
 			ent[add].risk = ent.isDev || ent.isMod || ent.isMapMod || ent.canGlobalKick || ent.canViewReports || ent.partnerApp || ent.canVerify || ent.canTeleport || ent.isKPDMode || ent.level >= 30;
 			
 			ent[add].is_you = ent[cheat.vars.isYou];
@@ -159,7 +162,10 @@ var add = Symbol(),
 			ent[add].pos.y = ent.y || 0;
 			ent[add].pos.z = ent.z || 0;
 			
-			ent[add].aiming = !ent[cheat.vars.aimVal] || ent.weapon.noAim || cheat.target && cheat.target[add] && ent.weapon.melee && ent[add].pos.distanceTo(cheat.target[add].pos) <= 18;
+			// aim should only be used on local player
+			ent[add].aim = ent[add].weapon.noAim || !ent[cheat.vars.aimVal] || cheat.target && cheat.target[add] && ent[add].weapon.melee && ent[add].pos.distanceTo(cheat.target[add].pos) <= 18;
+			
+			ent[add].aim_press = cheat.controls[cheat.vars.mouseDownR] || cheat.controls.keys[cheat.controls.binds.aim.val];
 			
 			ent[add].crouch = ent[cheat.vars.crouchVal];
 			
@@ -176,7 +182,7 @@ var add = Symbol(),
 			ent[add].enemy = !ent.team || ent.team != cheat.player.team;
 			ent[add].did_shoot = ent[cheat.vars.didShoot];
 			
-			ent[add].shot = cheat.player.weapon.nAuto && cheat.player[cheat.vars.didShoot];
+			ent[add].shot = ent[add].weapon.nAuto && ent[cheat.vars.didShoot];
 			
 			if(ent[add].active){
 				if(ent[add].obj)ent[add].obj.visible = true;
@@ -266,7 +272,7 @@ cheat.ui = new (require('./ui.js').init)({
 				[ 'triggerbot', 'Triggerbot' ],
 				[ 'assist', 'Assist' ],
 				[ 'silent', 'Silent' ],
-				[ 'hidden', 'Hidden' ],
+				// [ 'hidden', 'Hidden' ],
 			],
 			key: 3,
 		},{

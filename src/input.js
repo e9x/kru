@@ -16,10 +16,10 @@ var keys = {frame: 0, delta: 1, xdir: 2, ydir: 3, moveDir: 4, shoot: 5, scope: 6
 		cheat.controls.object.position.z -= ang * Math.cos(al) * Math.cos(am), cheat.world.updateFrustum();
 	};
 
-module.exports = (cheat, data) => {
-	var target = cheat.target = cheat.game.players.list.filter(ent => ent[cheat.add] && !ent[cheat.add].is_you && ent[cheat.add].canSee && ent[cheat.add].active && ent[cheat.add].enemy && (cheat.config.aim.frustrum_check ? ent[cheat.add].frustum : true)).sort(cheat.sorts.norm)[0],
-		pm = cheat.game.players.list.filter(ent => ent && ent[cheat.add] && ent[cheat.add].active && ent[cheat.add].enemy && ent[cheat.add].canSee).map(ent => ent[cheat.add].obj),
-		has_ammo = cheat.player[cheat.vars.ammos][cheat.player[cheat.vars.weaponIndex]];
+module.exports = (cheat, add, data) => {
+	var target = cheat.target = cheat.game.players.list.filter(ent => ent[add] && !ent[add].is_you && ent[add].canSee && ent[add].active && ent[add].enemy && (cheat.config.aim.frustrum_check ? ent[add].frustum : true)).sort(cheat.sorts.norm)[0],
+		pm = cheat.game.players.list.filter(ent => ent && ent[add] && ent[add].active && ent[add].enemy && ent[add].canSee).map(ent => ent[add].obj),
+		has_ammo = cheat.player[add].weapon.melee || cheat.player[cheat.vars.ammos][cheat.player[cheat.vars.weaponIndex]];
 	
 	// arrow controls
 	cheat.controls[cheat.vars.pchObjc].rotation.x -= cheat.ui.inputs.ArrowDown ? 0.006 : 0;
@@ -44,35 +44,29 @@ module.exports = (cheat, data) => {
 	
 	cheat.raycaster.setFromCamera({ x: 0, y: 0 }, cheat.world.camera);
 	
-	if(has_ammo && cheat.config.aim.status != 'off' && cheat.target && cheat.player.health && !data[keys.reload]){
-		var yVal = target.y + (target[cheat.syms.isAI] ? -(target.dat.mSize / 2) : (target.jumpBobY * 0.072) + 1 - target[cheat.add].crouch * 3),
-			yDire = cheat.util.getDir(cheat.player[cheat.add].pos.z, cheat.player[cheat.add].pos.x, target.z, target.x),
-			xDire = cheat.util.getXDire(cheat.player[cheat.add].pos.x, cheat.player[cheat.add].pos.y, cheat.player[cheat.add].pos.z, target.x, yVal, target.z),
+	if(has_ammo && cheat.config.aim.status != 'off' && target && cheat.player.health && !data[keys.reload]){
+		var yVal = target.y + (target[cheat.syms.isAI] ? -(target.dat.mSize / 2) : (target.jumpBobY * 0.072) + 1 - target[add].crouch * 3),
+			yDire = cheat.util.getDir(cheat.player[add].pos.z, cheat.player[add].pos.x, target.z, target.x),
+			xDire = cheat.util.getXDire(cheat.player[add].pos.x, cheat.player[add].pos.y, cheat.player[add].pos.z, target.x, yVal, target.z),
 			xv = xDire - cheat.player[cheat.vars.recoilAnimY] * 0.27,
 			rot = {
 				x: cheat.round(Math.max(-cheat.util.halfpi, Math.min(cheat.util.halfpi, xv )) % cheat.util.pi2, 3) || 0,
 				y: cheat.util.normal_radian(cheat.round(yDire % cheat.util.pi2, 3)) || 0,
 			};
 		
-		if((cheat.config.aim.status == 'silent' && !cheat.config.aim.smooth.status || ['silent', 'triggerbot'].includes(cheat.config.aim.status) && cheat.player[cheat.add].aiming && cheat.raycaster.intersectObjects(pm, true).length) && cheat.player[cheat.add].aiming)data[keys.shoot] = cheat.player[cheat.add].shot ? 0 : 1;
+		if((cheat.config.aim.status == 'silent' && !cheat.config.aim.smooth.status || ['silent', 'triggerbot'].includes(cheat.config.aim.status) && cheat.player[add].aim && cheat.raycaster.intersectObjects(pm, true).length) && cheat.player[add].aim)data[keys.shoot] = cheat.player[add].shot ? 0 : 1;
 		
 		// if fully aimed or weapon cant even be aimed or weapon is melee and nearby, shoot
-		// if(cheat.config.aim.status == 'silent' && !cheat.config.aim.smooth.status && cheat.player[cheat.add].aiming)data[keys.shoot] = 1;
-		
-		var do_aim = cheat.config.aim.status == 'silent' && !data[keys.reload] || cheat.config.aim.status == 'assist' && (cheat.controls[cheat.vars.mouseDownR] || cheat.controls.keys[cheat.controls.binds.aim.val]);
-		
-		if(cheat.player[cheat.add].shot){
-			data[keys.shoot] = data[keys.scope] = 0;
-			cheat.player.inspecting = false;
-			cheat.player.inspectX = 0;
-		}
+		if(cheat.config.aim.status == 'silent' && !cheat.config.aim.smooth.status && cheat.player[add].aim)data[keys.shoot] = 1;
+
+		var do_aim = cheat.config.aim.status == 'silent' || cheat.config.aim.status == 'assist' && cheat.player[add].aim_press;
 		
 		switch(cheat.config.aim.status){
 			case'hidden':
 				
 				// wip
 				
-				if(cheat.player[cheat.add].shot && data[keys.shoot]){
+				if(cheat.player[add].shot && cheat.player[add].aim){
 					data[keys.xdir] = rot.x * 1000;
 					data[keys.ydir] = rot.y * 1000;
 					
