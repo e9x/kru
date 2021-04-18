@@ -125,7 +125,6 @@ var add = Symbol(),
 			return Math.hypot((innerWidth / 2) - pos.x, (innerHeight / 2) - pos.y);
 		},
 		sorts: {
-			//  * (ent_1[add].frustum == ent_2[add].frustum ? 1 : 0.5);
 			dist3d(ent_1, ent_2){
 				return ent_1[add].pos.distanceTo(ent_2);
 			},
@@ -140,8 +139,8 @@ var add = Symbol(),
 			},
 		},
 		ent_pos: {
-			distanceTo(p2){return Math.hypot(this.x - p2.x, this.y - p2.y, this.z - p2.z)},
-			project(t){ return this.applyMatrix4(t.matrixWorldInverse).applyMatrix4(t.projectionMatrix)},
+			distanceTo(p){return Math.hypot(this.x-p.x,this.y-p.y,this.z-p.z)},
+			project(t){return this.applyMatrix4(t.matrixWorldInverse).applyMatrix4(t.projectionMatrix)},
 			applyMatrix4(t){var e=this.x,n=this.y,r=this.z,i=t.elements,a=1/(i[3]*e+i[7]*n+i[11]*r+i[15]);return this.x=(i[0]*e+i[4]*n+i[8]*r+i[12])*a,this.y=(i[1]*e+i[5]*n+i[9]*r+i[13])*a,this.z=(i[2]*e+i[6]*n+i[10]*r+i[14])*a,this},
 		},
 		ent_vals(ent){
