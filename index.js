@@ -32,7 +32,7 @@ var fs = require('fs'),
 						include: /^https?:\/\/(internal\.|comp\.)?krunker\.io\/*?(index.html)?(\?|$)/,
 						grant: [ 'GM_setValue', 'GM_getValue', 'GM_xmlhttpRequest' ],
 						'run-at': 'document-start',
-						connect: 'sys32.dev',
+						connect: [ 'sys32.dev', 'githubusercontent.com' ],
 					},
 					meta = Object.entries(rmeta).flatMap(([ key, val ]) => Array.isArray(val) ? val.map(val => [ key, val ]) : [ [ key, val ] ]),
 					whitespace = meta.map(meta => meta[0]).sort((a, b) => b.toString().length - a.toString().length)[0].length + 8;
