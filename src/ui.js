@@ -36,25 +36,25 @@ exports.init = class {
 		control.interact = () => {
 			switch(control.type){
 				case'bool':
-					control.set(!control.get())
+					this.set_walk(control, !this.get_walk(control));
 					break
 				case'bool_rot':
 					control.aval = control.aval + 1
 					if(control.aval >= control.vals.length)control.aval = 0 // past length
-					control.set(control.vals[control.aval][0]);
+					this.set_walk(control, control.vals[control.aval][0]);
 					break
 				case'function':
-					control.get()();
+					this.get_walk(control)();
 					break
 				case'function_inline':
-					control.val();
+					control.value();
 					break
 				case'nested_menu':
 					this.tabs.forEach(ele => ele.style.display = 'none');
 					control.tab_ele.removeAttribute('style');
 					break
 				case'textbox':
-					control.set(control.input.value.substr(0, control.max_length));
+					this.set_walk(control, control.input.value.substr(0, control.max_length));
 					break
 			}
 			
@@ -67,7 +67,7 @@ exports.init = class {
 			
 			switch(control.type){
 				case'bool':
-					control.button.className = this.css_class('toggle') + ' ' + this.css_class(!!control.get());
+					control.button.className = this.css_class('toggle') + ' ' + this.css_class(!!this.get_walk(control));
 					break;
 				case'bool_rot':
 					content_name.innerHTML = this.char_ins(control.name + ': ' + control.vals[control.aval][1]);
@@ -93,11 +93,11 @@ exports.init = class {
 					content_name.style['padding-left'] = '8px';
 					break;
 				case'textbox':
-					control.input.value = ('' + control.get()).substr(0, control.max_length);
+					control.input.value = ('' + this.get_walk(control)).substr(0, control.max_length);
 					break;
 				case'slider':
-					control.slider_bg.style.width = ((control.get() / control.range[1]) * 100) + '%'
-					control.slider.setAttribute('data-value', Number(control.get().toString().substr(0, 10)));
+					control.slider_bg.style.width = ((this.get_walk(control) / control.range[1]) * 100) + '%'
+					control.slider.setAttribute('data-value', Number(this.get_walk(control).toString().substr(0, 10)));
 					break;
 			}
 		};
@@ -123,7 +123,7 @@ exports.init = class {
 				content_name.style['border-left'] = 'none';
 				content_name.style['border-right'] = '2px solid var(--secondary)';
 				
-				control.input = this.add_ele('input', content, { className: this.css_class('control-textbox'), placeholder: control.placeholder, spellcheck: false, value: control.get() });
+				control.input = this.add_ele('input', content, { className: this.css_class('control-textbox'), placeholder: control.placeholder, spellcheck: false, value: this.get_walk(control) });
 				
 				label_appended = true;
 				
@@ -146,7 +146,7 @@ exports.init = class {
 						else if(event.clientX >= slider_box.x + slider_box.width)value = control.range[1], perc_rounded = 100;
 						
 						if(perc_rounded <= 100 && value >= control.range[0]){
-							control.set(Number(value));
+							this.set_walk(control, +value);
 							control.update();
 							
 							this.data.config.save();
@@ -154,9 +154,9 @@ exports.init = class {
 					};
 				
 				control.slider = this.add_ele('div', content, { className: this.css_class('control-slider') });
-				control.slider_bg = this.add_ele('div', control.slider, { className: this.css_class('control-slider-bg'), style: 'width:' + (control.get() / control.range[1] * 100 + '%') });
+				control.slider_bg = this.add_ele('div', control.slider, { className: this.css_class('control-slider-bg'), style: 'width:' + (this.get_walk(control) / control.range[1] * 100 + '%') });
 				
-				control.slider.setAttribute('data-value', control.get());
+				control.slider.setAttribute('data-value', this.get_walk(control));
 				
 				control.slider.addEventListener('mousedown', event=>{
 					movement = { held: true, x: event.layerX, y: event.layerY }
@@ -170,7 +170,7 @@ exports.init = class {
 				break
 			case'bool_rot':
 				
-				control.aval = control.vals.findIndex(([ val ]) => val == control.get());
+				control.aval = control.vals.findIndex(([ val ]) => val == this.get_walk(control));
 				if(control.aval == -1)control.aval = 0;
 				
 				break
@@ -185,8 +185,8 @@ exports.init = class {
 		control.update(false);
 		
 		if(control.key && control.key != 'unset')this.keybinds.push({
-			get code(){ return !isNaN(Number(control.key)) ? 'Digit' + control.key : 'Key' + control.key.toUpperCase() },
-			get interact(){ return control.interact; },
+			get code(){ return !isNaN(Number(control.key)) ? 'Digit' + control.key : /^F\d$/.test(control.key) ? control.key : 'Key' + control.key.toUpperCase() },
+			get interact(){ return control.interact },
 		});
 	}
 	wait_for(check, interval){
@@ -199,6 +199,27 @@ exports.init = class {
 			interval = null;
 		}, 15));
 	}
+	walk(data){
+		if(typeof data == 'string')data = data.split('.');
+		
+		var state = this.data.config.state(),
+			last_state,
+			last_key;
+		
+		data.forEach(key => state = (last_state = state)[last_key = key]);
+		
+		return [ last_state, last_key ];
+	}
+	get_walk(control){
+		var walked = this.walk(control.walk);
+		
+		return walked[0][walked[1]];
+	}
+	set_walk(control, value){
+		var walked = this.walk(control.walk);
+		
+		return walked[0][walked[1]] = value;
+	}
 	constructor(data){
 		this.data = data;
 		this.pos = { x: 0, y: 0 };
@@ -209,6 +230,9 @@ exports.init = class {
 		this.div = 'div';
 		
 		this.data.config.load().then(() => this.wait_for(() => document.head && document.documentElement)).then(() => {
+			// write config.json at nwjs client startup
+			this.data.config.save();
+			
 			// clear all inputs when window is not focused
 			window.addEventListener('blur', () => this.inputs= []);
 			

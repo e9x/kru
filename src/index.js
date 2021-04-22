@@ -1,10 +1,6 @@
 'use strict';
-
-if(typeof GM_getValue == 'undefined'){
-	var GM_getValue = key => localStorage.getItem('ss' + key), GM_setValue = (key, val) => localStorage.setItem('ss' + key, val);
-}
-
 var add = Symbol(),
+	constants = require('./consts.js'),
 	spackage = require('../package.json'),
 	msgpack = require('msgpack-lite'),
 	cheat = {
@@ -47,6 +43,7 @@ var add = Symbol(),
 				bhop: 'off',
 				wireframe: false,
 				auto_respawn: false,
+				adblock: true,
 			},
 		},
 		util: require('./util.js'),
@@ -129,7 +126,7 @@ var add = Symbol(),
 				return ent_1[add].pos.distanceTo(ent_2);
 			},
 			dist2d(ent_1, ent_2){
-				return (ent_1, ent_2) => dist_center(ent_2[add].pos2D) - dist_center(ent_1[add].pos2D);
+				return (ent_1, ent_2) => dist_center(ent_2[add].pos2d) - dist_center(ent_1[add].pos2d);
 			},
 			hp(ent_1, ent_2){
 				return ent_1.health - ent_2.health;
@@ -138,17 +135,8 @@ var add = Symbol(),
 				return cheat.sorts[cheat.config.aim.target_sorting || 'dist2d'](ent_1, ent_2) * (ent_1[add].frustum == ent_2[add].frustum ? 1 : 0.5);
 			},
 		},
-		ent_pos: {
-			distanceTo(p){return Math.hypot(this.x-p.x,this.y-p.y,this.z-p.z)},
-			project(t){return this.applyMatrix4(t.matrixWorldInverse).applyMatrix4(t.projectionMatrix)},
-			applyMatrix4(t){var e=this.x,n=this.y,r=this.z,i=t.elements,a=1/(i[3]*e+i[7]*n+i[11]*r+i[15]);return this.x=(i[0]*e+i[4]*n+i[8]*r+i[12])*a,this.y=(i[1]*e+i[5]*n+i[9]*r+i[13])*a,this.z=(i[2]*e+i[6]*n+i[10]*r+i[14])*a,this},
-		},
 		ent_vals(ent){
-			if(!ent[add]){
-				ent[add] = {
-					pos: Object.assign({}, cheat.ent_pos),
-				};
-			}
+			if(!ent[add])ent[add] = {};
 			
 			// todo: collect weapon json data and merge partially with encoded variables
 			ent[add].weapon = cheat.player.weapon;
@@ -157,9 +145,16 @@ var add = Symbol(),
 			
 			ent[add].is_you = ent[cheat.vars.isYou];
 			
-			ent[add].pos.x = ent.x || 0;
-			ent[add].pos.y = ent.y || 0;
-			ent[add].pos.z = ent.z || 0;
+			ent[add].pos = {
+				distanceTo(p){return Math.hypot(this.x-p.x,this.y-p.y,this.z-p.z)},
+				project(t){return this.applyMatrix4(t.matrixWorldInverse).applyMatrix4(t.projectionMatrix)},
+				applyMatrix4(t){var e=this.x,n=this.y,r=this.z,i=t.elements,a=1/(i[3]*e+i[7]*n+i[11]*r+i[15]);return this.x=(i[0]*e+i[4]*n+i[8]*r+i[12])*a,this.y=(i[1]*e+i[5]*n+i[9]*r+i[13])*a,this.z=(i[2]*e+i[6]*n+i[10]*r+i[14])*a,this},
+				x: ent.x || 0,
+				y: ent.y || 0,
+				z: ent.z || 0,
+			};
+			
+			ent[add].pos2d = cheat.util.pos2d(ent[add].pos);
 			
 			// aim should only be used on local player
 			ent[add].aim = ent[add].weapon.noAim || !ent[cheat.vars.aimVal] || cheat.target && cheat.target[add] && ent[add].weapon.melee && ent[add].pos.distanceTo(cheat.target[add].pos) <= 18;
@@ -172,7 +167,6 @@ var add = Symbol(),
 			
 			ent[add].health = ent.health;
 			ent[add].max_health = ent[cheat.vars.maxHealth];
-			ent[add].pos2D = ent.x != null ? cheat.util.pos2d(ent[add].pos) : { x: 0, y: 0 };
 			ent[add].canSee = ent[add].active && cheat.util.can_see(cheat.player, ent) == null ? true : false;
 			
 			ent[add].frustum = cheat.util.frustum(cheat.world.frustum, ent[add].pos);
@@ -254,18 +248,18 @@ cheat.ui = new (require('./ui.js').init)({
 	footer: 'Press [F1] or [C] to toggle',
 	toggle: ['KeyC', 'F1'],
 	config: {
-		save: () => GM_setValue('config', JSON.stringify(cheat.config)),
+		save: () => constants.store.set('config', JSON.stringify(cheat.config)),
 		async load(){
-			return cheat.assign_deep(cheat.config, JSON.parse(await GM_getValue('config') || '{}'));
+			return cheat.assign_deep(cheat.config, JSON.parse(await constants.store.get('config') || '{}'));
 		},
+		state: () => cheat.config, // for setting walked objects
 	},
 	values: [{
 		name: 'Main',
 		contents: [{
 			name: 'Auto aim',
 			type: 'bool_rot',
-			get: _ => cheat.config.aim.status,
-			set: v => cheat.config.aim.status = v,
+			walk: 'aim.status',
 			vals: [
 				[ 'off', 'Off' ],
 				[ 'triggerbot', 'Triggerbot' ],
@@ -277,8 +271,7 @@ cheat.ui = new (require('./ui.js').init)({
 		},{
 			name: 'Auto bhop',
 			type: 'bool_rot',
-			get: _ => cheat.config.game.bhop,
-			set: v => cheat.config.game.bhop = v,
+			walk: 'game.bhop',
 			vals: [
 				[ 'off', 'Off' ],
 				[ 'keyjump', 'Key jump' ],
@@ -291,8 +284,7 @@ cheat.ui = new (require('./ui.js').init)({
 		},{
 			name: 'ESP mode',
 			type: 'bool_rot',
-			get: _ => cheat.config.esp.status,
-			set: v => cheat.config.esp.status = v,
+			walk: 'esp.status',
 			vals: [
 				[ 'off', 'Off' ],
 				[ 'box', 'Box' ],
@@ -304,20 +296,17 @@ cheat.ui = new (require('./ui.js').init)({
 		},{
 			name: 'Tracers',
 			type: 'bool',
-			get: _ => cheat.config.esp.tracers,
-			set: v => cheat.config.esp.tracers = v,
+			walk: 'esp.tracers',
 			key: 6,
 		},{
 			name: 'Nametags',
 			type: 'bool',
-			get: _ => cheat.config.esp.nametags,
-			set: v => cheat.config.esp.nametags = v,
+			walk: 'esp.nametags',
 			key: 7,
 		},{
 			name: 'Overlay',
 			type: 'bool',
-			get: _ => cheat.config.game.overlay,
-			set: v => cheat.config.game.overlay = v,
+			walk: 'game.overlay',
 			key: 8,
 		}],
 	},{
@@ -325,20 +314,17 @@ cheat.ui = new (require('./ui.js').init)({
 		contents: [{
 			name: 'Skins',
 			type: 'bool',
-			get: _ => cheat.config.game.skins,
-			set: v => cheat.config.game.skins = v,
+			walk: 'game.skins',
 			key: 'unset',
 		},{
 			name: 'Wireframe',
 			type: 'bool',
-			get: _ => cheat.config.game.wireframe,
-			set: v => cheat.config.game.wireframe = v,
+			walk: 'game.wireframe',
 			key: 'unset',
 		},{
 			name: 'Auto respawn',
 			type: 'bool',
-			get: _ => cheat.config.game.auto_respawn,
-			set: v => cheat.config.game.auto_respawn = v,
+			walk: 'game.auto_respawn',
 			key: 'unset',
 		}],
 	},{
@@ -346,8 +332,7 @@ cheat.ui = new (require('./ui.js').init)({
 		contents: [{
 			name: 'Target sorting',
 			type: 'bool_rot',
-			get: _ => cheat.config.game.target_sorting,
-			set: v => cheat.config.game.target_sorting = v,
+			walk: 'game.target_sorting',
 			vals: [
 				[ 'dist2d', 'Distance (2D)' ],
 				[ 'dist3d', 'Distance (3D)' ],
@@ -357,32 +342,27 @@ cheat.ui = new (require('./ui.js').init)({
 		},{
 			name: 'Smoothness',
 			type: 'slider',
-			get: _ => cheat.config.aim.smooth.value,
-			set: v => cheat.config.aim.smooth.value = v,
+			walk: 'aim.smooth.value',
 			range: [ 5, 50 ],
 		},{
 			name: 'Smooth',
 			type: 'bool',
-			get: _ => cheat.config.aim.smooth.status,
-			set: v => cheat.config.aim.smooth.status = v,
+			walk: 'aim.smooth.status',
 			key: 'unset',
 		},{
 			name: 'Auto reload',
 			type: 'bool',
-			get: _ => cheat.config.aim.auto_reload,
-			set: v => cheat.config.aim.auto_reload = v,
+			walk: 'aim.auto_reload',
 			key: 'unset',
 		},{
 			name: 'Sight check',
 			type: 'bool',
-			get: _ => cheat.config.aim.sight,
-			set: v => cheat.config.aim.sight = v,
+			walk: 'aim.sight',
 			key: 'unset',
 		},{
 			name: 'Wallbangs',
 			type: 'bool',
-			get: _ => cheat.config.aim.wallbangs,
-			set: v => cheat.config.aim.wallbangs = v,
+			walk: 'aim.wallbangs',
 			key: 'unset',
 		}],
 	},{
@@ -390,20 +370,17 @@ cheat.ui = new (require('./ui.js').init)({
 		contents: [{
 			name: 'Minimap',
 			type: 'bool',
-			get: _ => cheat.config.esp.minimap,
-			set: v => cheat.config.esp.minimap = v,
+			walk: 'esp.minimap',
 			key: 'unset',
 		},{
 			name: 'Walls',
 			type: 'bool',
-			get: _ => cheat.config.esp.walls.status,
-			set: v => cheat.config.esp.walls.status = v,
+			walk: 'esp.walls.status',
 			key: 'unset',
 		},{
 			name: 'Wall opacity',
 			type: 'slider',
-			get: _ => cheat.config.esp.walls.value,
-			set: v => cheat.config.esp.walls.value = v,
+			walk: 'esp.walls.value',
 			range: [ 0.1, 1 ],
 		}]
 	},{
@@ -412,13 +389,13 @@ cheat.ui = new (require('./ui.js').init)({
 			name: 'Join the Discord',
 			type: 'function_inline',
 			key: 'unset',
-			val: () => window.open('https://e9x.github.io/kru/invite'),
+			value: () => window.open('https://e9x.github.io/kru/invite'),
 		},{
 			name: 'Source code',
 			type: 'function_inline',
 			key: 'unset',
-			val: () => window.open('https://github.com/e9x/kru'),
-		}],
+			value: () => window.open('https://github.com/e9x/kru'),
+		}].concat(constants.injected_settings),
 	}],
 });
 
@@ -428,49 +405,54 @@ new MutationObserver((muts, observer) => muts.forEach(mut => [...mut.addedNodes]
 	observer.disconnect();
 	node.remove();
 	
-	fetch('https://api.sys32.dev/latest.js').then(res => res.text()).then(vries => {
+	new constants.request('https://api.sys32.dev/latest.js').text().then(krunker => {
 		// find variables
-		cheat.find_vars.forEach(([ name, regex, index ]) => cheat.vars[name] = (vries.match(regex) || 0)[index] || console.error('Could not find', name, regex, 'at index', index));
+		cheat.find_vars.forEach(([ name, regex, index ]) => cheat.vars[name] = (krunker.match(regex) || 0)[index] || console.error('Could not find', name, regex, 'at index', index));
 		
 		// apply patches
-		cheat.patches.forEach(([ regex, replace ]) => vries = vries.replace(regex, replace));
+		cheat.patches.forEach(([ regex, replace ]) => krunker = krunker.replace(regex, replace));
 		
-		new Function('ssd', 'WebSocket', vries)(cheat.storage, class extends WebSocket {
+		/*
+		// WP_fetchMMToken does not need to be specified as the vars injected will automatically add it
+		// this script can expect to use greasemonkey request methods or fetch as a fallback
+		// ideally if greasemonkey can be used for requesting then it should as it avoids any cors headers that COULD be added to break this script
+		*/
+		
+		new Function('WP_fetchMMToken', 'ssd', 'WebSocket', krunker)(new Promise((resolve, reject) => new constants.request('https://api.sys32.dev/token').json().then(data => resolve(data.token)).catch(reject)), cheat.storage, class extends WebSocket {
 			constructor(url, proto){
 				super(url, proto);
 				
 				this.addEventListener('message', event => {
-					var decoded = msgpack.decode(new Uint8Array(event.data)), start_client;
+					var decoded = msgpack.decode(new Uint8Array(event.data)), client;
 					
-					if(cheat.config.game.skins && decoded[0] == 0 && cheat.skin_cache && cheat.ws && (start_client = decoded[1].indexOf(cheat.ws.socketId || 0)) != -1){
-						var player = decoded[1].slice(start_client);
+					if(cheat.config.game.skins && decoded[0] == 0 && cheat.skin_cache && cheat.ws && (client = decoded[1].indexOf(cheat.ws.socketId || 0)) != -1){
+						// loadout
+						decoded[1][client + 12] = cheat.skin_cache[2];
 						
-						player[12] = cheat.skin_cache.loadout;
-						player[13] = cheat.skin_cache.hat;
-						player[14] = cheat.skin_cache.body;
-						player[19] = cheat.skin_cache.knife;
-						player[24] = cheat.skin_cache.dye;
-						player[33] = cheat.skin_cache.waist;
+						// hat
+						decoded[1][client + 13] = cheat.skin_cache[3];
 						
-						decoded[1] = decoded[1].slice(0, start_client).concat(player);
+						// body
+						decoded[1][client + 14] = cheat.skin_cache[4];
 						
-						var buf = msgpack.encode(decoded).buffer;
+						// knife
+						decoded[1][client + 19] = cheat.skin_cache[9];
 						
-						Object.defineProperty(event, 'data', { get: _ => buf });
+						// dye
+						decoded[1][client + 24] = cheat.skin_cache[14];
+						
+						// waist
+						decoded[1][client + 33] = cheat.skin_cache[17];
+						
+						// event.data is non-writable but configurable
+						Object.defineProperty(event, 'data', { value: msgpack.encode(decoded).buffer });
 					}
 				});
 			}
 			send(data){
-				var decoded;
+				var decoded = msgpack.decode(data.slice(0, -2));
 				
-				if((decoded = msgpack.decode(data.slice(0, -2)))[0] == 'en')cheat.skin_cache = {
-					loadout: decoded[1][2],
-					hat: decoded[1][3],
-					body: decoded[1][4],
-					knife: decoded[1][9],
-					dye: decoded[1][14],
-					waist: decoded[1][17],
-				};
+				if(decoded[0] == 'en')cheat.skin_cache = decoded[1];
 				
 				super.send(data);
 			}

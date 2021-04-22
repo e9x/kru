@@ -1,13 +1,15 @@
-var latest_script = 'https://raw.githubusercontent.com/e9x/kru/master/sploit.user.js',
-	check_update = async () => {
-		if(build_extracted >= new Date(parse_headers(await fetch(latest_script).then(res => res.text())).extracted).getTime())return;
+var constants = require('./consts.js'),
+	check_update = async () => new constants.request.text().then(latest => {
+		
+		console.log(new Date(parse_headers(latest).extracted).getTime());
+		if(constants.extracted >= new Date(parse_headers(await new constants.request.text()).extracted).getTime())return;
 		
 		clearInterval(update_interval);
 		
 		if(!confirm('A new sploit version is available, do you wish to update?'))return;
 		
-		window.open(latest_script);
-	},
+		window.open(constants.script);
+	}),
 	parse_headers = script => {
 		var out = {};
 		

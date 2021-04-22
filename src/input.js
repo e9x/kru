@@ -44,7 +44,8 @@ module.exports = (cheat, add, data) => {
 	
 	cheat.raycaster.setFromCamera({ x: 0, y: 0 }, cheat.world.camera);
 	
-	if(has_ammo && cheat.config.aim.status != 'off' && target && cheat.player.health && !data[keys.reload]){
+	// data[keys.reload]
+	if(has_ammo && cheat.config.aim.status != 'off' && target && cheat.player.health){
 		var yVal = target.y + (target[cheat.syms.isAI] ? -(target.dat.mSize / 2) : (target.jumpBobY * 0.072) + 1 - target[add].crouch * 3),
 			yDire = cheat.util.getDir(cheat.player[add].pos.z, cheat.player[add].pos.x, target.z, target.x),
 			xDire = cheat.util.getXDire(cheat.player[add].pos.x, cheat.player[add].pos.y, cheat.player[add].pos.z, target.x, yVal, target.z),
@@ -57,7 +58,7 @@ module.exports = (cheat, add, data) => {
 		if((cheat.config.aim.status == 'silent' && !cheat.config.aim.smooth.status || ['silent', 'triggerbot'].includes(cheat.config.aim.status) && cheat.player[add].aim && cheat.raycaster.intersectObjects(pm, true).length) && cheat.player[add].aim)data[keys.shoot] = cheat.player[add].shot ? 0 : 1;
 		
 		// if fully aimed or weapon cant even be aimed or weapon is melee and nearby, shoot
-		if(cheat.config.aim.status == 'silent' && !cheat.config.aim.smooth.status && cheat.player[add].aim)data[keys.shoot] = 1;
+		if(cheat.config.aim.status == 'silent' && !cheat.config.aim.smooth.status && cheat.player[add].aim)data[keys.shoot] = cheat.player[add].shot ? 0 : 1;
 
 		var do_aim = cheat.config.aim.status == 'silent' || cheat.config.aim.status == 'assist' && cheat.player[add].aim_press;
 		
