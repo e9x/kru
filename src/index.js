@@ -169,7 +169,12 @@ var add = Symbol(),
 			ent[add].max_health = ent[cheat.vars.maxHealth];
 			ent[add].canSee = ent[add].active && cheat.util.can_see(cheat.player, ent) == null ? true : false;
 			
-			ent[add].frustum = cheat.util.frustum(cheat.world.frustum, ent[add].pos);
+			ent[add].frustum = true;
+			
+			for(var ind = 0; ind < 6; ind++){if(cheat.world.frustum.planes[ind].distanceToPoint(ent[add].pos) < 0){
+				ent[add].frustum = false;
+				break;
+			}
 			
 			ent[add].active = ent && ent.x != null && ent[add].obj && cheat.ctx && ent.health &&ent.health > 0;
 			ent[add].enemy = !ent.team || ent.team != cheat.player.team;

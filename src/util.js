@@ -9,12 +9,6 @@ exports.normal_radian = radian => {
 	return radian;
 };
 
-exports.frustum = (frustum, point) => {
-	for(var ind = 0; ind < 6; ind++)if(frustum.planes[ind].distanceToPoint(point) < 0)return false;
-	
-	return true;
-};
-
 exports.distanceTo = (p1, p2) => Math.hypot(p1.x - p2.x, p1.y - p2.y, p1.z - p2.z);
 
 exports.applyMatrix4 = (pos, t) => {
