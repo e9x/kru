@@ -208,15 +208,13 @@ body {
 		</style>
 	</head>
 	<body>
-		<div data-invite='6KmhbcRyW2'></div>
+		<div class='discord-invite' data-invite='zBGZzTjdXD'></div>
 		<script>
 'use strict';
 
 var add_ele = (tag, par, atr) => Object.assign(par.appendChild(document.createElement(tag)), atr);
 
-document.querySelectorAll('[data-invite]').forEach(node => {
-	node.classList.add('discord-invite');
-	
+document.querySelectorAll('.discord-invite[data-invite]').forEach(node => {
 	var description = add_ele('div', node, { className: 'description' }),
 		content = add_ele('div', node, { className: 'content' }),
 		icon = add_ele('div', content, { className: 'icon' }),

@@ -14,7 +14,7 @@ var fs = require('fs'),
 	compiler = webpack({
 		entry: path.join(__dirname, 'src', 'index.js'),
 		output: { path: __dirname, filename: 'sploit.user.js' },
-		module: { rules: [ { test: /\.css$/, use: [ { loader: path.join(__dirname, 'css.js'), options: {} } ] } ] },
+		module: { rules: [ { test: /\.css$/, use: [ { loader: path.join(__dirname, 'src', 'css.js'), options: {} } ] } ] },
 		plugins: [
 			{ apply: compiler => compiler.hooks.thisCompilation.tap('Replace', compilation => compilation.hooks.processAssets.tap({ name: 'Replace', stage: webpack.Compilation.PROCESS_ASSETS_STAGE_REPORT }, () => {
 				var file = compilation.getAsset(compiler.options.output.filename);

@@ -12,6 +12,9 @@ if(typeof nw == 'undefined'){ // not in nwjs
 	child_process.execFile(require('nw/lib/findpath')(), [
 		__dirname,
 		'--remote-debugging-port=9222',
+		'--disable-frame-rate-limit',
+		'--disable-gpu-vsync',
+		'--max-gum-fps="9999"'
 	], { stdio: 'inherit', stderr: 'inherit' }).on('close', () => {
 		process.nextTick(() => process.exit(0));
 	});
@@ -22,21 +25,25 @@ Char: ${event.colno}
 Error: ${event.error instanceof Error ? event.error.type : event.error}
 Code: ${event.error instanceof Error ? event.error.code : ''}
 Stack:
-${(event.error instanceof Error ? error : new Error()).stack}`));
+${(event.error instanceof Error ? event.error : new Error()).stack}`));
 	
 	var fs_promises_exists = path => new Promise((resolve, reject) => fs.promises.access(path, fs.F_OK).then(() => resolve(true)).catch(err => resolve(false))),
 		screen = nw.Screen.screens[0],
+		loaders = {
+			'.json': source => 'module.exports=' + JSON.stringify(JSON.parse(source)),
+			'.css': require(path.join(__dirname, '..', 'src', 'css.js')),
+		},
 		files = {
 			home: os.homedir(),
 		},
 		inject_gm = {
-			async GM_getValue(key, value){
+			GM_getValue(key, value){
 				var file = path.join(files.sploit, key + '.json');
 				
-				return await fs_promises_exists(file) ? (await fs.promises.readFile(file)).toString() : '';
+				return fs.promises.readFile(file).catch(err => '');
 			},
-			async GM_setValue(key, value){
-				return await fs.promises.writeFile(path.join(files.sploit, key + '.json'), value);
+			GM_setValue(key, value){
+				return fs.promises.writeFile(path.join(files.sploit, key + '.json'), value);
 			},
 			GM_xmlhttpRequest(details){
 				// https://www.tampermonkey.net/documentation.php#GM_xmlhttpRequest
@@ -103,7 +110,7 @@ ${(event.error instanceof Error ? error : new Error()).stack}`));
 				return { abort: () => request.abort() };
 			},
 		},
-		eval_require = (func, base, cache = {}, base_require = mod.createRequire(base)) => fn => {
+		eval_require = (func, base, cache = {}, base_require = mod.createRequire(base + '/')) => fn => {
 			var resolved = base_require.resolve(fn);
 			
 			// internal module
@@ -112,9 +119,10 @@ ${(event.error instanceof Error ? error : new Error()).stack}`));
 			if(cache[resolved])return cache[resolved].exports;
 			
 			var mod = cache[resolved] = Object.setPrototypeOf({ _exports: {}, get exports(){ return this._exports }, set exports(v){ return this._exports = v }, filename: resolved, id: resolved, path: path.dirname(resolved), loaded: true, children: [] }, null),
-				script = resolved.endsWith('.css') ? 'module.exports=' + JSON.stringify(fs.readFileSync(resolved, 'utf8')) : (resolved.endsWith('.json') ? 'module.exports=' : '') + fs.readFileSync(resolved, 'utf8') + '\n//@ sourceURL=' + resolved;
+				ext = path.extname(resolved),
+				script = loaders[ext] ? loaders[ext](fs.readFileSync(resolved)) : fs.readFileSync(resolved) + '\n//@ sourceURL=' + resolved;
 			
-			new func('module', 'exports', 'require', Object.keys(inject_gm), script)(mod, mod.exports, eval_require(func, mod.path + '/', cache), ...Object.values(inject_gm));
+			new func('__dirname', '__filename', 'module', 'exports', 'require', Object.keys(inject_gm), script)(mod.path, resolved, mod, mod.exports, eval_require(func, mod.path + '/', cache), ...Object.values(inject_gm));
 			
 			if(path.basename(resolved) == 'consts.js')mod.exports.injected_settings = [{
 				name: 'Open resource folder',
@@ -172,7 +180,7 @@ ${(event.error instanceof Error ? error : new Error()).stack}`));
 			});
 			
 			// create node require in context
-			eval_require(window.Function, path.join(__dirname, '..') + '/')('./src');
+			eval_require(window.Function, __dirname)('../src');
 		});
 	});
 }

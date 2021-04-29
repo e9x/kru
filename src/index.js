@@ -171,7 +171,7 @@ var add = Symbol(),
 			
 			ent[add].frustum = true;
 			
-			for(var ind = 0; ind < 6; ind++){if(cheat.world.frustum.planes[ind].distanceToPoint(ent[add].pos) < 0){
+			for(var ind = 0; ind < 6; ind++)if(cheat.world.frustum.planes[ind].distanceToPoint(ent[add].pos) < 0){
 				ent[add].frustum = false;
 				break;
 			}

@@ -1,15 +1,15 @@
 'use strict';
-
-exports.reload = () => this.control_updates.forEach(val => val());
-
-exports.css = require('./ui.css');
+var constants = require('./consts.js');
 
 exports.init = class {
+	reload(){
+		this.control_updates.forEach(val => val());
+	}
 	char_ins(str = ''){
 		return str;
 	}
-	css_class(classn){
-		return classn;
+	css_class(...classn){
+		return classn.filter(cls => typeof cls == 'string').join(' ');
 	}
 	add_ele(node_name, parent, attributes){
 		if(node_name == 'div')node_name = this.div;
@@ -67,7 +67,7 @@ exports.init = class {
 			
 			switch(control.type){
 				case'bool':
-					control.button.className = this.css_class('toggle') + ' ' + this.css_class(!!this.get_walk(control));
+					control.button.className = this.css_class('toggle') + ' ' + this.css_class(!!this.get_walk(control) + '');
 					break;
 				case'bool_rot':
 					content_name.innerHTML = this.char_ins(control.name + ': ' + control.vals[control.aval][1]);
@@ -234,7 +234,7 @@ exports.init = class {
 			this.data.config.save();
 			
 			// clear all inputs when window is not focused
-			window.addEventListener('blur', () => this.inputs= []);
+			window.addEventListener('blur', () => this.inputs = {});
 			
 			window.addEventListener('keydown', event => {
 				if(event.repeat || document.activeElement && document.activeElement.tagName == 'INPUT')return;
@@ -273,18 +273,9 @@ exports.init = class {
 				this.prev_pos = { x: event.pageX, y: event.pageY };
 			});
 			
-			// load font
-			new FontFace('Inconsolata', 'url("https://fonts.gstatic.com/s/inconsolata/v20/QldgNThLqRwH-OJ1UHjlKENVzkWGVkL3GZQmAwLYxYWI2qfdm7Lpp4U8WR32lw.woff2")', {
-				family: 'Inconsolata',
-				style: 'normal',
-				weight: 400,
-				stretch: '100%',
-				unicodeRange: 'U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD',
-			}).load().then(font => document.fonts.add(font));
+			this.add_ele('link', document.head, { rel: 'stylesheet', href: URL.createObjectURL(new Blob([ require('./ui.css').replace(/\.((?:(?!\[|\d|:|,|\.)\S)+)/g, (m, cl) => '.' + this.css_class(cl)) ], { type: 'text/css' })) });
 			
-			this.add_ele('link', document.head, { rel: 'stylesheet', href: URL.createObjectURL(new Blob([ exports.css.replace(/\.((?:(?!\[|\d|:|,|\.)\S)+)/g, (m, cl) => '.' + this.css_class(cl)) ], { type: 'text/css' })) });
-			
-			this.panel = this.add_ele('div', document.documentElement, { className: this.css_class('ss-panel') });
+			this.panel = this.add_ele('div', document.documentElement, { className: this.css_class('ss-panel', constants.mobile ? 'mobile' : undefined) });
 			
 			this.title = this.add_ele('div', this.panel, { innerHTML: this.char_ins(data.title), className: this.css_class('title') });
 			
