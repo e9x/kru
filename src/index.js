@@ -410,7 +410,7 @@ new MutationObserver((muts, observer) => muts.forEach(mut => [...mut.addedNodes]
 	observer.disconnect();
 	node.remove();
 	
-	new constants.request('https://api.sys32.dev/latest.js').text().then(krunker => {
+	new constants.request('https://sys32.dev/api/v1/source').text().then(krunker => {
 		// find variables
 		cheat.find_vars.forEach(([ name, regex, index ]) => cheat.vars[name] = (krunker.match(regex) || 0)[index] || console.error('Could not find', name, regex, 'at index', index));
 		
@@ -423,7 +423,7 @@ new MutationObserver((muts, observer) => muts.forEach(mut => [...mut.addedNodes]
 		// ideally if greasemonkey can be used for requesting then it should as it avoids any cors headers that COULD be added to break this script
 		*/
 		
-		new Function('WP_fetchMMToken', 'ssd', 'WebSocket', krunker)(new Promise((resolve, reject) => new constants.request('https://api.sys32.dev/token').json().then(data => resolve(data.token)).catch(reject)), cheat.storage, class extends WebSocket {
+		new Function('WP_fetchMMToken', 'ssd', 'WebSocket', krunker)(new Promise((resolve, reject) => new constants.request('https://sys32.dev/api/v1/token').text().then(data => resolve(data.split(''))).catch(reject)), cheat.storage, class extends WebSocket {
 			constructor(url, proto){
 				super(url, proto);
 				
