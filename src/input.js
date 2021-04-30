@@ -18,7 +18,7 @@ exports.main = (cheat, add) => {
 			cheat.controls.object.position.x -= ang * Math.sin(al) * Math.cos(am), cheat.controls.object.position.y += ang * Math.sin(am), 
 			cheat.controls.object.position.z -= ang * Math.cos(al) * Math.cos(am), cheat.world.updateFrustum();
 		},
-		valid_target = (ent, cheat) => ent[cheat.add] && !ent[cheat.add].is_you && ent[cheat.add].canSee && ent[cheat.add].active && ent[cheat.add].enemy && (cheat.config.aim.sight ? ent[cheat.add].frustum : true)
+		valid_target = ent => ent[cheat.add] && !ent[cheat.add].is_you && ent[cheat.add].canSee && ent[cheat.add].active && ent[cheat.add].enemy && (cheat.config.aim.sight ? ent[cheat.add].frustum : true)
 	
 	exports.exec = data => {
 		var target = cheat.target = valid_target(cheat.target) ? cheat.target : cheat.game.players.list.filter(valid_target).sort(cheat.sorts.norm)[0],
