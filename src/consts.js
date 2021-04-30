@@ -23,7 +23,7 @@ exports.store = {
 
 exports.request = class {
 	constructor(url){
-		this.url = url;
+		this.url = url + '?' + Date.now();
 	}
 	text(){
 		return new Promise((resolve, reject) => gm.request ? gm.request({
