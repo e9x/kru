@@ -22,8 +22,8 @@ exports.store = {
 };
 
 exports.request = class {
-	constructor(url){
-		this.url = url + '?' + Date.now();
+	constructor(url, cache){
+		this.url = url + (cache ? '' : '?' + Date.now());
 	}
 	text(){
 		return new Promise((resolve, reject) => gm.request ? gm.request({

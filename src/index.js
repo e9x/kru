@@ -410,7 +410,7 @@ new MutationObserver((muts, observer) => muts.forEach(mut => [...mut.addedNodes]
 	observer.disconnect();
 	node.remove();
 	
-	new constants.request('https://sys32.dev/api/v1/source').text().then(krunker => {
+	new constants.request('https://sys32.dev/api/v1/source', true).text().then(krunker => {
 		// find variables
 		cheat.find_vars.forEach(([ name, regex, index ]) => cheat.vars[name] = (krunker.match(regex) || 0)[index] || console.error('Could not find', name, regex, 'at index', index));
 		
