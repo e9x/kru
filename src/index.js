@@ -113,7 +113,7 @@ var add = Symbol(),
 					};
 				}
 				
-				cheat.visual(cheat, add);
+				cheat.visual.exec(cheat, add);
 				
 				return frame(func);
 			},
@@ -466,5 +466,6 @@ new MutationObserver((muts, observer) => muts.forEach(mut => [...mut.addedNodes]
 }))).observe(document, { childList: true, subtree: true });
 
 cheat.input.main(cheat, add);
+cheat.visual.main(cheat, add);
 
 require('./update.js');
