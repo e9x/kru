@@ -107,7 +107,7 @@ var add = Symbol(),
 					cheat.player[cheat.syms.procInputs] = cheat.player[cheat.vars.procInputs];
 					
 					cheat.player[cheat.vars.procInputs] = (data, ...args) => {
-						if(cheat.controls && cheat.player && cheat.player[add] && cheat.player[add].weapon)cheat.input(cheat, add, data);
+						if(cheat.controls && cheat.player && cheat.player[add] && cheat.player[add].weapon)cheat.input.exec(data);
 						
 						return cheat.player[cheat.syms.procInputs](data, ...args);
 					};
@@ -423,7 +423,7 @@ new MutationObserver((muts, observer) => muts.forEach(mut => [...mut.addedNodes]
 		// ideally if greasemonkey can be used for requesting then it should as it avoids any cors headers that COULD be added to break this script
 		*/
 		
-		new Function('WP_fetchMMToken', 'ssd', 'WebSocket', krunker)(new Promise((resolve, reject) => new constants.request('https://sys32.dev/api/v1/token').text().then(data => resolve(data.split('').map(x => x.charCodeAt()))).catch(reject)), cheat.storage, class extends WebSocket {
+		new Function('WP_fetchMMToken', 'ssd', 'WebSocket', krunker)(new Promise((resolve, reject) => new constants.request('https://sys32.dev/api/v1/token').json().then(resolve).catch(reject)), cheat.storage, class extends WebSocket {
 			constructor(url, proto){
 				super(url, proto);
 				
@@ -464,5 +464,7 @@ new MutationObserver((muts, observer) => muts.forEach(mut => [...mut.addedNodes]
 		});
 	});
 }))).observe(document, { childList: true, subtree: true });
+
+cheat.input.main(cheat, add);
 
 require('./update.js');
