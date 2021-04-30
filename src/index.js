@@ -113,7 +113,7 @@ var add = Symbol(),
 					};
 				}
 				
-				cheat.visual.exec(cheat, add);
+				cheat.visual.exec();
 				
 				return frame(func);
 			},
