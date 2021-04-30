@@ -17,7 +17,7 @@ var keys = {frame: 0, delta: 1, xdir: 2, ydir: 3, moveDir: 4, shoot: 5, scope: 6
 	};
 
 module.exports = (cheat, add, data) => {
-	var target = cheat.target = cheat.game.players.list.filter(ent => ent[add] && !ent[add].is_you && ent[add].canSee && ent[add].active && ent[add].enemy && (cheat.config.aim.frustrum_check ? ent[add].frustum : true)).sort(cheat.sorts.norm)[0],
+	var target = cheat.target = cheat.game.players.list.filter(ent => ent[add] && !ent[add].is_you && ent[add].canSee && ent[add].active && ent[add].enemy && (cheat.config.aim.sight ? ent[add].frustum : true)).sort(cheat.sorts.norm)[0],
 		pm = cheat.game.players.list.filter(ent => ent && ent[add] && ent[add].active && ent[add].enemy && ent[add].canSee).map(ent => ent[add].obj),
 		has_ammo = cheat.player[add].weapon.melee || cheat.player[cheat.vars.ammos][cheat.player[cheat.vars.weaponIndex]];
 	
