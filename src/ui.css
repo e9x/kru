@@ -38,10 +38,6 @@ html { display: flex; }
 	outline: none;
 }
 
-.ss-panel.close {
-	display: none;
-}
-
 .ss-panel:hover {
 	opacity: 1;
 }

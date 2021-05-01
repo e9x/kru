@@ -15,7 +15,7 @@ class Control {
 		if(this.key)this.ui.keybinds.push({
 			code: this.key,
 			interact: () => {
-				if(this.ui.panel.classList.contains('close'))return;
+				if(this.ui.frame.style.display == 'none')return;
 				
 				this.interact();
 				this.update();
@@ -185,7 +185,7 @@ exports.init = class {
 		this.keybinds.push({
 			code: this.data.toggle,
 			interact: () => {
-				this.panel.classList.toggle('close');
+				this.frame.style.display = this.frame.style.display == 'none' ? 'block' : 'none';
 			},
 		});
 		
