@@ -7,7 +7,7 @@ var constants = require('./consts.js'),
 		
 		if(!confirm('A new sploit version is available, do you wish to update?'))return;
 		
-		window.open(constants.script);
+		location.assign(constants.script);
 	}),
 	parse_headers = script => {
 		var out = {};
