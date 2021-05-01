@@ -1,7 +1,7 @@
 {
 	"name": "Sploit",
 	"author": "Divide <sploit@sys32.dev>",
-	"version": "1.5.8",
+	"version": "1.5.9",
 	"main": "index.js",
 	"license": "BSD-3-Clause",
 	"repository": {

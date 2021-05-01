@@ -1,10 +1,9 @@
 'use strict';
-var add = Symbol(),
+var add = ent => new cheat.player_wrap(ent),
 	constants = require('./consts.js'),
 	spackage = require('../package.json'),
 	msgpack = require('msgpack-lite'),
 	cheat = {
-		add: add,
 		assign_deep: (e,...a)=>(a.forEach(a=>Object.keys(a).forEach(r=>typeof a[r]=='object'&&!Array.isArray(a[r])&&r in e?cheat.assign_deep(e[r],a[r]):e[r]=a[r])),e),
 		syms: new Proxy({}, {
 			get(target, prop){
@@ -26,10 +25,12 @@ var add = Symbol(),
 		},
 		config: {
 			aim: {
+				target_sorting: 'dist2d',
+				offset: 'head',
 				status: 'off',
 				smooth: {
 					status: false,
-					value: 25,
+					value: 10,
 				},
 			},
 			esp: {
@@ -107,7 +108,7 @@ var add = Symbol(),
 					cheat.player[cheat.syms.procInputs] = cheat.player[cheat.vars.procInputs];
 					
 					cheat.player[cheat.vars.procInputs] = (data, ...args) => {
-						if(cheat.controls && cheat.player && cheat.player[add] && cheat.player[add].weapon)cheat.input.exec(data);
+						if(cheat.controls && cheat.player && add(cheat.player) && add(cheat.player).weapon)cheat.input.exec(data);
 						
 						return cheat.player[cheat.syms.procInputs](data, ...args);
 					};
@@ -123,67 +124,21 @@ var add = Symbol(),
 		},
 		sorts: {
 			dist3d(ent_1, ent_2){
-				return ent_1[add].pos.distanceTo(ent_2);
+				return add(ent_1).pos.distanceTo(ent_2);
 			},
 			dist2d(ent_1, ent_2){
-				return (ent_1, ent_2) => dist_center(ent_2[add].pos2d) - dist_center(ent_1[add].pos2d);
+				return (ent_1, ent_2) => dist_center(add(ent_2).pos2d) - dist_center(add(ent_1).pos2d);
 			},
 			hp(ent_1, ent_2){
 				return ent_1.health - ent_2.health;
 			},
 			norm(ent_1, ent_2){
-				return cheat.sorts[cheat.config.aim.target_sorting || 'dist2d'](ent_1, ent_2) * (ent_1[add].frustum == ent_2[add].frustum ? 1 : 0.5);
+				return cheat.sorts[cheat.config.aim.target_sorting || 'dist2d'](ent_1, ent_2) * (add(ent_1).frustum == add(ent_2).frustum ? 1 : 0.5);
 			},
 		},
 		ent_vals(ent){
-			if(!ent[add])ent[add] = {};
-			
-			// todo: collect weapon json data and merge partially with encoded variables
-			ent[add].weapon = cheat.player.weapon;
-			
-			ent[add].risk = ent.isDev || ent.isMod || ent.isMapMod || ent.canGlobalKick || ent.canViewReports || ent.partnerApp || ent.canVerify || ent.canTeleport || ent.isKPDMode || ent.level >= 30;
-			
-			ent[add].is_you = ent[cheat.vars.isYou];
-			
-			ent[add].pos = {
-				distanceTo(p){return Math.hypot(this.x-p.x,this.y-p.y,this.z-p.z)},
-				project(t){return this.applyMatrix4(t.matrixWorldInverse).applyMatrix4(t.projectionMatrix)},
-				applyMatrix4(t){var e=this.x,n=this.y,r=this.z,i=t.elements,a=1/(i[3]*e+i[7]*n+i[11]*r+i[15]);return this.x=(i[0]*e+i[4]*n+i[8]*r+i[12])*a,this.y=(i[1]*e+i[5]*n+i[9]*r+i[13])*a,this.z=(i[2]*e+i[6]*n+i[10]*r+i[14])*a,this},
-				x: ent.x || 0,
-				y: ent.y || 0,
-				z: ent.z || 0,
-			};
-			
-			ent[add].pos2d = cheat.util.pos2d(ent[add].pos);
-			
-			// aim should only be used on local player
-			ent[add].aim = ent[add].weapon.noAim || !ent[cheat.vars.aimVal] || cheat.target && cheat.target[add] && ent[add].weapon.melee && ent[add].pos.distanceTo(cheat.target[add].pos) <= 18;
-			
-			ent[add].aim_press = cheat.controls[cheat.vars.mouseDownR] || cheat.controls.keys[cheat.controls.binds.aim.val];
-			
-			ent[add].crouch = ent[cheat.vars.crouchVal];
-			
-			ent[add].obj = ent && ent.lowerBody && ent.lowerBody.parent && ent.lowerBody.parent ? ent.lowerBody.parent : null;
-			
-			ent[add].health = ent.health;
-			ent[add].max_health = ent[cheat.vars.maxHealth];
-			ent[add].canSee = ent[add].active && cheat.util.can_see(cheat.player, ent) == null ? true : false;
-			
-			ent[add].frustum = true;
-			
-			for(var ind = 0; ind < 6; ind++)if(cheat.world.frustum.planes[ind].distanceToPoint(ent[add].pos) < 0){
-				ent[add].frustum = false;
-				break;
-			}
-			
-			ent[add].active = ent && ent.x != null && ent[add].obj && cheat.ctx && ent.health &&ent.health > 0;
-			ent[add].enemy = !ent.team || ent.team != cheat.player.team;
-			ent[add].did_shoot = ent[cheat.vars.didShoot];
-			
-			ent[add].shot = ent[add].weapon.nAuto && ent[cheat.vars.didShoot];
-			
-			if(ent[add].active){
-				if(ent[add].obj)ent[add].obj.visible = true;
+			if(add(ent).active){
+				if(add(ent).obj)add(ent).obj.visible = true;
 				
 				var normal = ent[cheat.vars.inView];
 				
@@ -215,10 +170,76 @@ var add = Symbol(),
 			}
 		},
 		visual: require('./visual.js'),
-		process(){
-			if(cheat.game && cheat.controls && cheat.world && cheat.player){
-				cheat.game.players.list.forEach(cheat.ent_vals);
+		player_wrap: class {
+			constructor(entity){
+				this.entity = entity;
 			}
+			distanceTo(p){return Math.hypot(this.x-p.x,this.y-p.y,this.z-p.z)}
+			project(t){return this.applyMatrix4(t.matrixWorldInverse).applyMatrix4(t.projectionMatrix)}
+			applyMatrix4(t){var e=this.x,n=this.y,r=this.z,i=t.elements,a=1/(i[3]*e+i[7]*n+i[11]*r+i[15]);return this.x=(i[0]*e+i[4]*n+i[8]*r+i[12])*a,this.y=(i[1]*e+i[5]*n+i[9]*r+i[13])*a,this.z=(i[2]*e+i[6]*n+i[10]*r+i[14])*a,this}
+			get x(){
+				return this.entity.x || 0;
+			}
+			get y(){
+				return this.entity.y || 0;
+			}
+			get z(){
+				return this.entity.z || 0;
+			}
+			get can_see(){
+				return this.active && cheat.util.can_see(cheat.player, this.entity) == null ? true : false;
+			}
+			get frustum(){
+				for(var ind = 0; ind < 6; ind++)if(cheat.world.frustum.planes[ind].distanceToPoint(this) < 0)return false;
+				
+				return true;
+			}
+			get pos2d(){
+				return cheat.util.pos2d(this);
+			}
+			get weapon(){
+				// todo: collect weapon json data and merge partially with encoded variables
+				return this.entity.weapon;
+			}
+			get risk(){
+				return this.entity.isDev || this.entity.isMod || this.entity.isMapMod || this.entity.canGlobalKick || this.entity.canViewReports || this.entity.partnerApp || this.entity.canVerify || this.entity.canTeleport || this.entity.isKPDMode || this.entity.level >= 30;
+			}
+			get is_you(){
+				return this.entity[cheat.vars.isYou];
+			}
+			get aim(){
+				return this.weapon.noAim || !this.entity[cheat.vars.aimVal] || cheat.target && this.weapon.melee && this.distanceTo(add(cheat.target)) <= 18;
+			}
+			get aim_press(){
+				return cheat.controls[cheat.vars.mouseDownR] || cheat.controls.keys[cheat.controls.binds.aim.val];
+			}
+			get crouch(){
+				return this.entity[cheat.vars.crouchVal];
+			}
+			get obj(){
+				return this.entity.lowerBody && this.entity.lowerBody.parent && this.entity.lowerBody.parent ? this.entity.lowerBody.parent : null;
+			}
+			get health(){
+				return this.entity.health || 0;
+			}
+			get max_health(){
+				return this.entity[cheat.vars.maxHealth] || 100;
+			}
+			get active(){
+				return cheat.ctx && this.entity.x != null && this.obj && this.health > 0;
+			}
+			get enemy(){
+				return !this.entity.team || this.entity.team != cheat.player.team;
+			}
+			get did_shoot(){
+				return this.entity[cheat.vars.didShoot];
+			}
+			get shot(){
+				return this.weapon.nAuto && this.did_shoot;
+			}
+		},
+		process(){
+			if(cheat.game && cheat.controls && cheat.world && cheat.player)cheat.game.players.list.forEach(cheat.ent_vals);
 			
 			requestAnimationFrame(cheat.process);
 		},
@@ -238,7 +259,7 @@ var add = Symbol(),
 			if(cheat.config.game.auto_respawn){
 				if(cheat.has_instruct('game is full'))clearInterval(cheat.process_interval), location.assign('https://krunker.io');
 				else if(cheat.has_instruct('disconnected'))clearInterval(cheat.process_interval), location.assign('https://krunker.io');
-				else if(cheat.has_instruct('click to play') && (!cheat.player || !cheat.player[cheat.add] || !cheat.player[cheat.add].active || !cheat.player[cheat.add].health))cheat.controls.toggle(true);
+				else if(cheat.has_instruct('click to play') && (!cheat.player || !add(cheat.player) || !add(cheat.player).active || !add(cheat.player).health))cheat.controls.toggle(true);
 			}
 		}, 100),
 	};
@@ -254,9 +275,7 @@ cheat.ui = new (require('./ui.js').init)({
 	toggle: ['KeyC', 'F1'],
 	config: {
 		save: () => constants.store.set('config', JSON.stringify(cheat.config)),
-		async load(){
-			return cheat.assign_deep(cheat.config, JSON.parse(await constants.store.get('config') || '{}'));
-		},
+		load: () => new Promise((resolve, reject) => constants.store.get('config').then(config => resolve(cheat.assign_deep(cheat.config, JSON.parse(config || '{}')))).catch(reject)),
 		state: () => cheat.config, // for setting walked objects
 	},
 	values: [{
@@ -337,18 +356,29 @@ cheat.ui = new (require('./ui.js').init)({
 		contents: [{
 			name: 'Target sorting',
 			type: 'bool_rot',
-			walk: 'game.target_sorting',
+			walk: 'aim.target_sorting',
 			vals: [
-				[ 'dist2d', 'Distance (2D)' ],
-				[ 'dist3d', 'Distance (3D)' ],
+				[ 'dist2d', 'Distance 2D' ],
+				[ 'dist3d', 'Distance 3D' ],
 				[ 'hp', 'Health' ],
+			],
+			key: 'unset',
+		},{
+			name: 'Offset',
+			type: 'bool_rot',
+			walk: 'aim.offset',
+			vals: [
+				[ 'head', 'Head' ],
+				[ 'chest', 'Chest' ],
+				[ 'feet', 'Feet' ],
+				[ 'random', 'Random' ],
 			],
 			key: 'unset',
 		},{
 			name: 'Smoothness',
 			type: 'slider',
 			walk: 'aim.smooth.value',
-			range: [ 5, 50 ],
+			range: [ 0, 50 ],
 		},{
 			name: 'Smooth',
 			type: 'bool',

@@ -23,7 +23,7 @@ exports.pos2d = (pos, aY = 0) => {
 	
 	if(!exports.cas)exports.cas = parent.document.querySelector('#game-overlay');
 	
-	pos = Object.assign({}, pos);
+	pos = { x: pos.x, y: pos.y, z: pos.z };
 	
 	pos.y += aY;
 	

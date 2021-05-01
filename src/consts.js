@@ -11,8 +11,8 @@ exports.script = 'https://raw.githubusercontent.com/e9x/kru/master/sploit.user.j
 exports.extracted = typeof build_extracted != 'number' ? Date.now() : build_extracted;
 
 exports.store = {
-	get(key){
-		if(gm.get_value)return gm.get_value(key);
+	async get(key){
+		if(gm.get_value)return await gm.get_value(key);
 		else return localStorage.getItem('ss' + key);
 	},
 	set(key, value){
@@ -31,6 +31,7 @@ exports.request = class {
 			onabort: reject,
 			onload: details => resolve(details.responseText),
 			ontimeout: reject,
+			onerror: reject,
 		}) : fetch(this.url).then(res => res.text()).then(resolve).catch(reject));
 	}
 	async json(){

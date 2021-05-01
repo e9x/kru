@@ -137,9 +137,10 @@ exports.init = class {
 					update_slider = event => {
 						if(!movement.held)return;
 						
-						var slider_box = control.slider.getBoundingClientRect(),
+						var unit = control.range[2] ? control.range[2] : control.range[1] / 5,
+							slider_box = control.slider.getBoundingClientRect(),
 							perc = ((event.pageX - slider_box.x) / slider_box.width) * 100,
-							perc_rounded = rtn(perc, control.range[1] / 5).toFixed(2),
+							perc_rounded = rtn(perc, unit).toFixed(2),
 							value = ((control.range[1] / 100) * perc_rounded).toFixed(2);
 						
 						if(event.clientX <= slider_box.x)value = perc_rounded = 0;
