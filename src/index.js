@@ -117,6 +117,8 @@ var ui = require('./ui.js'),
 			},
 		},
 		ent_vals(ent){
+			ent.can_see = add(ent).active && cheat.util.obstructing(cheat.player, ent) == null ? true : false;
+			
 			if(add(ent).active){
 				if(add(ent).obj)add(ent).obj.visible = true;
 				
@@ -167,7 +169,7 @@ var ui = require('./ui.js'),
 				return this.entity.z || 0;
 			}
 			get can_see(){
-				return this.active && cheat.util.can_see(cheat.player, this.entity) == null ? true : false;
+				return this.entity.can_see;
 			}
 			get frustum(){
 				for(var ind = 0; ind < 6; ind++)if(cheat.world.frustum.planes[ind].distanceToPoint(this) < 0)return false;

@@ -38,7 +38,7 @@ exports.pos2d = (pos, aY = 0) => {
 	}
 };
 
-exports.can_see = (player, target, offset = 0) => {
+exports.obstructing = (player, target, offset = 0) => {
 	var d3d = exports.getD3D(player.x, player.y, player.z, target.x, target.y, target.z),
 		dir = exports.getDir(player.z, player.x, target.z, target.x),
 		dist_dir = exports.getDir(exports.getDistance(player.x, player.z, target.x, target.z), target.y, 0, player.y),
