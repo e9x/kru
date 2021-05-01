@@ -15,7 +15,7 @@ class Control {
 		if(this.key)this.ui.keybinds.push({
 			code: this.key,
 			interact: () => {
-				if(panel.classList.contains('close'))return;
+				if(this.ui.panel.classList.contains('close'))return;
 				
 				this.interact();
 				this.update();
@@ -169,45 +169,44 @@ exports.init = class {
 		this.frame = constants.add_ele('iframe', document.documentElement, { style: 'z-index:9000000;border:none;position:absolute;background:#0000;width:376px;height:334px' });
 		constants.add_ele('style', this.frame.contentWindow.document.documentElement, { textContent: require('./ui.css')  });
 		
+		// clear all inputs when window is not focused
+		window.addEventListener('blur', () => this.inputs = {});
+		
+		this.window_listen('keydown', event => {
+			if(event.repeat || document.activeElement && document.activeElement.tagName == 'INPUT')return;
+			
+			this.inputs[event.code] = true;
+			
+			this.keybinds.find(keybind => [].concat(keybind.code).some(keycode => [ keycode, keycode.replace('Digit', 'Numpad') ].includes(event.code)) && event.preventDefault() + keybind.interact());
+		});
+		
+		this.window_listen('keyup', event => this.inputs[event.code] = false);
+		
+		this.keybinds.push({
+			code: this.data.toggle,
+			interact: () => {
+				this.panel.classList.toggle('close');
+			},
+		});
+		
+		this.window_listen('mouseup', () => this.bar_pressed = false);
+		
+		window.addEventListener('mousemove', event => this.proc_move({ x: event.pageX, y: event.pageY }));
+		
+		this.frame.contentWindow.addEventListener('mousemove', event => this.proc_move({ x: event.pageX + this.frame.offsetLeft, y: event.pageY + this.frame.offsetTop }));
+		
+		this.panel = constants.add_ele('div', this.frame.contentWindow.document.documentElement, { className: 'ss-panel' + (constants.mobile ? ' mobile' : '') });
+		
+		this.title = constants.add_ele('div', this.panel, { innerHTML: data.title, className: 'title' });
+		
+		constants.add_ele('div', this.title, { className: 'version', innerHTML: 'v' + data.version });
+		
+		this.title.addEventListener('mousedown', () => this.bar_pressed = true);
+		
+		this.sections = constants.add_ele('div', this.panel, { className: 'sections' });
+		this.sidebar_con = constants.add_ele('div', this.sections, { className: 'sidebar' });
+		
 		this.data.config.load(() => {
-			
-			// clear all inputs when window is not focused
-			window.addEventListener('blur', () => this.inputs = {});
-			
-			this.window_listen('keydown', event => {
-				if(event.repeat || document.activeElement && document.activeElement.tagName == 'INPUT')return;
-				
-				this.inputs[event.code] = true;
-				
-				this.keybinds.find(keybind => [].concat(keybind.code).some(keycode => [ keycode, keycode.replace('Digit', 'Numpad') ].includes(event.code)) && event.preventDefault() + keybind.interact());
-			});
-			
-			this.window_listen('keyup', event => this.inputs[event.code] = false);
-			
-			this.keybinds.push({
-				code: this.data.toggle,
-				interact: () => {
-					this.panel.classList.toggle('close');
-				},
-			});
-			
-			this.window_listen('mouseup', () => this.bar_pressed = false);
-			
-			window.addEventListener('mousemove', event => this.proc_move({ x: event.pageX, y: event.pageY }));
-			
-			this.frame.contentWindow.addEventListener('mousemove', event => this.proc_move({ x: event.pageX + this.frame.offsetLeft, y: event.pageY + this.frame.offsetTop }));
-			
-			this.panel = constants.add_ele('div', this.frame.contentWindow.document.documentElement, { className: 'ss-panel' + (constants.mobile ? ' mobile' : '') });
-			
-			this.title = constants.add_ele('div', this.panel, { innerHTML: data.title, className: 'title' });
-			
-			constants.add_ele('div', this.title, { className: 'version', innerHTML: 'v' + data.version });
-			
-			this.title.addEventListener('mousedown', () => this.bar_pressed = true);
-			
-			this.sections = constants.add_ele('div', this.panel, { className: 'sections' });
-			this.sidebar_con = constants.add_ele('div', this.sections, { className: 'sidebar' });
-			
 			this.tabs = data.values.map((tab, index) => {
 				var section = constants.add_ele('div', this.sections, {
 					className: 'section',
@@ -223,9 +222,9 @@ exports.init = class {
 			
 			// add footer last
 			if(this.data.footer)constants.add_ele('div', this.panel, { className: 'footer', innerHTML: this.data.footer });
-			
-			setTimeout(() => (this.pos = { x: 20, y: (window.innerHeight / 2) - (this.panel.getBoundingClientRect().height / 2) }, this.apply_bounds()));
 		});
+		
+		setTimeout(() => (this.pos = { x: 20, y: (window.innerHeight / 2) - (this.panel.getBoundingClientRect().height / 2) }, this.apply_bounds()));
 	}
 	apply_bounds(){
 		var size = this.panel.getBoundingClientRect();
