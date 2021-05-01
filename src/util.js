@@ -39,23 +39,19 @@ exports.pos2d = (pos, aY = 0) => {
 };
 
 exports.can_see = (player, target, offset = 0) => {
-	if(!player)return false;
-	
 	var d3d = exports.getD3D(player.x, player.y, player.z, target.x, target.y, target.z),
 		dir = exports.getDir(player.z, player.x, target.z, target.x),
 		dist_dir = exports.getDir(exports.getDistance(player.x, player.z, target.x, target.z), target.y, 0, player.y),
 		ad = 1 / (d3d * Math.sin(dir - Math.PI) * Math.cos(dist_dir)),
 		ae = 1 / (d3d * Math.cos(dir - Math.PI) * Math.cos(dist_dir)),
 		af = 1 / (d3d * Math.sin(dist_dir)),
-		height = player.y + (player.height || 0) - 1.15, // 1.15 = config.cameraHeight
-		obj;
+		height = player.y + (player.height || 0) - 1.15; // 1.15 = config.cameraHeight
 	
 	// iterate through game objects
 	for(var ind in exports.cheat.game.map.manager.objects){
-		obj = exports.cheat.game.map.manager.objects[ind];
+		var obj = exports.cheat.game.map.manager.objects[ind];
 		
-		if(!obj.noShoot && obj.active && (exports.cheat.player.weapon && exports.cheat.player.weapon.pierce && exports.cheat.config.aim.wallbangs ? !obj.penetrable : true)){	
-
+		if(!obj.noShoot && obj.active && (exports.cheat.player.weapon && exports.cheat.player.weapon.pierce && exports.cheat.config.aim.wallbangs ? !obj.penetrable : true)){
 			var in_rect = exports.lineInRect(player.x, player.z, height, ad, ae, af, obj.x - Math.max(0, obj.width - offset), obj.z - Math.max(0, obj.length - offset), obj.y - Math.max(0, obj.height - offset), obj.x + Math.max(0, obj.width - offset), obj.z + Math.max(0, obj.length - offset), obj.y + Math.max(0, obj.height - offset));
 			
 			if(in_rect && 1 > in_rect)return in_rect;

@@ -11,8 +11,8 @@ exports.script = 'https://raw.githubusercontent.com/e9x/kru/master/sploit.user.j
 exports.extracted = typeof build_extracted != 'number' ? Date.now() : build_extracted;
 
 exports.store = {
-	async get(key){
-		if(gm.get_value)return await gm.get_value(key);
+	get(key){
+		if(gm.get_value)return gm.get_value(key);
 		else return localStorage.getItem('ss' + key);
 	},
 	set(key, value){
@@ -41,3 +41,5 @@ exports.request = class {
 
 // for nwjs client
 exports.injected_settings = [];
+
+exports.add_ele = (node_name, parent, attributes) => Object.assign(parent.appendChild(document.createElement(node_name)), attributes);

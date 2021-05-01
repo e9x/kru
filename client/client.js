@@ -24,7 +24,7 @@ var os = require('os'),
 		GM_getValue(key, value){
 			var file = path.join(files.sploit, key + '.json');
 			
-			return new Promise(resolve => fs.promises.readFile(file).then(resolve).catch(err => ''));
+			return new Promise(resolve => fs.promises.readFile(file).then(data => resolve(data + '')).catch(err => ''));
 		},
 		GM_setValue(key, value){
 			return fs.promises.writeFile(path.join(files.sploit, key + '.json'), value);
@@ -91,12 +91,12 @@ var os = require('os'),
 		
 		if(path.basename(resolved) == 'consts.js')mod.exports.injected_settings = [{
 			name: 'Open resource folder',
-			type: 'function_inline',
+			type: 'function',
 			key: 'F6',
 			value: () => child_process.exec('start ' + files.sploit),
 		},{
 			name: 'Auto respawn',
-			type: 'bool',
+			type: 'boolean',
 			walk: 'game.auto_respawn',
 			key: 'unset',
 		}];

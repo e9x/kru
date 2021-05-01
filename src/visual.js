@@ -145,12 +145,8 @@ exports.main = (cheat, add) => {
 		};
 
 	exports.exec = () => {
-		if(!cheat.cas || !cheat.ctx){
-			cheat.cas = parent.document.querySelector('#game-overlay');
-			cheat.ctx = cheat.cas ? cheat.cas.getContext('2d', { alpha: true }) : {};
-		}
-		
-		cheat.ctr('resetTransform');
+		cheat.ctr('clearRect', [ 0, 0, cheat.cas.width, cheat.cas.height ]);
+		// cheat.ctr('resetTransform');
 		
 		if(cheat.config.esp.minimap){
 			var cm = cheat.game.map.maps[cheat.game.map.lastGen];
@@ -261,7 +257,7 @@ exports.main = (cheat, add) => {
 		}
 		
 		// draw overlay stuff
-		if(cheat.config.game.overlay && cheat.game && cheat.ctx){
+		if(cheat.config.game.overlay && cheat.game){
 			cheat.ctx.strokeStyle = '#000'
 			cheat.ctx.font = 'Bold 14px Inconsolata, monospace';
 			cheat.ctx.textAlign = 'start';

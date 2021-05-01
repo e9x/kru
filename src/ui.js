@@ -1,314 +1,228 @@
 'use strict';
 var constants = require('./consts.js');
 
-exports.init = class {
-	reload(){
-		this.control_updates.forEach(val => val());
-	}
-	char_ins(str = ''){
-		return str;
-	}
-	css_class(...classn){
-		return classn.filter(cls => typeof cls == 'string').join(' ');
-	}
-	add_ele(node_name, parent, attributes){
-		if(node_name == 'div')node_name = this.div;
+class Control {
+	constructor(data, section, ui){
+		this.data = data;
+		this.name = this.data.name;
+		this.key = this.data.key;
+		this.ui = ui;
+		this.container = constants.add_ele('div', section, { className: 'control' });
+		this.button = constants.add_ele('div', this.container, { className: 'toggle' });
+		this.label = constants.add_ele('div', this.container, { className: 'label' });
+		this.button.addEventListener('click', () => (this.interact(), this.update()));
 		
-		return Object.assign(parent.appendChild(document.createElement(node_name)), attributes);
-	}
-	process_controls(control, tab, tab_button, tab_ele){
-		if(control.type == 'nested_menu'){
-			control.tab_ele = this.add_ele('div', this.sections, { className: this.css_class('section'), style: 'display: none' });
-			
-			this.tabs.push(control.tab_ele);
-			
-			control.val.forEach(controle => this.process_controls(controle, tab, tab_button, control.tab_ele));
-			
-			if(control.load)control.load(control.tab_ele);
-		}
-		
-		var content = this.add_ele('div', tab_ele, {
-				className: this.css_class('control'),
-			}),
-			content_name = document.createElement(this.div), // append after stuff
-			label_appended = false;
-		
-		control.interact = () => {
-			switch(control.type){
-				case'bool':
-					this.set_walk(control, !this.get_walk(control));
-					break
-				case'bool_rot':
-					control.aval = control.aval + 1
-					if(control.aval >= control.vals.length)control.aval = 0 // past length
-					this.set_walk(control, control.vals[control.aval][0]);
-					break
-				case'function':
-					this.get_walk(control)();
-					break
-				case'function_inline':
-					control.value();
-					break
-				case'nested_menu':
-					this.tabs.forEach(ele => ele.style.display = 'none');
-					control.tab_ele.removeAttribute('style');
-					break
-				case'textbox':
-					this.set_walk(control, control.input.value.substr(0, control.max_length));
-					break
-			}
-			
-			control.update();
-			this.data.config.save()
-		};
-		
-		control.update = () => {
-			if(control.button)control.button.innerHTML = this.char_ins('[' + (control.key == 'unset' ? '-' : control.key) + ']');
-			
-			switch(control.type){
-				case'bool':
-					control.button.className = this.css_class('toggle') + ' ' + this.css_class(!!this.get_walk(control) + '');
-					break;
-				case'bool_rot':
-					content_name.innerHTML = this.char_ins(control.name + ': ' + control.vals[control.aval][1]);
-					break;
-				case'text-small':
-					content_name.style.border = 'none';
-					content_name.style['font-size'] = '12px';
-					content_name.style['padding-left'] = '8px';
-					break;
-				case'text-medium':
-					content_name.style.border = 'none';
-					content_name.style['font-size'] = '13px';
-					content_name.style['padding-left'] = '8px';
-					break;
-				case'text-bold':
-					content_name.style.border = 'none';
-					content_name.style['font-weight'] = '600';
-					content_name.style['padding-left'] = '8px';
-					break;
-				case'text-small-bold':
-					content_name.style['font-size'] = '12px';
-					content_name.style['font-weight'] = '600';
-					content_name.style['padding-left'] = '8px';
-					break;
-				case'textbox':
-					control.input.value = ('' + this.get_walk(control)).substr(0, control.max_length);
-					break;
-				case'slider':
-					control.slider_bg.style.width = ((this.get_walk(control) / control.range[1]) * 100) + '%'
-					control.slider.setAttribute('data-value', Number(this.get_walk(control).toString().substr(0, 10)));
-					break;
-			}
-		};
-		
-		this.control_updates.push(control.update);
-		
-		if(control.key){
-			control.button = this.add_ele('div', content, { className: this.css_class('toggle') });
-			
-			control.button.addEventListener('click', control.interact);
-			
-			control.button.innerHTML = this.char_ins(control.key == 'unset' ? '[-]' : '[' + control.key + ']');
-		}
-		
-		switch(control.type){
-			case'textbox':
-				Object.assign(content.appendChild(content_name), {
-					className: this.css_class('control-label'),
-					innerHTML: this.char_ins(control.name),
-				});
+		if(this.key)this.ui.keybinds.push({
+			code: this.key,
+			interact: () => {
+				if(panel.classList.contains('close'))return;
 				
-				content_name.style.padding = '0px 10px';
-				content_name.style['border-left'] = 'none';
-				content_name.style['border-right'] = '2px solid var(--secondary)';
-				
-				control.input = this.add_ele('input', content, { className: this.css_class('control-textbox'), placeholder: control.placeholder, spellcheck: false, value: this.get_walk(control) });
-				
-				label_appended = true;
-				
-				control.input.addEventListener('input', control.interact);
-				
-				break
-			case'slider':
-				var movement = { held: false, x: 0, y: 0 };
-				
-				var rtn = (number, unit) => (number / unit).toFixed() * unit,
-					update_slider = event => {
-						if(!movement.held)return;
-						
-						var unit = control.range[2] ? control.range[2] : control.range[1] / 5,
-							slider_box = control.slider.getBoundingClientRect(),
-							perc = ((event.pageX - slider_box.x) / slider_box.width) * 100,
-							perc_rounded = rtn(perc, unit).toFixed(2),
-							value = ((control.range[1] / 100) * perc_rounded).toFixed(2);
-						
-						if(event.clientX <= slider_box.x)value = perc_rounded = 0;
-						else if(event.clientX >= slider_box.x + slider_box.width)value = control.range[1], perc_rounded = 100;
-						
-						if(perc_rounded <= 100 && value >= control.range[0]){
-							this.set_walk(control, +value);
-							control.update();
-							
-							this.data.config.save();
-						}
-					};
-				
-				control.slider = this.add_ele('div', content, { className: this.css_class('control-slider') });
-				control.slider_bg = this.add_ele('div', control.slider, { className: this.css_class('control-slider-bg'), style: 'width:' + (this.get_walk(control) / control.range[1] * 100 + '%') });
-				
-				control.slider.setAttribute('data-value', this.get_walk(control));
-				
-				control.slider.addEventListener('mousedown', event=>{
-					movement = { held: true, x: event.layerX, y: event.layerY }
-					update_slider(event);
-				});
-				
-				window.addEventListener('mouseup', () => movement.held = false );
-				
-				window.addEventListener('mousemove', event => update_slider(event));
-				
-				break
-			case'bool_rot':
-				
-				control.aval = control.vals.findIndex(([ val ]) => val == this.get_walk(control));
-				if(control.aval == -1)control.aval = 0;
-				
-				break
-		}
-		
-		if(!label_appended){
-			content.appendChild(content_name);
-			content_name.className = this.css_class('control-label');
-			content_name.innerHTML = this.char_ins(control.name);
-		}
-		
-		control.update(false);
-		
-		if(control.key && control.key != 'unset')this.keybinds.push({
-			get code(){ return !isNaN(Number(control.key)) ? 'Digit' + control.key : /^F\d$/.test(control.key) ? control.key : 'Key' + control.key.toUpperCase() },
-			get interact(){ return control.interact },
+				this.interact();
+				this.update();
+			},
 		});
 	}
-	wait_for(check, interval){
-		return new Promise((resolve, reject) => interval = setInterval(() => {
-			var checked = check();
-			
-			if(checked)clearInterval(interval); else return;
-			
-			resolve(checked);
-			interval = null;
-		}, 15));
-	}
-	walk(data){
-		if(typeof data == 'string')data = data.split('.');
-		
-		var state = this.data.config.state(),
+	walk(){
+		var state = this.ui.data.config.state(),
 			last_state,
 			last_key;
 		
-		data.forEach(key => state = (last_state = state)[last_key = key]);
+		this.data.walk.split('.').forEach(key => state = (last_state = state)[last_key = key]);
 		
 		return [ last_state, last_key ];
 	}
-	get_walk(control){
-		var walked = this.walk(control.walk);
+	get value(){
+		if(this.data.hasOwnProperty('value'))return this.data.value;
+		
+		var walked = this.walk();
 		
 		return walked[0][walked[1]];
 	}
-	set_walk(control, value){
-		var walked = this.walk(control.walk);
+	set value(value){
+		var walked = this.walk();
 		
-		return walked[0][walked[1]] = value;
+		walked[0][walked[1]] = value;
+		
+		this.ui.data.config.save();
+		
+		return value;
+	}
+	interact(){
+		console.warn('No defined interaction for', this);
+	}
+	update(){
+		this.button.textContent = '[' + (this.data.key || '-').slice(-1) + ']';
+		this.label.textContent = this.name;
+	}
+}
+
+class BooleanControl extends Control {
+	interact(){
+		this.value = !this.value;
+	}
+	update(){
+		super.update();
+		this.button.className = 'toggle  ' + !!this.value;
+	}
+}
+
+class RotateControl extends Control {
+	constructor(...args){
+		super(...args);
+		this.value_index = this.data.vals.findIndex(([ val ]) => val == this.value);
+	}
+	interact(){
+		this.value = this.data.vals[this.value_index = (this.value_index + 1) % this.data.vals.length][0];
+	}
+	update(){
+		super.update();
+		if(!this.data.vals[this.value_index])this.value_index = 0;
+		this.label.textContent = this.name + ': ' + this.data.vals[this.value_index][1];
+	}
+}
+
+class FunctionControl extends Control {
+	interact(){
+		this.value();
+	}
+}
+
+class TextBoxControl extends Control {
+	update(){
+		this.button.style.display = 'none';
+		this.input.value = ('' + this.value).substr(0, this.data.max_length);
+	}
+}
+
+class SliderControl extends Control {
+	constructor(...args){
+		super(...args);
+		
+		var movement = { held: false, x: 0, y: 0 },
+			rtn = (number, unit) => (number / unit).toFixed() * unit,
+			update_slider = event => {
+				if(!movement.held)return;
+				
+				var unit = this.data.range[2] ? this.data.range[2] : this.data.range[1] / 5,
+					slider_box = this.slider.getBoundingClientRect(),
+					perc = ((event.pageX - slider_box.x) / slider_box.width) * 100,
+					perc_rounded = rtn(perc, unit).toFixed(2),
+					value = +((this.data.range[1] / 100) * perc_rounded).toFixed(2);
+				
+				if(event.clientX <= slider_box.x)value = perc_rounded = 0;
+				else if(event.clientX >= slider_box.x + slider_box.width)value = this.data.range[1], perc_rounded = 100;
+				
+				if(perc_rounded <= 100 && value >= this.data.range[0]){
+					this.value = value;
+					this.update();
+				}
+			};
+		
+		this.slider = constants.add_ele('div', this.container, { className: 'ss-slider' });
+		this.background = constants.add_ele('div', this.slider, { className: 'background', style: 'width:' + (this.value / this.data.range[1] * 100 + '%') });
+		this.slider.dataset.value = this.value;
+		
+		this.slider.addEventListener('mousedown', event=>{
+			movement = { held: true, x: event.layerX, y: event.layerY }
+			update_slider(event);
+		});
+		
+		this.ui.window_listen('mouseup', () => movement.held = false );
+		
+		this.ui.window_listen('mousemove', event => update_slider(event));
+	}
+	update(){
+		super.update();
+		this.button.style.display = 'none';
+		this.background.style.width = ((this.value / this.data.range[1]) * 100) + '%';
+		this.slider.dataset.value = this.value;
+		this.label.textContent = this.name + ':';
+	}
+}
+
+exports.init = class {
+	process_controls(data, tab, section){
+		var construct;
+		
+		switch(data.type){
+			case'rotate': construct = RotateControl; break;
+			case'boolean': construct = BooleanControl; break;
+			case'function': construct = FunctionControl; break;
+			case'textbox': construct = TextBoxControl; break;
+			case'slider': construct = SliderControl; break;
+			default: throw new TypeError('Unknown type: ' + data.type); break;
+		}
+		
+		var control = new construct(data, section, this);
+		
+		control.update();
+	}
+	window_listen(event, callback, options){
+		this.frame.contentWindow.addEventListener(event, callback, options);
+		window.addEventListener(event, callback, options);
 	}
 	constructor(data){
 		this.data = data;
 		this.pos = { x: 0, y: 0 };
-		this.tabs = [];
 		this.inputs = {};
 		this.keybinds = [];
-		this.control_updates = [];
-		this.div = 'div';
+		this.frame = constants.add_ele('iframe', document.documentElement, { style: 'z-index:9000000;border:none;position:absolute;background:#0000;width:376px;height:334px' });
+		constants.add_ele('style', this.frame.contentWindow.document.documentElement, { textContent: require('./ui.css')  });
 		
-		this.data.config.load().then(() => this.wait_for(() => document.head && document.documentElement)).then(() => {
-			// write config.json at nwjs client startup
-			this.data.config.save();
+		this.data.config.load(() => {
 			
 			// clear all inputs when window is not focused
 			window.addEventListener('blur', () => this.inputs = {});
 			
-			window.addEventListener('keydown', event => {
+			this.window_listen('keydown', event => {
 				if(event.repeat || document.activeElement && document.activeElement.tagName == 'INPUT')return;
 				
 				this.inputs[event.code] = true;
 				
-				var keybind = this.keybinds.find(keybind => typeof keybind.code == 'string'
-						? keybind.code == event.code || keybind.code.replace('Digit', 'Numpad') == event.code
-						: keybind.code.some(keycode => keycode == event.code || keycode.replace('Digit', 'Numpad') == event.code));
-				
-				if(!keybind)return;
-				
-				keybind.interact();
+				this.keybinds.find(keybind => [].concat(keybind.code).some(keycode => [ keycode, keycode.replace('Digit', 'Numpad') ].includes(event.code)) && event.preventDefault() + keybind.interact());
 			});
 			
-			window.addEventListener('keyup', event => this.inputs[event.code] = false);
+			this.window_listen('keyup', event => this.inputs[event.code] = false);
 			
 			this.keybinds.push({
 				code: this.data.toggle,
 				interact: () => {
-					event.preventDefault();
 					this.panel.classList.toggle('close');
 				},
 			});
 			
-			document.addEventListener('mouseup', () => this.bar_pressed = false);
+			this.window_listen('mouseup', () => this.bar_pressed = false);
 			
-			document.addEventListener('mousemove', event => {
-				if(this.prev_pos && this.bar_pressed){
-					this.pos.x += event.pageX - this.prev_pos.x;
-					this.pos.y += event.pageY - this.prev_pos.y;
-					
-					this.apply_bounds();
-				}
-				
-				this.prev_pos = { x: event.pageX, y: event.pageY };
-			});
+			window.addEventListener('mousemove', event => this.proc_move({ x: event.pageX, y: event.pageY }));
 			
-			this.add_ele('link', document.head, { rel: 'stylesheet', href: URL.createObjectURL(new Blob([ require('./ui.css').replace(/\.((?:(?!\[|\d|:|,|\.)\S)+)/g, (m, cl) => '.' + this.css_class(cl)) ], { type: 'text/css' })) });
+			this.frame.contentWindow.addEventListener('mousemove', event => this.proc_move({ x: event.pageX + this.frame.offsetLeft, y: event.pageY + this.frame.offsetTop }));
 			
-			this.panel = this.add_ele('div', document.documentElement, { className: this.css_class('ss-panel', constants.mobile ? 'mobile' : undefined) });
+			this.panel = constants.add_ele('div', this.frame.contentWindow.document.documentElement, { className: 'ss-panel' + (constants.mobile ? ' mobile' : '') });
 			
-			this.title = this.add_ele('div', this.panel, { innerHTML: this.char_ins(data.title), className: this.css_class('title') });
+			this.title = constants.add_ele('div', this.panel, { innerHTML: data.title, className: 'title' });
 			
-			this.add_ele('div', this.title, { className: this.css_class('version'), innerHTML: this.char_ins('v' + data.version) });
+			constants.add_ele('div', this.title, { className: 'version', innerHTML: 'v' + data.version });
 			
 			this.title.addEventListener('mousedown', () => this.bar_pressed = true);
 			
-			this.sections = this.add_ele('div', this.panel, { className: this.css_class('sections') });
-			this.sidebar_con = this.add_ele('div', this.sections, { className: this.css_class('sidebar' ) });
+			this.sections = constants.add_ele('div', this.panel, { className: 'sections' });
+			this.sidebar_con = constants.add_ele('div', this.sections, { className: 'sidebar' });
 			
-			data.values.forEach((tab, index) => {
-				var tab_button = this.add_ele('div', this.sidebar_con, {
-						className: this.css_class('section'),
-					}),
-					tab_ele = this.add_ele('div', this.sections, {
-						className: this.css_class('section'),
-						style: index > 0 ? 'display:none' : '',
-					});
+			this.tabs = data.values.map((tab, index) => {
+				var section = constants.add_ele('div', this.sections, {
+					className: 'section',
+					style: index > 0 ? 'display:none' : '',
+				});
 				
-				this.tabs.push(tab_ele);
+				constants.add_ele('div', this.sidebar_con, { className: 'section', textContent: tab.name }).addEventListener('click', () => (this.tabs.forEach(ele => ele.style.display = 'none'), section.removeAttribute('style')));
 				
-				tab_button.addEventListener('click', () => (this.tabs.forEach(ele => ele.style.display = 'none'), tab_ele.removeAttribute('style')));
+				tab.contents.forEach(data => this.process_controls(data, tab, section));
 				
-				tab_button.innerHTML = this.char_ins(tab.name);
-				
-				if(tab.load)tab.load(tab_ele);
-				
-				tab.contents.forEach(control => { try{ this.process_controls(control, tab, tab_button, tab_ele) }catch(err){ console.error('Encountered error at %c' + control.name + ' (' + control.val + ')', 'color: #FFF', err) }});
+				return section;
 			});
 			
 			// add footer last
-			if(this.data.footer)this.add_ele('div', this.panel, { className: this.css_class('footer'), innerHTML: this.char_ins(this.data.footer) });
+			if(this.data.footer)constants.add_ele('div', this.panel, { className: 'footer', innerHTML: this.data.footer });
 			
 			setTimeout(() => (this.pos = { x: 20, y: (window.innerHeight / 2) - (this.panel.getBoundingClientRect().height / 2) }, this.apply_bounds()));
 		});
@@ -316,7 +230,17 @@ exports.init = class {
 	apply_bounds(){
 		var size = this.panel.getBoundingClientRect();
 		
-		this.panel.style.left = Math.min(Math.max(this.pos.x, 0), window.innerWidth - size.width) + 'px';
-		this.panel.style.top = Math.min(Math.max(this.pos.y, 0), window.innerHeight - size.height) + 'px';
+		this.frame.style.left = Math.min(Math.max(this.pos.x, 0), window.innerWidth - size.width) + 'px';
+		this.frame.style.top = Math.min(Math.max(this.pos.y, 0), window.innerHeight - size.height) + 'px';
+	}
+	proc_move(pos){
+		if(this.prev_pos && this.bar_pressed){
+			this.pos.x += pos.x - this.prev_pos.x;
+			this.pos.y += pos.y - this.prev_pos.y;
+			
+			this.apply_bounds();
+		}
+		
+		this.prev_pos = pos;
 	}
 };

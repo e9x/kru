@@ -4,6 +4,9 @@
 	font-weight: 400;
 }
 
+body { display: none; }
+html { display: flex; }
+
 .ss-panel {
 	--primary: #eee;
 	--secondary: #445;
@@ -14,14 +17,12 @@
 	--control-height: 36px;
 	--blue: #29F;
 	border: 2px solid var(--primary);
-	z-index: 9000000;
-	position: absolute;
 	display: flex;
-	width: 375px;
-	background: rgba(var(--background-split), 0.8);
+	background: rgba(var(--background-split),0.8);
 	flex-direction: column;
 	user-select: none;
 	opacity: 0.8;
+	flex: 1 1 0;
 }
 
 .ss-panel.mobile {
@@ -64,7 +65,7 @@
 .ss-panel > .sections {
 	display: flex;
 	border-top: 2px solid var(--primary);
-	min-height: 226px;
+	min-height: 264px;
 	border-bottom: 2px solid var(--secondary);
 }
 
@@ -128,7 +129,7 @@
 	background: var(--false);
 }
 
-.control-textbox {
+/*.textbox {
 	height: 28px;
 	display: block;
 	font: 14px Inconsolata, monospace;
@@ -141,16 +142,16 @@
 
 .control-textbox:focus {
 	box-shadow: 0px 0px 0px 3px #037;
-}
+}*/
 
-.control-label {
+.ss-panel > .sections > .section > .control > .label {
 	flex: 1 1 0;
 	padding-left: 15px;
 	line-height: var(--control-height) !important;
 	border-left: 2px solid var(--secondary);
 }
 
-.control-slider {
+.ss-panel > .sections > .section > .control > .ss-slider {
 	flex: 1 1 0;
 	height: 28px;
 	cursor: w-resize;
@@ -158,20 +159,20 @@
 	margin: auto 3px;
 }
 
-.control-slider:hover {
+.ss-panel > .sections > .section > .control > .ss-slider:hover {
 	background: #333
 }
 
-.control-slider-bg {
+.ss-panel > .sections > .section > .control > .ss-slider > .background {
 	background: #2ad;
 	height: 100%
 }
 
-.control-slider:hover .control-slider-bg {
+.ss-panel > .sections > .section > .control > .ss-slider:hover .background {
 	background: #4ad
 }
 
-.control-slider::after {
+.ss-panel > .sections > .section > .control > .ss-slider::after {
 	position: relative;
 	height: 100%;
 	text-align: center;

@@ -1,5 +1,6 @@
 'use strict';
-var add = ent => new cheat.player_wrap(ent),
+var ui = require('./ui.js'),
+	add = ent => new cheat.player_wrap(ent),
 	constants = require('./consts.js'),
 	spackage = require('../package.json'),
 	msgpack = require('msgpack-lite'),
@@ -70,9 +71,6 @@ var add = ent => new cheat.player_wrap(ent),
 			[/this\.moveObj=func/, 'ssd.game = this, $&'],
 			[/this\.backgroundScene=/, 'ssd.world = this, $&'],
 			
-			// hijack rendering
-			[/requestAnimFrame(F|)\(/g, 'ssd.frame(requestAnimFrame$1, '],
-			
 			// get webpack modules
 			[/(\w)\(\1\.\w=\d+\)/, '$&; ssd.mod($1)'],
 			
@@ -99,24 +97,6 @@ var add = ent => new cheat.player_wrap(ent),
 			},
 			skin(player){
 				return cheat.config.game.skins && player && player.alias ? cheat.storage.skins : player.skins;
-			},
-			frame(frame, func){
-				cheat.player = cheat.game ? cheat.game.players.list.find(player => player[cheat.vars.isYou]) : null;
-				cheat.controls = cheat.game ? cheat.game.controls : null;
-				
-				if(cheat.player && cheat.player[cheat.vars.procInputs] && !cheat.player[cheat.syms.procInputs]){
-					cheat.player[cheat.syms.procInputs] = cheat.player[cheat.vars.procInputs];
-					
-					cheat.player[cheat.vars.procInputs] = (data, ...args) => {
-						if(cheat.controls && cheat.player && add(cheat.player) && add(cheat.player).weapon)cheat.input.exec(data);
-						
-						return cheat.player[cheat.syms.procInputs](data, ...args);
-					};
-				}
-				
-				cheat.visual.exec();
-				
-				return frame(func);
 			},
 		},
 		dist_center(pos){
@@ -241,14 +221,27 @@ var add = ent => new cheat.player_wrap(ent),
 		process(){
 			if(cheat.game && cheat.controls && cheat.world && cheat.player)cheat.game.players.list.forEach(cheat.ent_vals);
 			
+			cheat.player = cheat.game ? cheat.game.players.list.find(player => player[cheat.vars.isYou]) : null;
+			cheat.controls = cheat.game ? cheat.game.controls : null;
+			
+			if(cheat.player && cheat.player[cheat.vars.procInputs] && !cheat.player[cheat.syms.procInputs]){
+				cheat.player[cheat.syms.procInputs] = cheat.player[cheat.vars.procInputs];
+				
+				cheat.player[cheat.vars.procInputs] = (data, ...args) => {
+					if(cheat.controls && cheat.player && add(cheat.player) && add(cheat.player).weapon)cheat.input.exec(data);
+					
+					return cheat.player[cheat.syms.procInputs](data, ...args);
+				};
+			}
+			
+			cheat.visual.exec();
+			
 			requestAnimationFrame(cheat.process);
 		},
 		// axis
 		v3: ['x', 'y', 'z'],
 		round: (n, r) => Math.round(n * Math.pow(10, r)) / Math.pow(10, r),
 		ctr(label, args = []){ // ctx raw
-			if(!cheat.ctx)return;
-			
 			return Reflect.apply(CanvasRenderingContext2D.prototype[label], cheat.ctx, args);
 		},
 		input: require('./input.js'),
@@ -266,23 +259,22 @@ var add = ent => new cheat.player_wrap(ent),
 
 cheat.util.cheat = cheat;
 cheat.raycaster = new cheat.three.Raycaster();
-cheat.process();
 
-cheat.ui = new (require('./ui.js').init)({
+cheat.ui = new ui.init({
 	version: spackage.version,
 	title: 'Shitsploit',
 	footer: 'Press [F1] or [C] to toggle',
 	toggle: ['KeyC', 'F1'],
 	config: {
 		save: () => constants.store.set('config', JSON.stringify(cheat.config)),
-		load: () => new Promise((resolve, reject) => constants.store.get('config').then(config => resolve(cheat.assign_deep(cheat.config, JSON.parse(config || '{}')))).catch(reject)),
+		load: callback => constants.store.get('config').then(config => callback(cheat.assign_deep(cheat.config, JSON.parse(config || '{}')))),
 		state: () => cheat.config, // for setting walked objects
 	},
 	values: [{
 		name: 'Main',
 		contents: [{
 			name: 'Auto aim',
-			type: 'bool_rot',
+			type: 'rotate',
 			walk: 'aim.status',
 			vals: [
 				[ 'off', 'Off' ],
@@ -291,10 +283,10 @@ cheat.ui = new (require('./ui.js').init)({
 				[ 'silent', 'Silent' ],
 				// [ 'hidden', 'Hidden' ],
 			],
-			key: 3,
+			key: 'Digit3',
 		},{
 			name: 'Auto bhop',
-			type: 'bool_rot',
+			type: 'rotate',
 			walk: 'game.bhop',
 			vals: [
 				[ 'off', 'Off' ],
@@ -304,10 +296,10 @@ cheat.ui = new (require('./ui.js').init)({
 				[ 'off', 'Off' ],
 				[ 'autojump', 'Auto jump' ],
 			],
-			key: 4,
+			key: 'Digit4',
 		},{
 			name: 'ESP mode',
-			type: 'bool_rot',
+			type: 'rotate',
 			walk: 'esp.status',
 			vals: [
 				[ 'off', 'Off' ],
@@ -316,56 +308,52 @@ cheat.ui = new (require('./ui.js').init)({
 				[ 'box_chams', 'Box & chams' ],
 				[ 'full', 'Full' ],
 			],
-			key: 5,
+			key: 'Digit5',
 		},{
 			name: 'Tracers',
-			type: 'bool',
+			type: 'boolean',
 			walk: 'esp.tracers',
-			key: 6,
+			key: 'Digit6',
 		},{
 			name: 'Nametags',
-			type: 'bool',
+			type: 'boolean',
 			walk: 'esp.nametags',
-			key: 7,
+			key: 'Digit7',
 		},{
 			name: 'Overlay',
-			type: 'bool',
+			type: 'boolean',
 			walk: 'game.overlay',
-			key: 8,
+			key: 'Digit8',
 		}],
 	},{
 		name: 'Game',
 		contents: [{
 			name: 'Skins',
-			type: 'bool',
+			type: 'boolean',
 			walk: 'game.skins',
-			key: 'unset',
 		},{
 			name: 'Wireframe',
-			type: 'bool',
+			type: 'boolean',
 			walk: 'game.wireframe',
-			key: 'unset',
 		},{
 			name: 'Auto respawn',
-			type: 'bool',
+			type: 'boolean',
 			walk: 'game.auto_respawn',
-			key: 'unset',
 		}],
 	},{
 		name: 'Aim',
 		contents: [{
 			name: 'Target sorting',
-			type: 'bool_rot',
+			type: 'rotate',
 			walk: 'aim.target_sorting',
 			vals: [
 				[ 'dist2d', 'Distance 2D' ],
 				[ 'dist3d', 'Distance 3D' ],
 				[ 'hp', 'Health' ],
 			],
-			key: 'unset',
 		},{
 			name: 'Offset',
-			type: 'bool_rot',
+			type: 'rotate',
 			walk: 'aim.offset',
 			vals: [
 				[ 'head', 'Head' ],
@@ -373,7 +361,6 @@ cheat.ui = new (require('./ui.js').init)({
 				[ 'feet', 'Feet' ],
 				[ 'random', 'Random' ],
 			],
-			key: 'unset',
 		},{
 			name: 'Smoothness',
 			type: 'slider',
@@ -381,37 +368,31 @@ cheat.ui = new (require('./ui.js').init)({
 			range: [ 0, 50 ],
 		},{
 			name: 'Smooth',
-			type: 'bool',
+			type: 'boolean',
 			walk: 'aim.smooth.status',
-			key: 'unset',
 		},{
 			name: 'Auto reload',
-			type: 'bool',
+			type: 'boolean',
 			walk: 'aim.auto_reload',
-			key: 'unset',
 		},{
 			name: 'Sight check',
-			type: 'bool',
+			type: 'boolean',
 			walk: 'aim.sight',
-			key: 'unset',
 		},{
 			name: 'Wallbangs',
-			type: 'bool',
+			type: 'boolean',
 			walk: 'aim.wallbangs',
-			key: 'unset',
 		}],
 	},{
 		name: 'Esp',
 		contents: [{
 			name: 'Minimap',
-			type: 'bool',
+			type: 'boolean',
 			walk: 'esp.minimap',
-			key: 'unset',
 		},{
 			name: 'Walls',
-			type: 'bool',
+			type: 'boolean',
 			walk: 'esp.walls.status',
-			key: 'unset',
 		},{
 			name: 'Wall opacity',
 			type: 'slider',
@@ -422,13 +403,11 @@ cheat.ui = new (require('./ui.js').init)({
 		name: 'Settings',
 		contents: [{
 			name: 'Join the Discord',
-			type: 'function_inline',
-			key: 'unset',
+			type: 'function',
 			value: () => window.open('https://e9x.github.io/kru/invite'),
 		},{
 			name: 'Source code',
-			type: 'function_inline',
-			key: 'unset',
+			type: 'function',
 			value: () => window.open('https://github.com/e9x/kru'),
 		}].concat(constants.injected_settings),
 	}],
@@ -497,5 +476,12 @@ new MutationObserver((muts, observer) => muts.forEach(mut => [...mut.addedNodes]
 
 cheat.input.main(cheat, add);
 cheat.visual.main(cheat, add);
+
+cheat.cas = constants.add_ele('canvas', document.documentElement, { style: 'background:#0000;pointer-events:none;position:absolute;width:100%;height:100%;z-index:8999999', width: window.innerWidth, height: window.innerHeight });
+cheat.ctx = cheat.cas.getContext('2d', { alpha: true });
+
+window.addEventListener('resize', () => (cheat.cas.width = window.innerWidth, cheat.cas.height = window.innerHeight));
+
+cheat.process();
 
 require('./update.js');
