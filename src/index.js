@@ -267,7 +267,13 @@ cheat.ui = new ui.init({
 	toggle: ['KeyC', 'F1'],
 	config: {
 		save: () => constants.store.set('config', JSON.stringify(cheat.config)),
-		load: callback => constants.store.get('config').then(config => callback(cheat.assign_deep(cheat.config, JSON.parse(config || '{}')))),
+		load: callback => {
+			var res = constants.store.get('config'),
+				load = config => cheat.assign_deep(cheat.config, JSON.parse(config || '{}'));
+			
+			if(typeof res == 'object' && res != null)res.then(config => load(config) + callback());
+			else load(res), callback();
+		},
 		state: () => cheat.config, // for setting walked objects
 	},
 	values: [{

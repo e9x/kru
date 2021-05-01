@@ -189,7 +189,10 @@ exports.init = class {
 			},
 		});
 		
-		this.window_listen('mouseup', () => this.bar_pressed = false);
+		this.window_listen('mouseup', () => {
+			this.bar_pressed = false;
+			this.pos = this.bounds();
+		});
 		
 		window.addEventListener('mousemove', event => this.proc_move({ x: event.pageX, y: event.pageY }));
 		
@@ -226,11 +229,16 @@ exports.init = class {
 		
 		setTimeout(() => (this.pos = { x: 20, y: (window.innerHeight / 2) - (this.panel.getBoundingClientRect().height / 2) }, this.apply_bounds()));
 	}
-	apply_bounds(){
+	bounds(){
 		var size = this.panel.getBoundingClientRect();
 		
-		this.frame.style.left = Math.min(Math.max(this.pos.x, 0), window.innerWidth - size.width) + 'px';
-		this.frame.style.top = Math.min(Math.max(this.pos.y, 0), window.innerHeight - size.height) + 'px';
+		return { x: Math.min(Math.max(this.pos.x, 0), window.innerWidth - size.width), y: Math.min(Math.max(this.pos.y, 0), window.innerHeight - size.height) };
+	}
+	apply_bounds(){
+		var bounds = this.bounds();
+		
+		this.frame.style.left = bounds.x + 'px';
+		this.frame.style.top = bounds.y + 'px';
 	}
 	proc_move(pos){
 		if(this.prev_pos && this.bar_pressed){
