@@ -16,6 +16,6 @@ var constants = require('./consts.js'),
 		
 		return out;
 	},
-	update_interval = setInterval(check_update, 1000 * 60 * 5); // 5 minutes
+	update_interval = setInterval(check_update, 1000 * 60 * 3); // 3 minutes
 
-check_update();
+setTimeout(check_update, 3000);
