@@ -55,21 +55,22 @@ var ui = require('./ui.js'),
 		},
 		util: require('./util.js'),
 		vars: {},
-		find_vars: [
-			['isYou', /this\.accid=0,this\.(\w+)=\w+,this\.isPlayer/, 1],
-			['inView', /&&!\w\.\w+&&\w\.\w+&&\w\.(\w+)\){/, 1],
-			['pchObjc', /0,this\.(\w+)=new \w+\.Object3D,this/, 1],
-			['aimVal', /this\.(\w+)-=1\/\(this\.weapon\.aimSpd/, 1],
-			['crouchVal', /this\.(\w+)\+=\w\.crouchSpd\*\w+,1<=this\.\w+/, 1],
-			['didShoot', /--,\w+\.(\w+)=!0/, 1],
-			['ammos', /length;for\(\w+=0;\w+<\w+\.(\w+)\.length/, 1],
-			['weaponIndex', /\.weaponConfig\[\w+]\.secondary&&\(\w+\.(\w+)==\w+/, 1],
-			['maxHealth', /\.regenDelay,this\.(\w+)=\w+\.mode&&\w+\.mode\.\1/, 1],
-			['yVel', /\w+\.(\w+)&&\(\w+\.y\+=\w+\.\1\*/, 1],
-			['mouseDownR', /this\.(\w+)=0,this\.keys=/, 1], 
-			['recoilAnimY', /\.\w+=0,this\.(\w+)=0,this\.\w+=0,this\.\w+=1,this\.slide/, 1],
-			['procInputs', /this\.(\w+)=function\(\w+,\w+,\w+,\w+\){this\.recon/, 1],
-		],
+		find_vars: {
+			isYou: [/this\.accid=0,this\.(\w+)=\w+,this\.isPlayer/, 1],
+			inView: [/&&!\w\.\w+&&\w\.\w+&&\w\.(\w+)\){/, 1],
+			pchObjc: [/0,this\.(\w+)=new \w+\.Object3D,this/, 1],
+			aimVal: [/this\.(\w+)-=1\/\(this\.weapon\.aimSpd/, 1],
+			crouchVal: [/this\.(\w+)\+=\w\.crouchSpd\*\w+,1<=this\.\w+/, 1],
+			didShoot: [/--,\w+\.(\w+)=!0/, 1],
+			ammos: [/length;for\(\w+=0;\w+<\w+\.(\w+)\.length/, 1],
+			weaponIndex: [/\.weaponConfig\[\w+]\.secondary&&\(\w+\.(\w+)==\w+/, 1],
+			maxHealth: [/\.regenDelay,this\.(\w+)=\w+\.mode&&\w+\.mode\.\1/, 1],
+			yVel: [/\w+\.(\w+)&&\(\w+\.y\+=\w+\.\1\*/, 1],
+			mouseDownR: [/this\.(\w+)=0,this\.keys=/, 1], 
+			recoilAnimY: [/\.\w+=0,this\.(\w+)=0,this\.\w+=0,this\.\w+=1,this\.slide/, 1],
+			procInputs: [/this\.(\w+)=function\(\w+,\w+,\w+,\w+\){this\.recon/, 1],
+			objInstances: [/lowerBody\),\w+\|\|\w+\.(\w+)\./, 1],
+		},
 		patches: [
 			// get vars
 			[/this\.moveObj=func/, 'ssd.game = this, $&'],
@@ -100,10 +101,11 @@ var ui = require('./ui.js'),
 			get aim(){ return this.weapon.noAim || !this.entity[cheat.vars.aimVal] || cheat.target && this.weapon.melee && this.distanceTo(add(cheat.target)) <= 18 }
 			get aim_press(){ return cheat.controls[cheat.vars.mouseDownR] || cheat.controls.keys[cheat.controls.binds.aim.val] }
 			get crouch(){ return this.entity[cheat.vars.crouchVal] }
-			get obj(){ return this.entity.lowerBody && this.entity.lowerBody.parent && this.entity.lowerBody.parent ? this.entity.lowerBody.parent : null }
+			get obj(){ return this.entity[cheat.vars.objInstances] } // this.entity.lowerBody && this.entity.lowerBody.parent && this.entity.lowerBody.parent ? this.entity.lowerBody.parent : null }
+			get recoil_y(){ return this.entity[cheat.vars.recoilAnimY] }
 			get health(){ return this.entity.health || 0 }
 			get max_health(){ return this.entity[cheat.vars.maxHealth] || 100 }
-			get active(){ return cheat.ctx && this.entity.x != null && this.obj && this.health > 0 }
+			get active(){ return !this.entity.isHidden && cheat.ctx && this.entity.x != null && this.obj && this.health > 0 }
 			get enemy(){ return !this.entity.team || this.entity.team != cheat.player.team }
 			get did_shoot(){ return this.entity[cheat.vars.didShoot] }
 			get shot(){ return this.weapon.nAuto && this.did_shoot }
@@ -355,7 +357,11 @@ new MutationObserver((muts, observer) => muts.forEach(mut => [...mut.addedNodes]
 	
 	new constants.request('https://sys32.dev/api/v1/source', true).text().then(krunker => {
 		// find variables
-		cheat.find_vars.forEach(([ name, regex, index ]) => cheat.vars[name] = (krunker.match(regex) || 0)[index] || console.error('Could not find', name, regex, 'at index', index));
+		for(var label in cheat.find_vars){
+			var [ regex, index ] = cheat.find_vars[label];
+			
+			cheat.vars[label] = (krunker.match(regex) || 0)[index] || console.error('Could not find', name, regex, 'at index', index);
+		}
 		
 		// apply patches
 		cheat.patches.forEach(([ regex, replace ]) => krunker = krunker.replace(regex, replace));

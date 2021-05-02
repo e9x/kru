@@ -39,7 +39,7 @@ compiler.watch({}, (err, stats) => {
 	
 	if(error)return console.error('One or more errors occured during building, refer to above console output for more info');
 	
-	console.log('Build success, output at', path.join(compiler.options.output.path, compiler.options.output.filename));
+	console.log('Build success');
 });
 
 proxy(false, '/ping-list', 'matchmaker.krunker.io', (req, res, url) => url.searchParams.set('hostname', 'krunker.io'));

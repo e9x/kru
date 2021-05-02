@@ -73,7 +73,7 @@ exports.main = (cheat, add) => {
 			
 			var yDire = cheat.util.getDir(add(cheat.player).z, add(cheat.player).x, target.z, target.x),
 				xDire = cheat.util.getXDire(add(cheat.player).x, add(cheat.player).y, add(cheat.player).z, target.x, yVal, target.z),
-				xv = xDire - cheat.player[cheat.vars.recoilAnimY] * 0.27,
+				xv = xDire - add(cheat.player).recoil_y * 0.27,
 				rot = {
 					x: round(Math.max(-cheat.util.halfpi, Math.min(cheat.util.halfpi, xv )) % cheat.util.pi2, 3) || 0,
 					y: cheat.util.normal_radian(round(yDire % cheat.util.pi2, 3)) || 0,
