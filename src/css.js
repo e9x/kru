@@ -21,9 +21,10 @@ module.exports = source => {
 		var read = read_string(node.value.value);
 		
 		if(read.startsWith('assets:')){
-			var file = path.join(__dirname, read.substr(7));
+			var file = path.join(__dirname, read.substr(7)),
+				mime = mimes['.' + (path.extname(file) || '').substr(1)] || 'application/octet-stream';
 			
-			node.value.value = JSON.stringify('data:' + mimes[(path.extname(file) || '').substr(1)] || 'application/octet-stream') + ';base64,' + fs.readFileSync(file, 'base64');
+			node.value.value = JSON.stringify(`data:${mime};base64,${fs.readFileSync(file, 'base64')}`);
 		}
 	});
 	

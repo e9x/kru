@@ -2,6 +2,14 @@
 
 exports.main = (cheat, add) => {
 	var keys = {frame: 0, delta: 1, xdir: 2, ydir: 3, moveDir: 4, shoot: 5, scope: 6, jump: 7, reload: 8, crouch: 9, weaponScroll: 10, weaponSwap: 11, moveLock: 12},
+		round = (n, r) => Math.round(n * Math.pow(10, r)) / Math.pow(10, r),
+		raycaster = new cheat.three.Raycaster(),
+		dist_center = pos => Math.hypot((window.innerWidth / 2) - pos.x, (window.innerHeight / 2) - pos.y),
+		sorts = {
+			dist3d: (ent_1, ent_2) => add(ent_1).pos.distanceTo(ent_2),
+			dist2d: (ent_1, ent_2) => dist_center(add(ent_2).pos2d) - dist_center(add(ent_1).pos2d),
+			hp: (ent_1, ent_2) => ent_1.health - ent_2.health,
+		},
 		smooth = target	=> {
 			var aj = 17,
 				// turn = vertical speed 0.0022
@@ -20,23 +28,15 @@ exports.main = (cheat, add) => {
 			cheat.controls.object.position.x -= ang * Math.sin(al) * Math.cos(am), cheat.controls.object.position.y += ang * Math.sin(am), 
 			cheat.controls.object.position.z -= ang * Math.cos(al) * Math.cos(am), cheat.world.updateFrustum();
 		},
-		valid_target = ent => typeof ent == 'object' && add(ent) && !add(ent).is_you && add(ent).can_see && add(ent).active && add(ent).enemy && (cheat.config.aim.sight ? add(ent).frustum : true),
+		valid_target = ent => typeof ent == 'object' && !add(ent).is_you && add(ent).can_see && add(ent).active && add(ent).enemy && (cheat.config.aim.sight ? add(ent).frustum : true),
 		y_offset_types = ['head', 'chest', 'feet'],
 		y_offset_rand = 'head';
 	
 	setInterval(() => y_offset_rand = y_offset_types[~~(Math.random() * y_offset_types.length)], 2000);
 	
 	exports.exec = data => {
-		var target = cheat.target = valid_target(cheat.target) ? cheat.target : cheat.game.players.list.filter(valid_target).sort(cheat.sorts.norm)[0],
-			pm = cheat.game.players.list.filter(ent => ent && add(ent) && add(ent).active && add(ent).enemy && add(ent).can_see).map(ent => add(ent).obj),
+		var target = cheat.target = valid_target(cheat.target) ? cheat.target : cheat.game.players.list.filter(valid_target).sort((ent_1, ent_2) => sorts[cheat.config.aim.target_sorting || 'dist2d'](ent_1, ent_2) * (add(ent_1).frustum == add(ent_2).frustum ? 1 : 0.5))[0],
 			has_ammo = add(cheat.player).weapon.melee || cheat.player[cheat.vars.ammos][cheat.player[cheat.vars.weaponIndex]];
-		
-		// arrow controls
-		cheat.controls[cheat.vars.pchObjc].rotation.x -= cheat.ui.inputs.ArrowDown ? 0.006 : 0;
-		cheat.controls[cheat.vars.pchObjc].rotation.x += cheat.ui.inputs.ArrowUp ? 0.006 : 0;
-		
-		cheat.controls.object.rotation.y -= cheat.ui.inputs.ArrowRight ? 0.00675 : 0;
-		cheat.controls.object.rotation.y += cheat.ui.inputs.ArrowLeft ? 0.00675 : 0;
 		
 		// bhop
 		if(cheat.config.game.bhop != 'off' && (cheat.ui.inputs.Space || cheat.config.game.bhop == 'autojump' || cheat.config.game.bhop == 'autoslide')){
@@ -52,7 +52,7 @@ exports.main = (cheat, add) => {
 		// auto reload, currentAmmo set earlier
 		if(cheat.player && !has_ammo && (cheat.config.aim.status == 'silent' || cheat.config.aim.auto_reload))data[keys.reload] = 1;
 		
-		cheat.raycaster.setFromCamera({ x: 0, y: 0 }, cheat.world.camera);
+		raycaster.setFromCamera({ x: 0, y: 0 }, cheat.world.camera);
 		
 		// data[keys.reload]
 		if(has_ammo && cheat.config.aim.status != 'off' && target && cheat.player.health){
@@ -75,11 +75,11 @@ exports.main = (cheat, add) => {
 				xDire = cheat.util.getXDire(add(cheat.player).x, add(cheat.player).y, add(cheat.player).z, target.x, yVal, target.z),
 				xv = xDire - cheat.player[cheat.vars.recoilAnimY] * 0.27,
 				rot = {
-					x: cheat.round(Math.max(-cheat.util.halfpi, Math.min(cheat.util.halfpi, xv )) % cheat.util.pi2, 3) || 0,
-					y: cheat.util.normal_radian(cheat.round(yDire % cheat.util.pi2, 3)) || 0,
+					x: round(Math.max(-cheat.util.halfpi, Math.min(cheat.util.halfpi, xv )) % cheat.util.pi2, 3) || 0,
+					y: cheat.util.normal_radian(round(yDire % cheat.util.pi2, 3)) || 0,
 				};
 			
-			if((cheat.config.aim.status == 'silent' && !cheat.config.aim.smooth.status || ['silent', 'triggerbot'].includes(cheat.config.aim.status) && add(cheat.player).aim && cheat.raycaster.intersectObjects(pm, true).length) && add(cheat.player).aim)data[keys.shoot] = add(cheat.player).shot ? 0 : 1;
+			if((cheat.config.aim.status == 'silent' && !cheat.config.aim.smooth.status || ['silent', 'triggerbot'].includes(cheat.config.aim.status) && add(cheat.player).aim && raycaster.intersectObjects(cheat.game.players.list.filter(ent => add(ent).active && add(ent).enemy && add(ent).can_see).map(ent => add(ent).obj), true).length) && add(cheat.player).aim)data[keys.shoot] = add(cheat.player).shot ? 0 : 1;
 			
 			// if fully aimed or weapon cant even be aimed or weapon is melee and nearby, shoot
 			if(cheat.config.aim.status == 'silent' && !cheat.config.aim.smooth.status && add(cheat.player).aim)data[keys.shoot] = add(cheat.player).shot ? 0 : 1;

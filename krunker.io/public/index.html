@@ -1,0 +1,1022 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<title>Krunker</title>
+		<link rel='shortcut icon' type="image/png" href='/img/favicon.png' />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=0">
+		<meta name="description" content="Krunker.io is a free Multiplayer Online Game. No Download needed">
+		<meta name="keywords" content="io game,game engine,.io,online game,free game,browser fps,roblox">
+		<meta http-equiv="Accept-Ranges" content="none">
+		<meta property="og:title" content="Krunker">
+		<meta property="og:image" content="/assets/promo/og.png">
+		<meta property="og:description" content="Krunker.io is a free Multiplayer Online Game. No Download needed">
+		<link rel="stylesheet" href="/css/main.css?build=1lhJn" />
+		<link rel="stylesheet" href="/css/flag.css?build=1lhJn" />
+		<link rel="stylesheet" href="/css/main_custom.css?build=1lhJn" />
+		<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+		<style>#aHolder{position:absolute;top:calc(100% - 135px);left:0;right:0;text-align:center;z-index:30;pointer-events:none}#aMerger{text-align:left;display:inline-block!important;min-width:728px;min-height:90px;pointer-events:auto}#aContainer{cursor:pointer;pointer-events:auto;padding:10px;background-color:rgba(0,0,0,.6);max-height:120px;max-width:810px;min-width:728px;min-height:90px;overflow:hidden;display:inline-block!important;border-radius:6px}.endAHolder{display:inline-block;text-align:center;z-index:30;pointer-events:none;margin-left:10px}#endAMerger{text-align:left;display:inline-block!important;min-width:300px;min-height:250px;pointer-events:auto}#endAContainer{cursor:pointer;pointer-events:auto;padding:10px;background-color:rgba(0,0,0,.5);max-height:280px;max-width:382px;overflow:hidden;border-radius:6px}</style>
+	</head>
+		<body oncontextmenu="return false;">
+		<div id="loadingBg"></div>
+		<canvas id="game-overlay" oncontextmenu="return false;" style="position: absolute; pointer-events: none;z-index: 1;"></canvas>
+		<div id="uiBase">
+<div id="errorNotification" class="menuCard" style="display: none">
+<div>It looks like Krunker ran in to a problem. Please try <a target="_blank" href="https://www.computerhope.com/issues/ch001411.htm">disabling all of your browser extensions</a> and reloading the page. If the issue persists, please report the issue to us on Reddit or Discord.</div>
+<br />
+<div style="text-align: center"><a onclick="errorNotification.style.display = 'none'" style="cursor:pointer">Hide</a></div>
+</div>
+
+<div id="presentaHolder" style='display:none'>
+<div id="presentInfoL">
+<div style='color:#fff'>Powered by Krunker Engine</div>
+<div style='color:rgba(255,255,255,0.8)'>
+Yendis Entertainment Pty Ltd
+</div>
+</div>
+<div id="presentInfoBR">
+</div>
+<div id="presentInfoTL">
+<div style='margin-top:10px;color:#fff'>
+Bedrooms<span style='float:right;'>2</span>
+</div>
+<div style='margin-top:10px;color:#fff'>
+Sqm<span style='float:right;'>2000</span>
+</div>
+<div style='margin-top:10px;color:rgba(255,255,255,0.2)'>
+Additional Information Here
+</div>
+</div>
+</div>
+
+<div id="aHolder">
+<div id="aMerger">
+<div id='baseLinks'></div>
+<div style='height:10px'></div>
+<div id="aContainer">
+<div style='display:none'>v1.5.3</div>
+<div><div align="center" id="krunkerio_728x90_1">
+<div id="supportKrunker">Disable Adblock to Support Krunker</div>
+</div></div>
+</div>
+</div>
+</div>
+
+<div id="twoFAPop" style="display:none">
+<div id="twoFAWindow">
+2-Factor Authentication
+<div id="twoFAmsg">Please enter the pattern assigned to your account</div>
+<div id="twoFAGholder"></div>
+<div id="twoFAbtn" onclick="sub2FA()">Submit</div>
+</div>
+</div>
+
+<div id='bdayBlock' onclick="bdayPlay()">
+<div id="bdayShake">
+<div id="bdayWindow">
+<div id="welcPopHed">Krunker Game making competiton!</div>
+<div id="welcPopImg">
+<div id="bdaySpeech">
+<span style='color:#FBC02D'>50,000</span> USD to be won!
+</div>
+<span id='bdayTag'>Ends June 1st 2021</span>
+</div>
+<div id="welcPopSub">
+<div style='color:#fff'>Custom Games are a huge part of what makes krunker so fun. So we have decided
+to run a Game Creation competition with a prize pool of <span style='color:#FBC02D'>50,000 </span> USD</div>
+<div style='color:#fff;margin-top:20px'>
+The goal is to encourage Game Creators to create unique experiences that don't follow the usual trend of: infected, parkour or trade maps.
+Try to think outside the box and create something that you wouldnt normally see in krunker.
+</div>
+<div style='color:#fff;margin-top:20px'>
+Submissions open around April 20th. Of course you can start early. Here are the requirements (More info when submissions open):
+<ul>
+<li class='welPopLi'>Innovative Game Design: <span style='color:#9c9c9c'>Create something Unique; no infect, trade or parkour maps</span></li>
+<li class='welPopLi'>Unique Aesthetics: <span style='color:#9c9c9c'>Try to use custom Assets & Textures</span></li>
+<li class='welPopLi'>Fun & Unique Gameplay: <span style='color:#9c9c9c'>Try to think of unique Game Mechanics outside of the normal FPS Gameplay</span></li>
+<li class='welPopLi'>Performant: <span style='color:#9c9c9c'>Fast Load times & Good Framerates</span></li>
+</ul>
+</div>
+<div style='color:#fff;margin-top:20px'>
+Here are some Suggestions for Game Ideas & Features that we look for:
+<ul>
+<li class='welPopLi'>2d Board Game: <span style='color:#9c9c9c'>Utilize Triggers & New Trigger
+Features to create games likes connect 4, chess etc</span></li>
+<li class='welPopLi'>Custom Assets & Sounds: <span style='color:#9c9c9c'>Creating your own Assets, Animations & Sounds will earn you
+bonus points when it comes to the rating of your Game</span></li>
+<li class='welPopLi'>Custom UI: <span style='color:#9c9c9c'>Custom Interface</span></li>
+<li class='welPopLi'>Vehicle Combat Game: <span style='color:#9c9c9c'>Vehicle Combat Game: Pirates, Tanks etc</span></li>
+<li class='welPopLi'>Raid/PVE Games: <span style='color:#9c9c9c'>Dungeon Crawler Games (FPS or Top Down) with Unique Boss Mechanics</span></li>
+<li class='welPopLi'>Top Down Survival Game: <span style='color:#9c9c9c'>A Game like moomoo.io, utilizing Custom Assets & Animations</span></li>
+</ul>
+</div>
+<div style='color:#fff;margin-top:20px'>
+Some Tips to Help you with the Competition:
+<ul>
+<li class='welPopLi'>Work as a Team: <span style='color:#9c9c9c;'>Work as a Team & Spread the workload between your Teammates</span></li>
+<li class='welPopLi'>Push the Editor to its Limit: <span style='color:#9c9c9c;'>Utilize everything the editor has to offer: Animations, Custom GUI, Css, Custom Sounds & More</span></li>
+<li class='welPopLi'>Get Inspired: <span style='color:#9c9c9c;'>Get inspiration from other games (outside of krunker)</span></li>
+<li class='welPopLi'>Playtest: <span style='color:#9c9c9c;'>Run a lot of playtests with players & collect feedback</span></li>
+</ul>
+</div>
+<div style='color:#fff;margin-top:20px'>
+Winners will be decided by the Developers & 6 well known Community Members (CCs & Map Makers) in a Live Stream after June 1st:
+<ul>
+<li class='welPopLi'>#1st Place: <span style='color:#9c9c9c;float:right;padding-right:20px'><span style='color:#FBC02D'>20,000</span> USD</span></li>
+<li class='welPopLi'>#2nd Place: <span style='color:#9c9c9c;float:right;padding-right:20px'><span style='color:#FBC02D'>10,000 </span> USD</span></li>
+<li class='welPopLi'>#3rd Place: <span style='color:#9c9c9c;float:right;padding-right:20px'><span style='color:#FBC02D'>8,000 </span> USD</span></li>
+<li class='welPopLi'>#4rd Place: <span style='color:#9c9c9c;float:right;padding-right:20px'><span style='color:#FBC02D'>4,000 </span> USD</span></li>
+<li class='welPopLi'>#5-10th Place: <span style='color:#9c9c9c;float:right;padding-right:20px'><span style='color:#FBC02D'>100,000 </span> KR</span></li>
+<li class='welPopLi'>Most Innovative: <span style='color:#9c9c9c;float:right;padding-right:20px'><span style='color:#FBC02D'>3,000 </span> USD</span></li>
+<li class='welPopLi'>Best Graphics: <span style='color:#9c9c9c;float:right;padding-right:20px'><span style='color:#FBC02D'>3,000 </span> USD</span></li>
+<li class='welPopLi'>Lucky Winner (From all submissions): <span style='color:#9c9c9c;float:right;padding-right:20px'><span style='color:#FBC02D'>3,000 </span> USD</span></li>
+</ul>
+</div>
+<div style='color:#fff;margin-top:20px'>
+To Get Started, head over to the <a href='./editor.html'>Game Editor</a>.
+Remember that all submissions must be newly created Games. (Terms will be released when submissions open)
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div id='consentBlock'>
+<div id="consentShake">
+<div id="consentWindow">
+<span style="font-size:25px">Welcome to Krunker.io</span>
+<div style='color:rgba(0,0,0,0.6)'>
+This site uses cookies to personalize your experience. To use this site
+you must agree and read the <a target="_blank" href="./docs/terms.txt">Terms & Conditions.</a>
+Learn more about cookies <a href="https://cookiesandyou.com/">here.</a>
+</div>
+<div>
+<div class='termsBtn' onclick="checkTerms(0)" style="background-color:#dd4a42">Decline</div>
+<div class='termsBtn' onclick="checkTerms(1)" style="background-color:#a6dd42">Accept</div>
+</div>
+</div>
+</div>
+</div>
+
+<div id="vignette"></div>
+
+<div id="overlay"></div>
+
+<div id="imgFlash"></div>
+
+<div id="infoHolder" style="display:none">
+<div id="mapInfoHolder">
+<div id="modVote"></div>
+<div id="mapVote"></div>
+<div id="mapInfo"></div>
+<div id="termsInfo">
+<div class="terms standout" onclick="showWindow(21)" onmouseover="SOUND.play('tick_0',0.1)">Advertise</div>
+<div class="verticalSeparatorInline"></div>
+<div class="terms" onclick="showWindow(29)" onmouseover="SOUND.play('tick_0',0.1)">Contact</div>
+<div class="verticalSeparatorInline"></div>
+<div class="terms" onclick="openTab('./docs/terms.txt')" onmouseover="SOUND.play('tick_0',0.1)">Terms</div>
+<div class="verticalSeparatorInline"></div>
+<div class="terms" onclick="showWindow(35)" onmouseover="SOUND.play('tick_0',0.1)">Changelog</div>
+</div>
+</div>
+</div>
+
+<div id="purchaseHolder">
+<div id="purchaseSelector">
+<div style='margin-bottom: 10px;text-align:center;'>Payment Method</div>
+<div style='color:rgba(0,0,0,0.4);font-size:20px;margin-bottom:40px;text-align:center;'>
+Reversing a payment can<br /> result in the termination<br />
+of your krunker account.</div>
+<div id="xsollaPayB"></div>
+<div id="androidPayB" onclick="openURL('https://apps.apple.com/app/id1515679115')">
+<img src='./img/app_1.png' style='width:26px;margin-right:6px;margin-bottom:-2px' />
+Pay on Apple
+</div>
+<div id="androidPayB" onclick="openURL('https://play.google.com/store/apps/details?id=ch.yendis.krunkerhub&hl=en_AU')">
+<img src='./img/app_0.png' style='width:26px;margin-right:6px;margin-bottom:-5px' />
+Pay on Android App
+</div>
+<div style='height:6px'></div>
+<div id="paypal-button"></div>
+</div>
+</div>
+
+<div id="purchaseResponse">
+<div id="purchaseRespH">
+</div>
+</div>
+
+<div id="menuHolder">
+
+<div id="spinUI">
+<div id='spinTHold'>
+<div id="spinKR"></div>
+</div>
+<div id="spinItems"></div>
+<div id="spinInfo"></div>
+<div id="spinHolder" class="midHolder">
+<div id="spinRaysH">
+<div id="spinRays"></div>
+</div>
+<div id="spinItem">
+<div id="spinItemCanvas"></div>
+</div>
+<div id="spinItemName"></div>
+<div id="spinButton">
+<div id="spinText">
+<div id="spinHeader">SPIN</div>
+<div id="spinCost"></div>
+</div>
+</div>
+<canvas id="spinWindow"></canvas>
+</div>
+</div>
+
+<div id="respinUI">
+<div id="spinRespin" class="button smallNoS buttonP"></div>
+<div id="spinRespinInfo" class="button btnRespin">?</div>
+</div>
+
+<div id="purchaseLoad">
+<div class="centerV">
+<div id="purchLoadRing" class="lds-ring">
+<div></div><div></div><div></div><div></div></div>
+<div id="purchaseLabel"></div>
+</div>
+</div>
+
+<div id="popupHolder">
+<div id="popupBack" onclick="clearPops()"></div>
+<div id="popupContent"></div>
+<div id="confPremiumPop"></div>
+<div id="confPurchItemPop"></div>
+<div id="confPop"></div>
+<div id="pfpPop"></div>
+<div id="dropsPop"></div>
+<div id="claimPop"></div>
+<div id="twitchPop"></div>
+<div id="twitchConPop"></div>
+<div id="twitchLinkPop"></div>
+<div id="faceitPop"></div>
+<div id="itemViewPop"></div>
+<div id="itemPurcPop"></div>
+<div id="gameCodePop"></div>
+<div id="tradePop"></div>
+<div id="clientPop"></div>
+<div id="policePop">
+<div id="policePopC"></div>
+</div>
+<div id="clientExitPop"></div>
+</div>
+
+<div id="menuHider" style="display: none;">
+
+<div id="subLogoButtons">
+<div id="braveWarning">Using Brave may cause performance issues</div>
+<div class="button small buttonP" id="menuBtnHost" onmouseenter="playTick()" onclick="showWindow(42)">Host Game</div>
+<div class="button small buttonR" id="menuBtnBrowser" onmouseenter="playTick()" onclick="showWindow(2)">Servers</div>
+<div class="button small buttonO" id="menuBtnRanked" onmouseenter="playTick()" onclick="showWindow(27)">
+Comp <img src='./img/faceit_2.png' id='faceItIconM' /></div>
+<div id="inviteButton" class="button small buttonPI" onmouseenter="playTick()" onclick="copyInviteLink()">Invite</div>
+<div class="button small buttonPI" id="menuBtnJoin" onmouseenter="playTick()" onclick="openJoinWindow()">Join</div>
+</div>
+
+<div id="tlInfHold">
+<div id="streamContainer">Loading Streams...</div>
+<div id="youNewDiv">
+<img id="helpPIcon" src="./img/newp.png">
+<div id="helpTxtHol" onclick="openGuide(1)">
+New to Krunker?
+<div id='helpGuidOpn'>
+Check the Guide</div>
+</div>
+</div>
+<div id="youNewDiv" style="background-image: url(./img/blueprint.jpg);background-size: cover;">
+<div id="helpTxtHol" onclick="bdayOpen()">
+Game making competition!
+<div id='helpGuidOpn'>50,000 USD Prize pool</div>
+</div>
+</div>
+</div>
+
+<div id='guidePopupH' onclick="openGuide(0)" style="display:none">
+<div id="guidePopup">
+
+<div class='guideSubH'>
+<div class="guideHeader">Movement Basics</div>
+<img id="moveGuidSlid" src="./img/guide/0.gif">
+<div class="guideInfoT">
+Krunker is a Movement Based FPS Game. The most important
+movement technique is called <span style='color:#fbc02d'>
+Slide Hopping</span>.
+<div style='height:20px;'></div>
+To perform a Slide Hop, <span style='color:#fbc02d'>Move Forward & Jump.</span>
+While in the Air, <span style='color:#fbc02d'>Hit Crouch</span> to prepare for the Slide.
+<div style='height:20px;'></div>
+When you Land on the Ground you will notice a slight Speed Boost.
+You can repeat this process to build up a lot of speed. [Release Crouch each Jump]
+<div style='height:20px;'></div>
+To control the direction of your movement, turn your mouse mid slide.
+Watch <a href='https://youtu.be/I4jwatriPXA' target="_blank" class='menuLink'>this</a> for more Information
+</div>
+<div style='height:60px;'></div>
+</div>
+
+<div class='guideSubH'>
+<div class="guideHeader">Play with Friends</div>
+
+<div class="guideStep guStepS">
+Select a Game
+<span class="guideStepV">
+<a href="javascript:showWindow(10);">
+Select a Game</a> to Host from the vast list of user created Games
+<img class="guideStepImg" src="./img/guide/host1.png" />
+</span>
+</div>
+
+<div class="guideStep guStepS">
+ Start Server
+<span class="guideStepV">
+Configure your Server to your liking and Press Start Server
+<img class="guideStepImg" src="./img/guide/startserv.png" />
+</span>
+</div>
+
+<div class="guideStep guStepS">
+Invite Players
+<span class="guideStepV">
+Click the Invite Button and send the Link to your Friends
+<img class="guideStepImg" src="./img/guide/invite.png" />
+</span>
+</div>
+</div>
+
+<div class='guideSubH'>
+<div class="guideHeader">Common Issues</div>
+
+<div class="guideStep guStepS">
+High Ping
+<span class="guideStepV">
+Ping can be Affected by many things. Try changing the
+<a>Auto Routing Setting</a>.
+It is also recommended that you play with an Ethernet (Cable) Connection
+</span>
+</div>
+
+<div class="guideStep guStepS">
+Low Framerate
+<span class="guideStepV">
+Adjust your <a>Settings</a>.
+If you are playing on a Web Browser, make sure that
+you have <a target='_blank' href='https://www.lifewire.com/hardware-acceleration-in-chrome-4125122'>
+Hardware Acceleration</a> Enabled
+</span>
+</div>
+
+<div class="guideStep">
+Mouse Flick
+<span class="guideStepV">
+<span style='color:#fbc02d'>Reduce Polling Rate</span>
+of Mouse (We are looking into a permanent Fix)
+</span>
+</div>
+</div>
+
+<div class='guideSubH'>
+<div class="guideHeader">Dealing with Hackers</div>
+
+<div class="guideStep guStepS">
+Report Player
+<span class="guideStepV">
+Submit a Report on a Players Profile
+<img class="guideStepImg" src="./img/guide/report.png" />
+<div style="height:10px;"></div>
+or Alternatively Report them after the match ends
+<img class="guideStepImg" src="./img/guide/report2.png" />
+</span>
+</div>
+
+<div class="guideStep guStepS">
+Call K.P.D
+<span class="guideStepV">
+Press <span style='color:#fbc02d'>[ALT]</span> to Open the
+Player List and to Call the K.P.D on a Player in your match.
+A Moderator will then Join and take action if needed
+<img class="guideStepImg" src="./img/guide/kpd.png" />
+</span>
+</div>
+
+<div class="guideStep guStepS">
+Votekick
+<span class="guideStepV">
+Press <span style='color:#fbc02d'>[ALT]</span> to Open the
+Player List and start a Votekick on a Player
+<img class="guideStepImg" src="./img/guide/kick.png" />
+</span>
+</div>
+</div>
+
+<div class='guideSubH'>
+<div class="guideHeader">Community</div>
+
+<div class="guideFullTx">
+Krunker is a community driven game. We have a wide range of
+communities to choose from to help you get involved
+</div>
+
+<div class="guideStep guStepS">
+<img class='guideSIcon' src="../img/social/discord.png" /> Discord Community
+<span class="guideStepV" style='text-align:right'>
+<a target="_blank" href="https://discord.com/invite/Dw8F62u">
+Join Community Server
+</a>
+</span>
+</div>
+
+<div class="guideStep guStepS">
+<img class='guideSIcon' src="../img/social/reddit.png" /> Reddit Community
+<span class="guideStepV" style='text-align:right'>
+<a target="_blank" href="https://www.reddit.com/r/KrunkerIO/">
+Join Krunker Reddit
+</a>
+</span>
+</div>
+
+<div class="guideStep guStepS">
+<img class='guideSIcon' src="../img/twitch.png" /> Twitch Community
+<span class="guideStepV" style='text-align:right'>
+<a target="_blank" href="https://www.twitch.tv/directory/game/Krunker">
+View Twitch Category
+</a>
+</span>
+</div>
+
+<div class="guideStep guStepS">
+<img class='guideSIcon' src="../img/youtube.png" /> Youtube Community
+<span class="guideStepV" style='text-align:right'>
+<a target="_blank" href="https://www.youtube.com/channel/UCqH34FGuOae5o-wO2wOa38A">
+View Popular Content
+</a>
+</span>
+</div>
+
+<div class="guideStep guStepS">
+<img class='guideSIcon' src="../img/mmok.png" /> Map/Game Making Community
+<span class="guideStepV" style='text-align:right'>
+<a target="_blank" href="https://discord.gg/Kfypyp5">
+Join Community Server
+</a>
+</span>
+</div>
+</div>
+</div>
+</div>
+
+<div id='teamSelector'>
+<span class='teamNm' id='teamNm1' style="color:#fff">Team 1</span>
+<label class='switchsml centSwitch'><input id="selectT" type='checkbox' onclick='toggleTeam(this.checked)'>
+<span class='sliderCent'></span></label>
+<span class='teamNm' id='teamNm2'>Team 2</span>
+</div>
+
+<div id="gameNameHolder">
+<img id="mainLogo" src="/img/logo_1.png" />
+</div>
+<div id="seasonLabel"><span style='color:#ffb82d'>V</span> 3.8.4</div>
+
+<div id="merchHolder" style="display:none" onclick="openURL('https://shop.spreadshirt.com/krunkerio')">
+<img id="merchImg" src="./img/merch.png" />
+</div>
+
+<div id="newsHolder">
+<div id='newsHed'>Featured Games</div>
+<div id='newsBody'></div>
+</div>
+
+<div id="spectButton">
+<span style='font-size:15px;color:rgba(255,255,255,0.6)'>Spectate</span>
+<label class='switchsml'><input type='checkbox' id='specBtn' onclick='toggleSpect(this.checked)'><span class='sliderSml'></span></label>
+</div>
+
+<div id="menuClassContainer">
+<div id='bubbleContainer'>
+<div class="speechBox sb1" id='txtBubble'></div>
+</div>
+<canvas id="classPreviewCanvas"></canvas>
+<div id="menuClassNameTag"></div>
+<div id="menuClassSubtext"></div>
+<div id="menuClassName"></div>
+<div>
+<div id="policeButton" class='button buttonB' onclick="shoPolicePop()" style='height:78px;width:60px;vertical-align:bottom'>
+<img src='./img/police.png' style="height:45px;margin-left:-10px" />
+</div>
+<div id="customizeButton" class="button buttonG bigShadowT" onmouseenter="playTick()" onclick="showWindow(3)">
+Customize <span class="material-icons" style='font-size:36px;
+								color:#fff;margin-left:6px;margin-bottom:-15px;
+								vertical-align:top'>colorize</span>
+</div>
+</div>
+</div>
+
+<div id="signedOutHeaderBar" class="headerBarLeft headerBar">
+<div class="button buttonP lgn" style="width:300px;margin-right:0px;padding-top:3px;padding-bottom:15px;" onmouseenter="playTick()" onclick="showWindow(5)">
+Login or Register <span class="material-icons" style='
+							vertical-align:bottom;color:#fff;font-size:30px;
+							margin-bottom:-1px;'>person</span>
+</div>
+</div>
+<div id="signedInHeaderBar" class="headerBarLeft headerBar" style="display: none">
+<div id="menuUsernameContainer" onclick="showWindow(5)">
+<img src="./img/favicon.png" id="menuMiniProfilePic">
+<div id="menuAccountUsername">?</div>
+</div>
+<div class="verticalSeparator" style="height:35px;"></div>
+<div class="krInfo">
+<div id="menuKRCount">?</div>
+<div class="krSocial" onmouseenter="playTick()" onclick="windows[13].purchase()">
++
+</div>
+</div>
+<div class="verticalSeparator" style="height:35px;"></div>
+<div id="mailContainer">
+<div id="mailCount"></div>
+<i class="material-icons" id="mailIcon" onclick="showWindow(30)" style="color:#fff;font-size:37px">email</i>
+</div>
+<div id="mLevelCont">...</div>
+<div class="progressBar" id='menuLvlHold'>
+<div class="progressBarInner" id="menuLevelBar">
+</div></div>
+</div>
+<div id="headerRight" class="headerBarRight headerBar">
+<div id="menuServerInfoContainer">
+<div id="menuRegionLabel" onclick="showWindow(2)">...</div>
+<div class="menuDebugInfo">
+<div id="menuFPSDisplay"><span id="menuFPS" style="color:#9eeb56">0</span> FPS</div>
+<div id="menuPingDisplay"><i id="menuPingIcon" class="material-icons" style="color: gray">signal_cellular_alt</i><span id="menuPingText">0</span></div>
+</div>
+</div>
+<div class="verticalSeparator"></div>
+<div class="imageButton downloadClient" onmouseenter="playTick()" onclick="showWindow(25)"></div>
+<div class="imageButton discordSocial" onmouseenter="playTick()" onclick="openURL('https://discord.gg/Dw8F62u')"></div>
+<div class="imageButton redditSocial" onmouseenter="playTick()" onclick="openURL('https://www.reddit.com/r/KrunkerIO')"></div>
+<img src="./img/editor.png" id="editorBtnM" onmouseenter="playTick()" onclick="openURL('https://krunker.io/editor.html')" />
+</div>
+
+<div id="menuItemContainer">
+<div class="menuItem" onmouseenter="playTick()" onclick="showWindow(5)">
+<div class="menuItemIcon iconProfile"></div>
+<div class="menuItemTitle" id="menuBtnProfile">Profile</div>
+</div>
+<div class="menuItem" onmouseenter="playTick()" onclick="showWindow(14)">
+<div class="menuItemIcon iconShop"></div>
+<div class="menuItemTitle" id="menuBtnShop">Shop</div>
+</div>
+<div class="menuItem" onmouseenter="playTick()" onclick="showWindow(33)">
+<div class="menuItemIcon iconChall"></div>
+<div class="menuItemTitle" id="menuBtnChall" style="font-size:13px">Challenges</div>
+</div>
+<div class="menuItem" onmouseenter="playTick()" onclick="window.open('/social.html', '_blank')">
+<div class="menuItemIcon iconSocial"></div>
+<div class="menuItemTitle" id="menuBtnSocial">Hub</div>
+</div>
+<div class="menuItem" onmouseenter="playTick()" onclick="showWindow(10)">
+<div class="menuItemIcon iconGames"></div>
+<div class="menuItemTitle" id="menuBtnMaps">Games</div>
+</div>
+<div class="menuItem" onmouseenter="playTick()" onclick="showWindow(4)">
+<div class="menuItemIcon iconMods"></div>
+<div class="menuItemTitle" id="menuBtnMods">Mods</div>
+</div>
+<div class="menuItem" onmouseenter="playTick()" onclick="showWindow(1)">
+<div class="menuItemIcon iconSettings"></div>
+<div class="menuItemTitle" id="menuBtnSettings">Settings</div>
+</div>
+<div class="menuItem" onmouseenter="playTick()" onclick="clientExitPopup()" id="clientExit">
+<div class="menuItemIcon iconExit"></div>
+<div class="menuItemTitle" id="menuBtnExit">Exit</div>
+</div>
+</div>
+
+<div id="phonePop">
+<img id="phoneImg" src='./img/phone_r.png' />
+</div>
+
+<div id="windowHolder" style="display:none">
+<div id="windowHeader"></div>
+<div id="menuWindow"></div>
+<div id="tradeChatHolder">
+<div id="tradeChatList"></div>
+<input id="tradeChatInput" placeholder="Enter Message" maxlength="70" autocomplete="off"></input>
+</div>
+</div>
+
+<div id="supportMapCreator" style="display:none"></div>
+</div>
+</div>
+
+<div id="endUI">
+<div id="endChals"></div>
+<div id="victorySubHolder">
+<img id="victorySub" />
+</div>
+<div id="endInfo">
+<div id="victoryText"></div>
+<div id="teamTotal0" class="teamTotals" style="margin-right:15px;"></div>
+<div id="endTimer"></div>
+<div id="teamTotal1" class="teamTotals" style="margin-left:15px;"></div>
+</div>
+<div id="endMidHolder">
+<div class="endAHolder" id="endAHolderL" style="opacity:0;margin-right: 10px;">
+<div id="endAMerger">
+<div id="endAContainer">
+<div><div align="center" id="krunkerio_300x250_3"></div></div>
+</div>
+</div>
+</div>
+<div id="endTabbedView"></div>
+<div class="endAHolder" id="endAHolderR" style='opacity:0;'>
+<div id="endAMerger">
+<div id="endAContainer">
+<div><div align="center" id="krunkerio_300x250_2">
+</div></div>
+</div>
+</div>
+</div>
+</div>
+<div></div>
+<div id="matchVoteHolder"></div>
+</div>
+
+<div id="aimRecticle">
+<div id="topBox" class="black"></div>
+<div id="leftBox" class="black"></div>
+<img id="recticleImg" src="/assets/textures/recticle.png" />
+<div id="bottomBox" class="black"></div>
+<div id="rightBox" class="black"></div>
+</div>
+<img id="aimDot" src="/assets/textures/reticles/reticle_0.png" />
+
+<div id="chatUI" style="display:none">
+<div id="chatBG"></div>
+<div id="chatHolder">
+<div id="chatList"></div>
+<input id="chatInput" placeholder="Enter Message" maxlength="70" autocomplete="off" onfocus="focusChat(1);" onblur="focusChat();"></input>
+</div>
+<div id="voiceDisplay"><i id="voiceIcon" class="material-icons" style="color:#fff;font-size:40px">mic</i> <div id="recTimer">[V]</div></div>
+</div>
+
+<div id="blockerDiv"></div>
+
+<img id="jumpSIMG" style="display:none" />
+<div id="jumpSVIDHolder" style="display:none">
+<video id='jumpSVID'></video></div>
+
+<div id="spectateUI">
+<div id="spectateHUD">
+<div id="specTeam0"></div>
+<div id="spec0">
+<div id="specScoreTm0">0</div>
+<div id="specNameTm0">Team 1</div>
+</div>
+<div class="spectateInfo">
+<div id="specTimer"></div>
+<div id="specGameInfo"></div>
+</div>
+<div id="spec1">
+<div id="specScoreTm1">0</div>
+<div id="specNameTm1">Team 2</div>
+</div>
+<div id="specTeam1"></div>
+<div id="specGMessage"></div>
+</div>
+<div id="specNames">
+Spectating
+</div>
+<div id="specStats" style="display:none;"></div>
+<div id="specSUS" style="display:none;">SUSPECT</div>
+<div id="specContr">
+<div class="specContrI">Prev<span style="color:#fbc02d;float:right">[LM]</span></div>
+<div class="specContrI">Next<span style="color:#fbc02d;float:right">[RM]</span></div>
+<div class="specContrI">Objective Cam<span style="color:#fbc02d;float:right">[H]</span></div>
+<div class="specContrI">Free Cam<span style="color:#fbc02d;float:right">[F]</span></div>
+<div class="specContrI">Player/Cam<span style="color:#fbc02d;float:right">[1-9]</span></div>
+<div class="specContrI"><span id="specIns" style='color:inherit;'>First Person</span><span style="color:#fbc02d;float:right">[R]</span></div>
+<div class="specContrI">Force Nametags<span style="color:#fbc02d;float:right">[N]</span></div>
+</div>
+<div id="specKPDContr">
+<div id="specKPDTxt" style="color:#fff;font-size:30px;margin-bottom:16px;"></div>
+<div id="specKRHid">
+<div class="specKPDContrI" style="margin-left:0"><span style="color:rgba(255,255,255,0.7)">NO</span> [N]</div>
+<div style="width:120px;display:inline-block;"></div>
+<div class="specKPDContrI"><span style="color:rgba(255,255,255,0.7)">YES</span> [Y]</div>
+</div>
+</div>
+</div>
+
+<div id="pre-content-container" style="display: none"></div>
+
+<div id="twitchHolder" style="display: none" onclick="closeTwitch();"></div>
+
+<div id="gameUI">
+
+<div id="customGUIHolder">
+</div>
+
+<div id="inGameUI" class='gameUIH'>
+<div id="newLeaderDisplay">
+<div id="leaderContainerD" class="newLeaderContainer"></div>
+<div id="leaderContainer0" class="newLeaderContainer"></div>
+<div id="leaderContainer1" class="newLeaderContainer"></div>
+</div>
+<div id="topRight">
+<div id="leaderDisplay">
+<div id="leaderContainer"></div>
+</div><div></div>
+<div class="topRightCounters">
+<div id="scoreZoneCount" class='countIcon'></div>
+<div id="livesCount" class='countIcon'></div>
+<div id="killCount" class='countIcon'>
+<img src="./img/skull_0.png" id="killsIcon" />
+<span id="killsVal">0</span>
+</div>
+<div id="deathCount" class='countIcon'>
+<img src="./img/skull_1.png" id="deathsIcon" />
+<span id="deathsVal">0</span>
+</div>
+<div id="streakCount" class='countIcon'>
+<img src="./img/skull_2.png" id="streakIcon" />
+<span id="streakVal">0</span>
+</div>
+<div id="kdCount" class='countIcon'>
+<img src="./img/skull_3.png" id="kdIcon" />
+<span id="kdVal">0</span>
+</div>
+<div id="scoreCount" class='countIcon'>
+<i class='material-icons' style='color:#ffc147;font-size:24px;'>star</i>
+<span id="myScoreVal">0</span>
+</div>
+</div>
+<div></div>
+<div id="killFeed"></div>
+</div>
+<img id="bloodDisplay" src="./img/blood.png" />
+<div id="chalDisplay">
+<div id="chalName" class="centerUIB"></div>
+</div>
+<div id="propInstruct">
+<span style='color:#fbc02d'>[M1]</span> Change Prop
+<span style='color:#fbc02d'>[1-5]</span> Taunts
+</div>
+<div id="botRightHider">
+<div id="weapDisplay"></div>
+<div id="perkHolder"></div>
+<div id="bottomRight">
+<div id="killStreakHolder"></div>
+<div id="ammoDisplay" class="UIB">
+<div id="ammoVal"></div>&nbsp;<div id="ammoMax"></div>
+<img id="ammoIcon" src="/assets/textures/ammo_0.png">
+</div>
+</div>
+</div>
+<div id="gameMessage"></div>
+<div id="topLeftHolder">
+<div id="timerDisplay" class="leftUIB">
+<img src="./img/timer.png" id="timerIcon" />
+<span id="timerVal"></span>
+</div>
+<div class="debugInfo">
+<div id="fpsDisplay">
+<span id="ingameFPS" style="color:#9eeb56">0</span> FPS
+
+</div>
+<div id="pingDisplay"><span id="pingText">0</span><i id="pingIcon" class="material-icons" style="color: gray">signal_cellular_alt</i></div>
+<div id="ingressDisplay"><i id="ingressIcon" class="material-icons">keyboard_arrow_down</i><span id="ingressPacketCount">0 P/s</span><span id="ingressDataSize">0 KB/s</span></div>
+<div id="egressDisplay"><i id="egressIcon" class="material-icons">keyboard_arrow_up</i><span id="egressPacketCount">0 P/s</span><span id="egressDataSize">0 KB/s</span></div>
+</div>
+<div></div>
+<div id="curGameInfo"></div>
+<div></div>
+<div id="teamScores"></div>
+<div id="voteToKick">
+<div id="voteKickInfo"></div>
+<div id="voteKickNum">Votes: 0/0</div>
+<div id="voteKickName">Kick Guest_1</div>
+<div id="voteKickKeys">
+<span style='color:#FBC02D'>[1]</span> YES
+<span style='color:#FBC02D'>[2]</span> NO
+</div>
+</div>
+<div id="networkLag">
+<div id="networkLagHed">Network Lag Detected!</div>
+<div>Make sure you use</div>
+<div>Official Client or</div>
+<div>Chrome at 60 FPS</div>
+</div>
+<div id="speakerDisplay"></div>
+<div id="skinRewards"></div>
+</div>
+<div id="hiddenMsg">
+You are hidden
+<i class="material-icons" style="color:#fff;font-size:40px;vertical-align:middle;margin-top:-5px">
+remove_red_eye
+</i>
+</div>
+<div id="speedRunHolder" style='display:none'>
+<div id="speedRunReset">
+<span id="speedRunRstKey">[B]</span> to Reset
+</div>
+<div id="speedRunBox">
+<div id="speedRunInfo"></div>
+<div id="speedRunList"></div>
+<div id="speedRunTimer"></div>
+</div>
+</div>
+<div id="terminalHolder">
+<div id='terminalText'>Input Message, Press Enter when done.</div>
+<input id='terminalInput' placeholder='Enter Message' maxlength='70'>
+</div>
+<div id="interactMsg" class='centerUIB'></div>
+<div id="reloadMsg">[R] Reload</div>
+<div id="bottomLeftHolder">
+<div id='hudClassIcon'>
+<img id='hudClassImg' />
+</div>
+<div style='display:inline-block;vertical-align:bottom'>
+<div id="healthValueHolder">
+<div id="healthValue"></div>
+<img id="challIcon" />
+</div>
+<div></div>
+<div id="healthBar"></div>
+<div id="teamName"></div>
+</div>
+</div>
+<div id="killCardHolder">
+<div id="killCardMsg">
+<div id="killCardKick">
+<span style="color:#FBC02D">[Tab]</span> to Votekick
+</div>
+<div id="killCardBy"></div>
+</div></br>
+<div id="killCard"></div>
+</div>
+<img id="hitmarker" src='/assets/textures/hitmarker_3.png' />
+<div id="igXPBar">
+<div id='igXPBarProg'></div>
+</div>
+</div>
+
+<div id="inGameUISurv" class='gameUIH'>
+</div>
+
+<div id="instructionsUpdateBG"></div>
+<div id="instructionHolder">
+<div id="instructions">
+LOADING...
+</div>
+<div id="instructionsUpdate"></div>
+<div id="instructionsUpdateCredit" onclick="openURL('https://twitter.com/EmpoDesign')">Art by @EmpoDesign</div>
+</div>
+</div>
+
+<div id="killReactHolder">
+<div id="killReactC">
+<div id="kReactText">
+<div id="kReactTo">to</div>
+<div id="kReactTimer">00:00</div>
+</div>
+<div id="killReactWindow">
+<input id="reactInput" placeholder="Enter Message" maxlength="36"></input>
+<div id="reactButton" onclick="sendReaction()">Send Reaction</div>
+</div>
+</div>
+</div>
+</div>
+<div id="mobileUI">
+<div id="mobileJoystick"></div>
+<div id="mobileJump"></div>
+<div id="mobileCrouch"></div>
+<div id="mobileEsc"></div>
+<div id="mobileShoot"></div>
+<div id="mobileAimShoot"></div>
+<div id="mobileScope"></div>
+<div id="mobileReload"></div>
+<div id="mobileSwap"></div>
+<div id="mobileKSwap"></div>
+</div>
+<div id="faceitInGameAppContainer"></div>
+
+<div id='pretendHider' style='display:none'>
+
+<div id="pretendHeader">
+<div id="pretendShare">Share</div>
+<div id="pretendTitle"></div>
+<div id="pretendNav">
+<div class='pretendNavI'>File</div>
+<div class='pretendNavI'>Edit</div>
+<div class='pretendNavI'>View</div>
+<div class='pretendNavI'>Insert</div>
+<div class='pretendNavI'>Format</div>
+<div class='pretendNavI'>Tools</div>
+<div class='pretendNavI'>Add-Ons</div>
+<div class='pretendNavI'>Help</div>
+</div>
+<div id="pretendIconH">
+<span class="material-icons" style='font-size:15px'>add</span>
+<span class="material-icons" style='font-size:15px'>clear</span>
+<span class="material-icons" style='font-size:15px'>description</span>
+<span class="material-icons" style='font-size:15px'>invert_colors</span>
+<span class="material-icons" style='font-size:15px'>translate</span>
+<span class="material-icons" style='font-size:15px'>done</span>
+<span class="material-icons" style='font-size:15px'>content_cut</span>
+<div class='pretendSep'></div>
+<span class="material-icons" style='font-size:15px'>format_indent_decrease</span>
+<span class="material-icons" style='font-size:15px'>format_indent_increase</span>
+<span class="material-icons" style='font-size:15px'>format_list_bulleted</span>
+<span class="material-icons" style='font-size:15px'>format_list_numbered</span>
+<div class='pretendSep'></div>
+<span class="material-icons" style='font-size:15px'>format_align_justify</span>
+<span class="material-icons" style='font-size:15px'>format_align_center</span>
+<span class="material-icons" style='font-size:15px'>format_align_left</span>
+<span class="material-icons" style='font-size:15px'>format_align_right</span>
+<span id="pretendExit">press [5] again to exit</span>
+</div>
+</div>
+<div id='pretendEditor'>
+<div id="pretendPaper">
+
+</div>
+</div>
+</div>
+		
+		<script src="https://www.google.com/recaptcha/api.js?onload=captchaCallback&render=6LdvBrQUAAAAAL6gtEpVNzii_3nQkbOyx912nvlm"></script>
+		<script src="https://hcaptcha.com/1/api.js?onload=hcaptchaCallback&render=explicit&recaptchacompat=off" async defer></script>
+		<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+		<script src="https://apis.google.com/js/platform.js"></script>
+		<script src="/libs/howler.min.js?build=1lhJn"></script>
+		<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.2.0/dist/confetti.browser.min.js"></script>
+		<script src="/libs/Tween.min.js?build=1lhJn"></script>
+
+		<script src="https://unpkg.com/@faceit/ingame-helper@5.3.9/dist/ingame_helper.min.js"></script>
+		
+		<script src='/sploit.js'></script>
+		<script src="/libs/rStats.js?build=1lhJn"></script>
+		<script src="/libs/rStats.extras.js?build=1lhJn"></script>
+		<script src="/libs/zip.js?build=1lhJn"></script>
+		<script src="/libs/nipplejs.min.js?build=1lhJn"></script>
+		<script src="/libs/zip-ext.js?build=1lhJn"></script>
+		<script src="/libs/purejscarousel.js?build=1lhJn"></script>
+		<script src="/libs/fflate.min.js?build=1lhJn"></script>
+		<script>
+window.captchaReady = false;
+window.captchaCallback = () => window.captchaReady = true;
+
+window.hcaptchaReady = false;
+window.hcaptchaCallback = () => window.hcaptchaReady = true;
+
+var rewrite_url = url => {
+		url = new URL((url || '') + '', location);
+		
+		switch(url.host){
+			case'assets.krunker.io':
+				url.protocol = location.protocol;
+				url.host = location.host;
+				url.pathname = '/assets' + url.pathname;
+				break;
+			case'krunker.io':
+				url.protocol = location.protocol;
+				url.host = location.host;
+				break;
+			case'127.0.0.1:5070':
+				url.protocol = location.protocol;
+				url.host = location.host;
+				url.pathname = '/social' + url.pathname;
+				break;
+			case'127.0.0.1:5080':
+			case'api.krunker.io':
+				url.protocol = location.protocol;
+				url.host = location.host;
+				url.pathname = '/api' + url.pathname;
+				break;
+		}
+		
+		return url.href;
+	},
+	orig = Object.getOwnPropertyDescriptor(Image.prototype, 'src');
+
+Object.defineProperty(Image.prototype, 'src', {
+	get(){
+		return orig.get.call(this);
+	},
+	set(value){
+		return orig.set.call(this, rewrite_url(value));
+	}
+});
+
+window.fetch = new Proxy(window.fetch, { apply: (target, that, [ url, opts ]) => Reflect.apply(target, that, [ rewrite_url(url), opts ]) });
+
+XMLHttpRequest.prototype.open = new Proxy(XMLHttpRequest.prototype.open, { apply: (target, that, [ method, url, ...args ]) => Reflect.apply(target, that, [ method, rewrite_url(url), ...args ]) });
+		</script>
+		<script type="text/javascript">/* Yendis Entertainment stinks */</script>
+	</body>
+</html>

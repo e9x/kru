@@ -6,6 +6,7 @@
 		"url": "https://github.com/e9x/e9x.github.io/",
 		"type": "git"
 	},
+	"window": { "icon": "icon.png" },
 	"main": "index.js",
 	"domain": "sploit",
 	"homepage": "https://e9x.github.io/kru/",

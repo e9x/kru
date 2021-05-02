@@ -24,10 +24,14 @@ var os = require('os'),
 		GM_getValue(key, value){
 			var file = path.join(files.sploit, key + '.json');
 			
-			return new Promise(resolve => fs.promises.readFile(file).then(data => resolve(data + '')).catch(err => ''));
+			try{
+				return fs.readFileSync(file).toString();
+			}catch(err){
+				return null;
+			}
 		},
 		GM_setValue(key, value){
-			return fs.promises.writeFile(path.join(files.sploit, key + '.json'), value);
+			fs.promises.writeFile(path.join(files.sploit, key + '.json'), value);
 		},
 		GM_xmlhttpRequest(details){
 			// https://www.tampermonkey.net/documentation.php#GM_xmlhttpRequest
@@ -87,18 +91,17 @@ var os = require('os'),
 			ext = path.extname(resolved),
 			script = loaders[ext] ? loaders[ext](fs.readFileSync(resolved)) : fs.readFileSync(resolved) + '\n//@ sourceURL=' + resolved;
 		
-		new func('__dirname', '__filename', 'module', 'exports', 'require', Object.keys(inject_gm), script)(mod.path, resolved, mod, mod.exports, eval_require(func, mod.path + '/', cache), ...Object.values(inject_gm));
+		try{
+			new func('__dirname', '__filename', 'module', 'exports', 'require', Object.keys(inject_gm), script)(mod.path, resolved, mod, mod.exports, eval_require(func, mod.path + '/', cache), ...Object.values(inject_gm));
+		}catch(err){
+			alert(util.format(err));
+		}
 		
 		if(path.basename(resolved) == 'consts.js')mod.exports.injected_settings = [{
 			name: 'Open resource folder',
 			type: 'function',
 			key: 'F6',
 			value: () => child_process.exec('start ' + files.sploit),
-		},{
-			name: 'Auto respawn',
-			type: 'boolean',
-			walk: 'game.auto_respawn',
-			key: 'unset',
 		}];
 		
 		return mod.exports;

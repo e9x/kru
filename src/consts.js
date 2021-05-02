@@ -11,10 +11,7 @@ exports.script = 'https://raw.githubusercontent.com/e9x/kru/master/sploit.user.j
 exports.extracted = typeof build_extracted != 'number' ? Date.now() : build_extracted;
 
 exports.store = {
-	get(key){
-		if(gm.get_value)return gm.get_value(key);
-		else return localStorage.getItem('ss' + key);
-	},
+	get: async key => gm.get_value ? await gm.get_value(key) : localStorage.getItem('ss' + key),
 	set(key, value){
 		if(gm.set_value)return gm.set_value(key, value);
 		else return localStorage.setItem('ss' + key, value);
@@ -43,3 +40,5 @@ exports.request = class {
 exports.injected_settings = [];
 
 exports.add_ele = (node_name, parent, attributes) => Object.assign(parent.appendChild(document.createElement(node_name)), attributes);
+
+exports.string_key = key => key.replace(/^(Key|Digit|Numpad)/, '');

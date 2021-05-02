@@ -18,7 +18,7 @@ exports.applyMatrix4 = (pos, t) => {
 
 exports.project3d = (pos, t) => exports.applyMatrix4(exports.applyMatrix4(pos, t.matrixWorldInverse), t.projectionMatrix);
 
-exports.pos2d = (pos, aY = 0) => {
+exports.pos2d = (cheat, pos, aY = 0) => {
 	if(isNaN(pos.x) || isNaN(pos.y) || isNaN(pos.z))return { x: 0, y: 0 };
 	
 	if(!exports.cas)exports.cas = parent.document.querySelector('#game-overlay');
@@ -27,10 +27,10 @@ exports.pos2d = (pos, aY = 0) => {
 	
 	pos.y += aY;
 	
-	exports.cheat.world.camera.updateMatrix();
-	exports.cheat.world.camera.updateMatrixWorld();
+	cheat.world.camera.updateMatrix();
+	cheat.world.camera.updateMatrixWorld();
 	
-	exports.project3d(pos, exports.cheat.world.camera);
+	exports.project3d(pos, cheat.world.camera);
 	
 	return {
 		x: (pos.x + 1) / 2 * exports.cas.width,
@@ -38,7 +38,7 @@ exports.pos2d = (pos, aY = 0) => {
 	}
 };
 
-exports.obstructing = (player, target, offset = 0) => {
+exports.obstructing = (cheat, player, target, offset = 0) => {
 	var d3d = exports.getD3D(player.x, player.y, player.z, target.x, target.y, target.z),
 		dir = exports.getDir(player.z, player.x, target.z, target.x),
 		dist_dir = exports.getDir(exports.getDistance(player.x, player.z, target.x, target.z), target.y, 0, player.y),
@@ -48,10 +48,10 @@ exports.obstructing = (player, target, offset = 0) => {
 		height = player.y + (player.height || 0) - 1.15; // 1.15 = config.cameraHeight
 	
 	// iterate through game objects
-	for(var ind in exports.cheat.game.map.manager.objects){
-		var obj = exports.cheat.game.map.manager.objects[ind];
+	for(var ind in cheat.game.map.manager.objects){
+		var obj = cheat.game.map.manager.objects[ind];
 		
-		if(!obj.noShoot && obj.active && (exports.cheat.player.weapon && exports.cheat.player.weapon.pierce && exports.cheat.config.aim.wallbangs ? !obj.penetrable : true)){
+		if(!obj.noShoot && obj.active && (cheat.player.weapon && cheat.player.weapon.pierce && cheat.config.aim.wallbangs ? !obj.penetrable : true)){
 			var in_rect = exports.lineInRect(player.x, player.z, height, ad, ae, af, obj.x - Math.max(0, obj.width - offset), obj.z - Math.max(0, obj.length - offset), obj.y - Math.max(0, obj.height - offset), obj.x + Math.max(0, obj.width - offset), obj.z + Math.max(0, obj.length - offset), obj.y + Math.max(0, obj.height - offset));
 			
 			if(in_rect && 1 > in_rect)return in_rect;
@@ -59,8 +59,8 @@ exports.obstructing = (player, target, offset = 0) => {
 	}
 	
 	// iterate through game terrain
-	if(exports.cheat.game.map.terrain){
-		var al = exports.cheat.game.map.terrain.raycast(player.x, -player.z, height, 1 / ad, -1 / ae, 1 / af);
+	if(cheat.game.map.terrain){
+		var al = cheat.game.map.terrain.raycast(player.x, -player.z, height, 1 / ad, -1 / ae, 1 / af);
 		if(al)return exports.getD3D(player.x, player.y, player.z, al.x, al.z, -al.y);
 	}
 };

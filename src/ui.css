@@ -4,10 +4,7 @@
 	font-weight: 400;
 }
 
-body { display: none; }
-html { display: flex; }
-
-.ss-panel {
+body {
 	--primary: #eee;
 	--secondary: #445;
 	--background: #112;
@@ -16,56 +13,69 @@ html { display: flex; }
 	--false: #A00;
 	--control-height: 36px;
 	--blue: #29F;
-	border: 2px solid var(--primary);
-	display: flex;
+	display: block;
 	background: rgba(var(--background-split),0.8);
 	flex-direction: column;
 	user-select: none;
 	opacity: 0.8;
-	flex: 1 1 0;
+	margin: 0px;
+	width: 350px;
 }
 
-.ss-panel.mobile {
+body::after {
+	content: '';
+	border: 2px solid var(--primary);
+	box-sizing: border-box;
+	width: 100%;
+	height: 100%;
+	position: absolute;
+	pointer-events: none;
+	left: 0px;
+	top: 0px;
+}
+
+body.mobile {
 	width: 100%;
 	height: 100%;
 	left: 0px !important;
 	top: 0px !important;
 }
 
-.ss-panel * {
+body * {
 	color: var(--primary);
 	font: 13px Inconsolata, monospace;
 	outline: none;
 }
 
-.ss-panel:hover {
+body:hover {
 	opacity: 1;
 }
 
-.ss-panel > .title, .ss-panel > .footer {
+.title, footer {
 	text-align: center;
-	padding: 8px 0px;
-	z-index: 5;
 	position: relative;
 	display: flex;
 	justify-content: center;
+	height: 30px;
+	line-height: 30px;
+	outline: 2px solid var(--primary);
 }
 
-.ss-panel > .title > .version {
+.title > .version {
 	position: absolute;
 	right: 10px;
+	line-height: 30px;
 	margin: auto;
 	text-align: center;
 }
 
-.ss-panel > .sections {
+.sections {
 	display: flex;
-	border-top: 2px solid var(--primary);
-	min-height: 264px;
-	border-bottom: 2px solid var(--secondary);
+	margin: 2px 0px;
+	height: 264px;
 }
 
-.ss-panel > .sections > .sidebar {
+.sections > .sidebar {
 	width: 30%;
 	height: auto;
 	display: block;
@@ -73,55 +83,73 @@ html { display: flex; }
 	border-right: 2px solid var(--secondary);
 }
 
-.ss-panel > .sections > .sidebar > .section {
+.sections > .sidebar > section {
 	height: var(--control-height);
 	line-height: var(--control-height);
 	text-align: center;
-	border-bottom: 2px solid var(--secondary);
+	margin-bottom: 2px;
+	outline: 2px solid var(--secondary);
 }
 
-.ss-panel > .sections > .sidebar > .section:hover {
+.sections > .sidebar > section:last-of-type {
+	margin-bottom: 0px;
+}
+
+.sections > .sidebar > section:hover {
 	background: #666;
 }
 
-.ss-panel > .sections > .sidebar > .section:last-of-type {
-	border-bottom: none;
-}
-
-.ss-panel > .sections > .section {
-	display: flex;
+.sections > section {
+	display: none;
 	flex-direction: column;
-	width: 100%;
-	height: 100%;
+	overflow-y: auto;
+	flex: auto;
 }
 
-.ss-panel > .sections > .section > .control {
+.sections > section.active {
+	display: flex;
+}
+
+.sections > section > .control {
 	min-height: var(--control-height);
-	border-bottom: 2px solid var(--secondary);
+	outline: 2px solid var(--secondary);
+	margin-bottom: 2px;
 	display: flex;
 	flex-direction: row;
 }
 
-.ss-panel > .sections > .section > .control:last-of-type {
-	border-bottom: none;
+.sections > section > .control:last-of-type {
+	margin-bottom: 0px;
 }
 
-.ss-panel > .sections > .section > .control > .toggle {
+.sections > section > .control > .keybind {
+	font: 14px Inconsolata,monospace;
+	text-align: center;
+	color: black;
+	width: 100px;
+	height: 30px;
+	display: block;
+	position: relative;
+	margin: auto 6px;
+}
+
+.sections > section > .control > .toggle {
 	width: var(--control-height);
 	text-align: center;
 	line-height: var(--control-height) !important;
+	border-right: 2px solid var(--secondary);
 }
 
-.ss-panel > .sections > .section > .control > .toggle:hover {
+.sections > section > .control > .toggle:hover {
 	background: #333;
 	filter: brightness(125%);
 }
 
-.ss-panel > .sections > .section > .control > .toggle.true {
+.sections > section > .control > .toggle.true {
 	background: var(--true);
 }
 
-.ss-panel > .sections > .section > .control > .toggle.false {
+.sections > section > .control > .toggle.false {
 	background: var(--false);
 }
 
@@ -140,14 +168,16 @@ html { display: flex; }
 	box-shadow: 0px 0px 0px 3px #037;
 }*/
 
-.ss-panel > .sections > .section > .control > .label {
-	flex: 1 1 0;
-	padding-left: 15px;
-	line-height: var(--control-height) !important;
-	border-left: 2px solid var(--secondary);
+.sections > section > .control > .label {
+    flex: 1 1 0;
+    padding-left: 15px;
+    line-height: var(--control-height)!important;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
 }
 
-.ss-panel > .sections > .section > .control > .ss-slider {
+.sections > section > .control > .slider {
 	flex: 1 1 0;
 	height: 28px;
 	cursor: w-resize;
@@ -155,20 +185,20 @@ html { display: flex; }
 	margin: auto 3px;
 }
 
-.ss-panel > .sections > .section > .control > .ss-slider:hover {
+.sections > section > .control > .slider:hover {
 	background: #333
 }
 
-.ss-panel > .sections > .section > .control > .ss-slider > .background {
+.sections > section > .control > .slider > .background {
 	background: #2ad;
 	height: 100%
 }
 
-.ss-panel > .sections > .section > .control > .ss-slider:hover .background {
+.sections > section > .control > .slider:hover .background {
 	background: #4ad
 }
 
-.ss-panel > .sections > .section > .control > .ss-slider::after {
+.sections > section > .control > .slider::after {
 	position: relative;
 	height: 100%;
 	text-align: center;

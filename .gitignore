@@ -2,6 +2,7 @@ node_modules
 package-lock.json
 client/node_modules
 client/package-lock.json
+krunker.io/public/sploit.js
 sploit.user.js
 sploit.user.js.LICENSE.txt
 server
