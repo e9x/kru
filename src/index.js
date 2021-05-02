@@ -429,4 +429,4 @@ cheat.process();
 
 require('./update.js');
 
-window.cheat = cheat;
+// window.cheat = cheat;
