@@ -10,12 +10,8 @@ var ws = require('ws'),
 	webpack = require('webpack'),
 	nodehttp = require('sys-nodehttp'),
 	staticd = nodehttp.static(path.join(__dirname, 'public')),
-	proxy = (host, post_proc, after_proc) => async (req, res) => {
-		var url = new URL('https://' + host + req.url.href.substr(req.url.origin.length)),
-			prefixers = [ '/api', '/social' ],
-			prefix = prefixers.find(prefix => req.url.pathname.startsWith(prefix));
-		
-		if(prefix)url.pathname = url.pathname.substr(prefix.length);
+	proxy = (slice_prefix, prefix, host, post_proc, after_proc) => server.use(prefix, async (req, res) => {
+		var url = new URL('https://' + host + req.url.href.substr(req.url.origin.length + (slice_prefix ? prefix.length : 0)));
 		
 		if(post_proc)post_proc(req, res, url);
 		
@@ -24,7 +20,7 @@ var ws = require('ws'),
 		res.status(resp.status);
 		
 		res.send(after_proc ? after_proc(req, res, await resp.text()) : await resp.buffer());
-	},
+	}),
 	compiler = webpack({
 		optimization: {
 			minimize: false,
@@ -46,19 +42,19 @@ compiler.watch({}, (err, stats) => {
 	console.log('Build success, output at', path.join(compiler.options.output.path, compiler.options.output.filename));
 });
 
-server.get('/social/player-count', proxy('social.krunker.io', (req, res, url) => url.searchParams.set('hostname', 'krunker.io')));
+proxy(false, '/ping-list', 'matchmaker.krunker.io', (req, res, url) => url.searchParams.set('hostname', 'krunker.io'));
 
-server.get('/ping-list', proxy('matchmaker.krunker.io', (req, res, url) => url.searchParams.set('hostname', 'krunker.io')));
+proxy(false, '/game-list', 'matchmaker.krunker.io', (req, res, url) => url.searchParams.set('hostname', 'krunker.io'));
 
-server.get('/game-list', proxy('matchmaker.krunker.io', (req, res, url) => url.searchParams.set('hostname', 'krunker.io')));
+proxy(true, '/social', 'social.krunker.io', (req, res, url) => url.searchParams.set('hostname', 'krunker.io'));
 
-server.get('/api/streams', proxy('api.krunker.io'));
+proxy(true, '/user-assets', 'social.krunker.io', (req, res, url) => url.searchParams.set('hostname', 'krunker.io'));
 
-server.get('/api/maps', proxy('api.krunker.io'));
+proxy(true, '/api', 'api.krunker.io');
 
-server.get('/game-info', proxy('matchmaker.krunker.io'));
+proxy(false, '/game-info', 'matchmaker.krunker.io');
 
-server.get('/seek-game', proxy('matchmaker.krunker.io', (req, res, url) => {
+proxy(false, '/seek-game', 'matchmaker.krunker.io', (req, res, url) => {
 	url.href = 'https://matchmaker.krunker.io/seek-game?' + new URLSearchParams(Object.entries({
 		hostname: 'krunker.io',
 		validationToken: req.url.searchParams.get('validationToken'),
@@ -75,7 +71,7 @@ server.get('/seek-game', proxy('matchmaker.krunker.io', (req, res, url) => {
 	if(json.host)json.host = req.url.host + '?' + json.host;
 	
 	return JSON.stringify(json);
-}));
+});
 
 server.use(staticd);
 

@@ -998,6 +998,11 @@ var rewrite_url = url => {
 				url.host = location.host;
 				url.pathname = '/api' + url.pathname;
 				break;
+			case'user-assets.krunker.io':
+				url.protocol = location.protocol;
+				url.host = location.host;
+				url.pathname = '/user-assets' + url.pathname;
+				break;
 		}
 		
 		return url.href;
