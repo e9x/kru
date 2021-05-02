@@ -1,12 +1,13 @@
 'use strict';
 
 exports.main = (cheat, add) => {
-	var keys = {frame: 0, delta: 1, xdir: 2, ydir: 3, moveDir: 4, shoot: 5, scope: 6, jump: 7, reload: 8, crouch: 9, weaponScroll: 10, weaponSwap: 11, moveLock: 12},
+	var three = require('three'),
+		keys = {frame: 0, delta: 1, xdir: 2, ydir: 3, moveDir: 4, shoot: 5, scope: 6, jump: 7, reload: 8, crouch: 9, weaponScroll: 10, weaponSwap: 11, moveLock: 12},
 		round = (n, r) => Math.round(n * Math.pow(10, r)) / Math.pow(10, r),
-		raycaster = new cheat.three.Raycaster(),
+		raycaster = new three.Raycaster(),
 		dist_center = pos => Math.hypot((window.innerWidth / 2) - pos.x, (window.innerHeight / 2) - pos.y),
 		sorts = {
-			dist3d: (ent_1, ent_2) => add(ent_1).pos.distanceTo(ent_2),
+			dist3d: (ent_1, ent_2) => add(ent_1).distanceTo(ent_2),
 			dist2d: (ent_1, ent_2) => dist_center(add(ent_2).pos2d) - dist_center(add(ent_1).pos2d),
 			hp: (ent_1, ent_2) => ent_1.health - ent_2.health,
 		},
@@ -28,14 +29,13 @@ exports.main = (cheat, add) => {
 			cheat.controls.object.position.x -= ang * Math.sin(al) * Math.cos(am), cheat.controls.object.position.y += ang * Math.sin(am), 
 			cheat.controls.object.position.z -= ang * Math.cos(al) * Math.cos(am), cheat.world.updateFrustum();
 		},
-		valid_target = ent => typeof ent == 'object' && !add(ent).is_you && add(ent).can_see && add(ent).active && add(ent).enemy && (cheat.config.aim.sight ? add(ent).frustum : true),
 		y_offset_types = ['head', 'chest', 'feet'],
 		y_offset_rand = 'head';
 	
 	setInterval(() => y_offset_rand = y_offset_types[~~(Math.random() * y_offset_types.length)], 2000);
 	
 	exports.exec = data => {
-		var target = cheat.target = valid_target(cheat.target) ? cheat.target : cheat.game.players.list.filter(valid_target).sort((ent_1, ent_2) => sorts[cheat.config.aim.target_sorting || 'dist2d'](ent_1, ent_2) * (add(ent_1).frustum == add(ent_2).frustum ? 1 : 0.5))[0],
+		var target = cheat.target = add(cheat.target).target ? cheat.target : cheat.game.players.list.filter(player => add(player).target).sort((ent_1, ent_2) => sorts[cheat.config.aim.target_sorting || 'dist2d'](ent_1, ent_2) * (add(ent_1).frustum == add(ent_2).frustum ? 1 : 0.5))[0],
 			has_ammo = add(cheat.player).weapon.melee || cheat.player[cheat.vars.ammos][cheat.player[cheat.vars.weaponIndex]];
 		
 		// bhop
@@ -79,34 +79,32 @@ exports.main = (cheat, add) => {
 					y: cheat.util.normal_radian(round(yDire % cheat.util.pi2, 3)) || 0,
 				};
 			
+			// triggerbot
 			if((cheat.config.aim.status == 'silent' && !cheat.config.aim.smooth.status || ['silent', 'triggerbot'].includes(cheat.config.aim.status) && add(cheat.player).aim && raycaster.intersectObjects(cheat.game.players.list.filter(ent => add(ent).active && add(ent).enemy && add(ent).can_see).map(ent => add(ent).obj), true).length) && add(cheat.player).aim)data[keys.shoot] = add(cheat.player).shot ? 0 : 1;
 			
 			// if fully aimed or weapon cant even be aimed or weapon is melee and nearby, shoot
 			if(cheat.config.aim.status == 'silent' && !cheat.config.aim.smooth.status && add(cheat.player).aim)data[keys.shoot] = add(cheat.player).shot ? 0 : 1;
-
+			
 			var do_aim = cheat.config.aim.status == 'silent' || cheat.config.aim.status == 'assist' && add(cheat.player).aim_press;
 			
-			switch(cheat.config.aim.status){
-				case'hidden':
+			if(cheat.config.aim.status == 'hidden'){
+				// wip
+				
+				if(add(cheat.player).shot && add(cheat.player).aim){
+					data[keys.xdir] = rot.x * 1000;
+					data[keys.ydir] = rot.y * 1000;
 					
-					// wip
+					cheat.weapon_aimed = true;
 					
-					if(add(cheat.player).shot && add(cheat.player).aim){
-						data[keys.xdir] = rot.x * 1000;
-						data[keys.ydir] = rot.y * 1000;
-						
-						cheat.weapon_aimed = true;
-						
-						setTimeout(() => cheat.weapon_aimed = false, cheat.player.weapon.rate);
-					}
-					
-					break;
+					setTimeout(() => cheat.weapon_aimed = false, cheat.player.weapon.rate);
+				}
+			}else if(do_aim)switch(cheat.config.aim.status){
 				case'assist':
 					
-					if(do_aim && cheat.config.aim.smooth.status)smooth({
+					if(cheat.config.aim.smooth.status)smooth({
 						xD: rot.x,
 						yD: rot.y,
-					}); else if(do_aim){
+					}); else {
 						cheat.controls[cheat.vars.pchObjc].rotation.x = rot.x;
 						cheat.controls.object.rotation.y = rot.y;
 						
@@ -117,18 +115,16 @@ exports.main = (cheat, add) => {
 					break
 				case'silent':
 					
-					if(do_aim){
-						data[keys.scope] = 1;
-						
-						if(cheat.config.aim.smooth.status)smooth({ xD: rot.x, yD: rot.y });
-						else {
-							data[keys.xdir] = rot.x * 1000;
-							data[keys.ydir] = rot.y * 1000;
-						}
+					data[keys.scope] = 1;
+					
+					if(cheat.config.aim.smooth.status)smooth({ xD: rot.x, yD: rot.y });
+					else {
+						data[keys.xdir] = rot.x * 1000;
+						data[keys.ydir] = rot.y * 1000;
 					}
 					
 					break
-			}
+			}else cheat.target = null;
 		}
 	};
 };

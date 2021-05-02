@@ -44,6 +44,10 @@ npm install
 node index.js -once
 ```
 
+# Running Krunker.IO on http://127.0.0.1:5050
+
+Follow the steps for building but instead of `-once`, use `-server`
+
 # Userscript
 
 Install [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo) then install the [Userscript](https://raw.githubusercontent.com/e9x/kru/master/sploit.user.js)

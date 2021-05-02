@@ -1,6 +1,7 @@
 'use strict';
 var ui = require('./ui.js'),
 	add = ent => new cheat.player_wrap(ent),
+	three = require('three'),
 	constants = require('./consts.js'),
 	spackage = require('../package.json'),
 	msgpack = require('msgpack-lite'),
@@ -13,7 +14,6 @@ var ui = require('./ui.js'),
 				return target[prop];
 			}
 		}),
-		three: require('three'),
 		get box(){
 			return cheat.config.esp.status == 'box' || cheat.config.esp.status == 'box_chams' || cheat.config.esp.status == 'full';
 		},
@@ -38,6 +38,7 @@ var ui = require('./ui.js'),
 					status: false,
 					value: 15,
 				},
+				// fov: 100,
 			},
 			esp: {
 				status: 'off',
@@ -85,7 +86,7 @@ var ui = require('./ui.js'),
 		},
 		visual: require('./visual.js'),
 		player_wrap: class {
-			constructor(entity){ this.entity = entity }
+			constructor(entity){ this.entity = typeof entity == 'object' && entity != null ? entity : {} }
 			distanceTo(p){return Math.hypot(this.x-p.x,this.y-p.y,this.z-p.z)}
 			project(t){return this.applyMatrix4(t.matrixWorldInverse).applyMatrix4(t.projectionMatrix)}
 			applyMatrix4(t){var e=this.x,n=this.y,r=this.z,i=t.elements,a=1/(i[3]*e+i[7]*n+i[11]*r+i[15]);return this.x=(i[0]*e+i[4]*n+i[8]*r+i[12])*a,this.y=(i[1]*e+i[5]*n+i[9]*r+i[13])*a,this.z=(i[2]*e+i[6]*n+i[10]*r+i[14])*a,this}
@@ -93,7 +94,28 @@ var ui = require('./ui.js'),
 			get y(){ return this.entity.y || 0 }
 			get z(){ return this.entity.z || 0 }
 			get can_see(){ return this.active ? this.entity.can_see : false }
-			get frustum(){ for(var ind = 0; ind < 6; ind++)if(cheat.world.frustum.planes[ind].distanceToPoint(this) < 0)return false; return true }
+			/*get in_fov(){
+				var pos = this.pos2d,
+					max = cheat.config.aim.fov * 10;
+				
+				return Math.abs((window.innerWidth / 2) - pos.x) <= max && Math.abs((window.innerHeight / 2) - pos.y) <= max;
+			}*/
+			get target(){
+				return !this.is_you && this.active && this.can_see && this.enemy && (cheat.config.aim.sight ? this.frustum : true);
+			}
+			get frustum(){
+				if(!this.active)return false;
+				
+				var frustum = cheat.world.frustum,
+					camera = cheat.world.camera,
+					matrix = new three.Matrix4();
+				
+				matrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+				frustum.setFromProjectionMatrix(matrix);
+				
+				for(var ind = 0; ind < 6; ind++)if(frustum.planes[ind].distanceToPoint(this) < 0)return false;
+				return true;
+			}
 			get pos2d(){ return cheat.util.pos2d(cheat, this) }
 			get weapon(){ return this.entity.weapon }
 			get risk(){ return this.entity.isDev || this.entity.isMod || this.entity.isMapMod || this.entity.canGlobalKick || this.entity.canViewReports || this.entity.partnerApp || this.entity.canVerify || this.entity.canTeleport || this.entity.isKPDMode || this.entity.level >= 30 }
@@ -105,7 +127,7 @@ var ui = require('./ui.js'),
 			get recoil_y(){ return this.entity[cheat.vars.recoilAnimY] }
 			get health(){ return this.entity.health || 0 }
 			get max_health(){ return this.entity[cheat.vars.maxHealth] || 100 }
-			get active(){ return !this.entity.isHidden && cheat.ctx && this.entity.x != null && this.obj && this.health > 0 }
+			get active(){ return this.entity.x != null && this.health > 0 && this.obj != null }
 			get enemy(){ return !this.entity.team || this.entity.team != cheat.player.team }
 			get did_shoot(){ return this.entity[cheat.vars.didShoot] }
 			get shot(){ return this.weapon.nAuto && this.did_shoot }
@@ -255,9 +277,14 @@ cheat.ui = new ui.init({
 			name: 'Smoothness',
 			type: 'slider',
 			walk: 'aim.smooth.value',
-			range: [ 0, 50 ],
-		},{
-			name: 'Target sorting',
+			range: [ 0, 50, 2 ],
+		},/*{
+			name: 'Target FOV',
+			type: 'slider',
+			walk: 'aim.fov',
+			range: [ 0, 50, 2 ],
+		},*/{
+			name: 'Target sort',
 			type: 'rotate',
 			walk: 'aim.target_sorting',
 			vals: [
@@ -362,6 +389,8 @@ new MutationObserver((muts, observer) => muts.forEach(mut => [...mut.addedNodes]
 			
 			cheat.vars[label] = (krunker.match(regex) || 0)[index] || console.error('Could not find', name, regex, 'at index', index);
 		}
+		
+		// console.log(cheat.vars);
 		
 		// apply patches
 		cheat.patches.forEach(([ regex, replace ]) => krunker = krunker.replace(regex, replace));

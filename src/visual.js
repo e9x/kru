@@ -1,7 +1,8 @@
 'use strict';
 
 exports.main = (cheat, add) => {
-	var v3 = ['x', 'y', 'z'],
+	var three = require('three'),
+		v3 = ['x', 'y', 'z'],
 		draw_text = (lines, text_x, text_y, font_size) => {
 			for(var text_index = 0; text_index < lines.length; text_index++){
 				var line = lines[text_index],
@@ -44,6 +45,7 @@ exports.main = (cheat, add) => {
 			});
 		},
 		ent_visual = ent => {
+			// console.log(ent.alias, add(ent).active, add(ent).frustum, add(ent).is_you);
 			if(!add(ent).active || !add(ent).frustum || add(ent).is_you)return;
 			
 			var src_pos = cheat.util.pos2d(cheat, add(ent)),
@@ -67,7 +69,7 @@ exports.main = (cheat, add) => {
 				var orig_mat = obj.material;
 				
 				Object.defineProperty(obj, 'material', {
-					get: _ => cheat.chams ? new cheat.three.MeshBasicMaterial({
+					get: _ => cheat.chams ? new three.MeshBasicMaterial({
 						transparent: true,
 						fog: false,
 						depthTest: false,

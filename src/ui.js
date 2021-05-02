@@ -146,19 +146,20 @@ class SliderControl extends Control {
 			update_slider = event => {
 				if(!movement.held)return;
 				
-				var unit = this.data.range[2] ? this.data.range[2] : this.data.range[1] / 5,
-					slider_box = this.slider.getBoundingClientRect(),
+				var slider_box = this.slider.getBoundingClientRect(),
+					min_val = this.data.range[0],
+					max_val = this.data.range[1],
+					unit = this.data.range[2],
 					perc = ((event.pageX - slider_box.x) / slider_box.width) * 100,
-					perc_rounded = rtn(perc, unit).toFixed(2),
-					value = +((this.data.range[1] / 100) * perc_rounded).toFixed(2);
+					value = +(((max_val - min_val)*perc/100) + min_val).toFixed(2);
 				
-				if(event.clientX <= slider_box.x)value = perc_rounded = 0;
-				else if(event.clientX >= slider_box.x + slider_box.width)value = this.data.range[1], perc_rounded = 100;
+				if(unit)value = rtn(value, unit);
 				
-				if(perc_rounded <= 100 && value >= this.data.range[0]){
-					this.value = value;
-					this.update();
-				}
+				if(event.clientX <= slider_box.x)value = perc = min_val;
+				else if(event.clientX >= slider_box.x + slider_box.width)value = max_val, perc = 100;
+				
+				this.value = value;
+				this.update();
 			};
 		
 		this.slider = constants.add_ele('div', this.container, { className: 'slider' });
