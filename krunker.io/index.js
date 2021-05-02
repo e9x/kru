@@ -54,6 +54,8 @@ server.get('/game-list', proxy('matchmaker.krunker.io', (req, res, url) => url.s
 
 server.get('/api/streams', proxy('api.krunker.io'));
 
+server.get('/api/maps', proxy('api.krunker.io'));
+
 server.get('/game-info', proxy('matchmaker.krunker.io'));
 
 server.get('/seek-game', proxy('matchmaker.krunker.io', (req, res, url) => {
