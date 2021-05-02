@@ -54,17 +54,7 @@ proxy(true, '/api', 'api.krunker.io');
 
 proxy(false, '/game-info', 'matchmaker.krunker.io');
 
-proxy(false, '/seek-game', 'matchmaker.krunker.io', (req, res, url) => {
-	url.href = 'https://matchmaker.krunker.io/seek-game?' + new URLSearchParams(Object.entries({
-		hostname: 'krunker.io',
-		validationToken: req.url.searchParams.get('validationToken'),
-		dataQuery: JSON.stringify({
-			v: 'yfZAA',
-		}),
-		region: req.url.searchParams.get('region'),
-		autoChangeGame: req.url.searchParams.get('autoChangeGame'),
-	}));
-}, (req, res, body) => {
+proxy(false, '/seek-game', 'matchmaker.krunker.io', (req, res, url) => url.searchParams.set('hostname', 'krunker.io'), (req, res, body) => {
 	var json;
 	try{ json = JSON.parse(body) }catch(err){ return console.error(err), body; }
 	
