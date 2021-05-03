@@ -184,7 +184,7 @@ class SliderControl extends Control {
 	}
 }
 
-exports.init = class {
+module.exports = class {
 	window_listen(event, callback, options){
 		this.frame.contentWindow.addEventListener(event, callback, options);
 		window.addEventListener(event, callback, options);

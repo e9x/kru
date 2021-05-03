@@ -1,7 +1,8 @@
 'use strict';
 
 exports.main = (cheat, add) => {
-	var three = require('three'),
+	var util = require('./util'),
+		three = require('three'),
 		keys = {frame: 0, delta: 1, xdir: 2, ydir: 3, moveDir: 4, shoot: 5, scope: 6, jump: 7, reload: 8, crouch: 9, weaponScroll: 10, weaponSwap: 11, moveLock: 12},
 		round = (n, r) => Math.round(n * Math.pow(10, r)) / Math.pow(10, r),
 		raycaster = new three.Raycaster(),
@@ -17,14 +18,14 @@ exports.main = (cheat, add) => {
 				// speed = horizontal speed
 				turn = (50 - cheat.config.aim.smooth.value) / 10000,
 				speed = (50 - cheat.config.aim.smooth.value) / 10000,
-				ang = cheat.util.getAngleDst(cheat.controls.object.rotation.y, target.yD);
+				ang = util.getAngleDst(cheat.controls.object.rotation.y, target.yD);
 			
-			cheat.controls.object.rotation.y += ang * aj * turn, ang = cheat.util.getAngleDst(cheat.controls[cheat.vars.pchObjc].rotation.x, target.xD), 
+			cheat.controls.object.rotation.y += ang * aj * turn, ang = util.getAngleDst(cheat.controls[cheat.vars.pchObjc].rotation.x, target.xD), 
 			
-			cheat.controls[cheat.vars.pchObjc].rotation.x += ang * aj * turn, ang = cheat.util.getD3D(cheat.controls.object.position.x, cheat.controls.object.position.y, cheat.controls.object.position.z, target.x, target.y, target.z) * aj * speed;
+			cheat.controls[cheat.vars.pchObjc].rotation.x += ang * aj * turn, ang = util.getD3D(cheat.controls.object.position.x, cheat.controls.object.position.y, cheat.controls.object.position.z, target.x, target.y, target.z) * aj * speed;
 			
-			var al = cheat.util.getDir(cheat.controls.object.position.z, cheat.controls.object.position.x, target.z, target.x),
-				am = cheat.util.getXDire(cheat.controls.object.position.x, cheat.controls.object.position.y, cheat.controls.object.position.z, target.x, target.y, target.z);
+			var al = util.getDir(cheat.controls.object.position.z, cheat.controls.object.position.x, target.z, target.x),
+				am = util.getXDire(cheat.controls.object.position.x, cheat.controls.object.position.y, cheat.controls.object.position.z, target.x, target.y, target.z);
 			
 			cheat.controls.object.position.x -= ang * Math.sin(al) * Math.cos(am), cheat.controls.object.position.y += ang * Math.sin(am), 
 			cheat.controls.object.position.z -= ang * Math.cos(al) * Math.cos(am), cheat.world.updateFrustum();
@@ -71,12 +72,12 @@ exports.main = (cheat, add) => {
 					break;
 			};
 			
-			var yDire = cheat.util.getDir(add(cheat.player).z, add(cheat.player).x, target.z, target.x),
-				xDire = cheat.util.getXDire(add(cheat.player).x, add(cheat.player).y, add(cheat.player).z, target.x, yVal, target.z),
+			var yDire = util.getDir(add(cheat.player).z, add(cheat.player).x, target.z, target.x),
+				xDire = util.getXDire(add(cheat.player).x, add(cheat.player).y, add(cheat.player).z, target.x, yVal, target.z),
 				xv = xDire - add(cheat.player).recoil_y * 0.27,
 				rot = {
-					x: round(Math.max(-cheat.util.halfpi, Math.min(cheat.util.halfpi, xv )) % cheat.util.pi2, 3) || 0,
-					y: cheat.util.normal_radian(round(yDire % cheat.util.pi2, 3)) || 0,
+					x: round(Math.max(-util.halfpi, Math.min(util.halfpi, xv )) % util.pi2, 3) || 0,
+					y: util.normal_radian(round(yDire % util.pi2, 3)) || 0,
 				};
 			
 			// triggerbot

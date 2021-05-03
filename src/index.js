@@ -1,19 +1,19 @@
 'use strict';
 var ui = require('./ui.js'),
 	add = ent => new cheat.player_wrap(ent),
+	util = require('./util'),
 	three = require('three'),
 	constants = require('./consts.js'),
 	spackage = require('../package.json'),
 	msgpack = require('msgpack-lite'),
 	cheat = {
+		add: add,
 		assign_deep: (e,...a)=>(a.forEach(a=>Object.keys(a).forEach(r=>typeof a[r]=='object'&&a[r]!=null&&!Array.isArray(a[r])&&r in e?cheat.assign_deep(e[r],a[r]):e[r]=a[r])),e),
-		syms: new Proxy({}, {
-			get(target, prop){
-				if(!target[prop])target[prop] = Symbol();
-				
-				return target[prop];
-			}
-		}),
+		syms: {
+			procInputs: Symbol(),
+			hooked: Symbol(),
+			isAI: Symbol(),
+		},
 		get box(){
 			return cheat.config.esp.status == 'box' || cheat.config.esp.status == 'box_chams' || cheat.config.esp.status == 'full';
 		},
@@ -54,7 +54,6 @@ var ui = require('./ui.js'),
 				adblock: true,
 			},
 		},
-		util: require('./util.js'),
 		vars: {},
 		find_vars: {
 			isYou: [/this\.accid=0,this\.(\w+)=\w+,this\.isPlayer/, 1],
@@ -116,7 +115,7 @@ var ui = require('./ui.js'),
 				for(var ind = 0; ind < 6; ind++)if(frustum.planes[ind].distanceToPoint(this) < 0)return false;
 				return true;
 			}
-			get pos2d(){ return cheat.util.pos2d(cheat, this) }
+			get pos2d(){ return util.pos2d(cheat, this) }
 			get weapon(){ return this.entity.weapon }
 			get risk(){ return this.entity.isDev || this.entity.isMod || this.entity.isMapMod || this.entity.canGlobalKick || this.entity.canViewReports || this.entity.partnerApp || this.entity.canVerify || this.entity.canTeleport || this.entity.isKPDMode || this.entity.level >= 30 }
 			get is_you(){ return this.entity[cheat.vars.isYou] }
@@ -134,7 +133,7 @@ var ui = require('./ui.js'),
 		},
 		process(){
 			if(cheat.game && cheat.controls && cheat.world && cheat.player)cheat.game.players.list.forEach(ent => {
-				ent.can_see = add(ent).active && cheat.util.obstructing(cheat, cheat.player, ent) == null ? true : false;
+				ent.can_see = add(ent).active && util.obstructing(cheat, cheat.player, ent) == null ? true : false;
 				
 				if(add(ent).obj && !add(ent).obj[cheat.syms.hooked]){
 					add(ent).obj[cheat.syms.hooked] = true;
@@ -172,29 +171,22 @@ var ui = require('./ui.js'),
 				};
 			}
 			
-			cheat.visual.exec();
+			cheat.visual(cheat);
 			
 			requestAnimationFrame(cheat.process);
 		},
 		input: require('./input.js'),
 		has_instruct: (str, inst) => (inst = document.querySelector('#instructionHolder'), inst && inst.textContent.trim().toLowerCase().includes(str)),
-		process_interval: setInterval(() => {
-			// automatic stuff
-			
-			if(cheat.config.game.auto_respawn){
-				if(cheat.has_instruct('game is full'))clearInterval(cheat.process_interval), location.assign('https://krunker.io');
-				else if(cheat.has_instruct('disconnected'))clearInterval(cheat.process_interval), location.assign('https://krunker.io');
-				else if(cheat.has_instruct('click to play') && (!cheat.player || !add(cheat.player) || !add(cheat.player).active || !add(cheat.player).health))cheat.controls.toggle(true);
-			}
-		}, 100),
-		resize_cas(){
-			this.cas.width = window.innerWidth;
-			this.cas.height = window.innerHeight;
-		},
-		cas: constants.add_ele('canvas', document.documentElement, { style: 'top:0px;left:0px;background:#0000;pointer-events:none;position:absolute;width:100%;height:100%;z-index:8999999', width: window.innerWidth, height: window.innerHeight }),
-	};
+	},
+	process_interval = setInterval(() => {
+		if(!cheat.config.game.auto_respawn)return;
+		
+		if(cheat.has_instruct('game is full'))clearInterval(cheat.process_interval), location.assign('https://krunker.io');
+		else if(cheat.has_instruct('disconnected'))clearInterval(cheat.process_interval), location.assign('https://krunker.io');
+		else if(cheat.has_instruct('click to play') && (!cheat.player || !add(cheat.player) || !add(cheat.player).active || !add(cheat.player).health))cheat.controls.toggle(true);
+	}, 100);
 
-cheat.ui = new ui.init({
+cheat.ui = new ui({
 	version: spackage.version,
 	title: 'Sploit',
 	config: {
@@ -447,15 +439,7 @@ new MutationObserver((muts, observer) => muts.forEach(mut => [...mut.addedNodes]
 }))).observe(document, { childList: true, subtree: true });
 
 cheat.input.main(cheat, add);
-cheat.visual.main(cheat, add);
-
-cheat.ctx = cheat.cas.getContext('2d', { alpha: true });
-
-cheat.resize_cas();
-window.addEventListener('resize', () => cheat.resize_cas());
 
 cheat.process();
 
 require('./update.js');
-
-// window.cheat = cheat;

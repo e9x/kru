@@ -1,6 +1,7 @@
 'use strict';
 
-var three = require('three');
+var util = require('./util'),
+	three = require('three');
 
 exports.pi2 = Math.PI * 2;
 exports.halfpi = Math.PI / 2;
