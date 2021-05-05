@@ -474,8 +474,6 @@ cheat.ui.update(true, true).then(() => constants.request('https://sys32.dev/api/
 			this.addEventListener('message', event => {
 				var [ label, ...data ] = msgpack.decode(new Uint8Array(event.data)), client;
 				
-				// console.log(cheat.socket_id);
-				
 				if(label == 'io-init')cheat.socket_id = data[0];
 				else if(cheat.config.game.skins && label == 0 && cheat.skin_cache && (client = data[0].indexOf(cheat.socket_id)) != -1){
 					// loadout
