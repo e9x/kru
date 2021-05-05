@@ -32,7 +32,18 @@ window.addEventListener('resize', resize_canvas);
 exports.exec = cheat => {
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 	
-	// draw overlay stuff
+	// aim fov
+	if(cheat.config.aim.fov_box){
+		var width = (canvas.width * cheat.config.aim.fov) / 100,
+			height = (canvas.height * cheat.config.aim.fov) / 100;
+		
+		ctx.fillStyle = '#F00';
+		ctx.globalAlpha = 0.4;
+		ctx.fillRect((canvas.width - width) / 2, (canvas.height - height) / 2, width, height);
+		ctx.globalAlpha = 1;
+	}
+	
+	// draw overlay
 	if(cheat.config.game.overlay && cheat.game){
 		ctx.strokeStyle = '#000'
 		ctx.font = 'Bold 14px Inconsolata, monospace';

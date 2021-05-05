@@ -236,7 +236,7 @@ module.exports = class {
 			interact: () => {
 				this.config.value.ui.visible ^= 1;
 				this.config.save();
-				this.update(false);
+				this.update();
 			},
 		});
 		
@@ -285,12 +285,12 @@ module.exports = class {
 		this.frame.contentWindow.addEventListener(event, callback, options);
 		document.addEventListener(event, callback, options);
 	}
-	async update(load = true){
+	async update(load, position){
 		if(load)await this.config.load();
 		
 		this.frame.style.display = this.config.value.ui.visible ? 'block' : 'none';
 		
-		this.pos = { x: 20, y: (window.innerHeight / 2) - (this.panel.getBoundingClientRect().height / 2) };
+		if(position)this.pos = { x: 20, y: (window.innerHeight / 2) - (this.panel.getBoundingClientRect().height / 2) };
 		
 		this.apply_bounds();
 		

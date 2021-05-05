@@ -16,6 +16,11 @@ var ui = require('./ui'),
 		return target;
 	},
 	cheat = {
+		get scale(){
+			var base = document.querySelector('#uiBase');
+			
+			return base ? +base.style.transform.slice(6, -1) : 1;
+		},
 		// add to cheat object to access canvas
 		visual: require('./visual'),
 		add: ent => Object.setPrototypeOf({ entity: typeof ent == 'object' && ent != null ? ent : {} }, cheat.player_wrap),
@@ -54,6 +59,7 @@ var ui = require('./ui'),
 					value: 15,
 				},
 				// percentage of screen
+				fov_box: false,
 				fov: 100,
 			},
 			esp: {
@@ -104,14 +110,22 @@ var ui = require('./ui'),
 			get z(){ return this.entity.z || 0 },
 			get can_see(){ return this.active ? this.entity.can_see : false },
 			get in_fov(){
-				var pos = util.pos2d(cheat, this.obj),
-					x_perc = (pos.x / window.innerWidth) * 100,
-					y_perc = (pos.y / window.innerHeight) * 100;
+				var fov_bak = cheat.world.camera.fov;
 				
-				return Math.hypot(50 - x_perc, 50 - y_perc) <= cheat.config.aim.fov;
+				// config fov is percentage of current fov
+				cheat.world.camera.fov = cheat.config.aim.fov / fov_bak * 100;
+				cheat.world.camera.updateProjectionMatrix();
+				
+				cheat.update_frustum();
+				var ret = this.frustum;
+				
+				cheat.world.camera.fov = fov_bak;
+				cheat.world.camera.updateProjectionMatrix();
+				
+				return ret;
 			},
 			get target(){
-				return !this.is_you && this.active && this.enemy && this.can_see && (cheat.config.aim.sight ? this.frustum : true); // && this.in_fov;
+				return !this.is_you && this.active && this.enemy && this.can_see && (cheat.config.aim.sight ? this.frustum : true) && this.in_fov;
 			},
 			get frustum(){
 				if(!this.active)return false;
@@ -294,12 +308,12 @@ cheat.ui = new ui({
 			type: 'slider',
 			walk: 'aim.smooth.value',
 			range: [ 0, 50, 2 ],
-		},/*{
+		},{
 			name: 'Target FOV',
 			type: 'slider',
 			walk: 'aim.fov',
 			range: [ 10, 100, 5 ],
-		},*/{
+		},{
 			name: 'Target sort',
 			type: 'rotate',
 			walk: 'aim.target_sorting',
@@ -318,6 +332,10 @@ cheat.ui = new ui({
 				[ 'feet', 'Feet' ],
 				[ 'random', 'Random' ],
 			],
+		},{
+			name: 'Draw FOV box',
+			type: 'boolean',
+			walk: 'aim.fov_box',
 		},{
 			name: 'Smooth',
 			type: 'boolean',
@@ -407,7 +425,7 @@ cheat.ui = new ui({
 	}],
 });
 
-cheat.ui.update().then(() => constants.request('https://sys32.dev/api/v1/source?' + Date.now())).then(krunker => {
+cheat.ui.update(true, true).then(() => constants.request('https://sys32.dev/api/v1/source?' + Date.now())).then(krunker => {
 	input.main(cheat, cheat.add);
 	cheat.process();
 	
