@@ -11,9 +11,9 @@ if(typeof nw == 'undefined'){
 	child_process.execFile(require('nw/lib/findpath')(), [
 		__dirname,
 		'--remote-debugging-port=9222',
-		'--disable-frame-rate-limit',
-		'--disable-gpu-vsync',
-		'--max-gum-fps="9999"'
+		// '--disable-frame-rate-limit',
+		// '--disable-gpu-vsync',
+		// '--max-gum-fps="9999"'
 	], { stdio: 'inherit', stderr: 'inherit' }).on('close', () => {
 		process.nextTick(() => process.exit(0));
 	});

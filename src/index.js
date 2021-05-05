@@ -1,14 +1,24 @@
 'use strict';
-var ui = require('./ui.js'),
-	add = ent => new cheat.player_wrap(ent),
+var ui = require('./ui'),
 	util = require('./util'),
-	three = require('three'),
-	constants = require('./consts.js'),
+	input = require('./input'),
+	constants = require('./consts'),
 	spackage = require('../package.json'),
+	three = require('three'),
 	msgpack = require('msgpack-lite'),
+	clone_obj = obj => JSON.parse(JSON.stringify(obj)),
+	assign_deep = (target, ...objects) => {
+		for(var ind in objects)for(var key in objects[ind]){
+			if(typeof objects[ind][key] == 'object' && objects[ind][key] != null && key in target)assign_deep(target[key], objects[ind][key]);
+			else Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(objects[ind], key))
+		}
+		
+		return target;
+	},
 	cheat = {
-		add: add,
-		assign_deep: (e,...a)=>(a.forEach(a=>Object.keys(a).forEach(r=>typeof a[r]=='object'&&a[r]!=null&&!Array.isArray(a[r])&&r in e?cheat.assign_deep(e[r],a[r]):e[r]=a[r])),e),
+		// add to cheat object to access canvas
+		visual: require('./visual'),
+		add: ent => Object.setPrototypeOf({ entity: typeof ent == 'object' && ent != null ? ent : {} }, cheat.player_wrap),
 		syms: {
 			procInputs: Symbol(),
 			hooked: Symbol(),
@@ -20,7 +30,12 @@ var ui = require('./ui.js'),
 		get chams(){
 			return cheat.config.esp.status == 'chams' || cheat.config.esp.status == 'box_chams' || cheat.config.esp.status == 'full';
 		},
-		config: {
+		config: {},
+		config_base: {
+			ui: {
+				page: 0,
+				visible: 1,
+			},
 			binds: {
 				toggle: 'KeyC',
 				aim: 'Digit3',
@@ -38,7 +53,8 @@ var ui = require('./ui.js'),
 					status: false,
 					value: 15,
 				},
-				// fov: 100,
+				// percentage of screen
+				fov: 100,
 			},
 			esp: {
 				status: 'off',
@@ -46,6 +62,7 @@ var ui = require('./ui.js'),
 					status: false,
 					value: 1,
 				},
+				tracers: false,
 			},
 			game: {
 				bhop: 'off',
@@ -73,74 +90,66 @@ var ui = require('./ui.js'),
 		},
 		patches: [
 			// get vars
-			[/this\.moveObj=func/, 'ssd.game = this, $&'],
-			[/this\.backgroundScene=/, 'ssd.world = this, $&'],
-			
-			[/(function\(\w+,\w+,\w+\)\{var (?:\w+=\w+\(\d+\),?){3};\w+\.exports=)({(?:\w+:\w+,)+socket:)/, '$1ssd.ws=$2'],
-			[/((?:[a-zA-Z]+(\.|(?=\.skins)))+)\.skins(?!=)/g, 'ssd.skin($1)'],
+			[/this\.moveObj=func/, 'ssv.g(this),$&'],
+			[/this\.backgroundScene=/, 'ssv.w(this),$&'],
+			[/((?:[a-zA-Z]+(\.|(?=\.skins)))+)\.skins(?!=)/g, 'ssv.p($1)'],
 		],
 		skins: [...Array(5000)].map((e, i) => ({ ind: i, cnt: 1 })),
-		skin(player){
-			return cheat.config.game.skins && player && player.alias ? cheat.skins : player.skins;
-		},
-		visual: require('./visual.js'),
-		player_wrap: class {
-			constructor(entity){ this.entity = typeof entity == 'object' && entity != null ? entity : {} }
-			distanceTo(p){return Math.hypot(this.x-p.x,this.y-p.y,this.z-p.z)}
-			project(t){return this.applyMatrix4(t.matrixWorldInverse).applyMatrix4(t.projectionMatrix)}
-			applyMatrix4(t){var e=this.x,n=this.y,r=this.z,i=t.elements,a=1/(i[3]*e+i[7]*n+i[11]*r+i[15]);return this.x=(i[0]*e+i[4]*n+i[8]*r+i[12])*a,this.y=(i[1]*e+i[5]*n+i[9]*r+i[13])*a,this.z=(i[2]*e+i[6]*n+i[10]*r+i[14])*a,this}
-			get x(){ return this.entity.x || 0 }
-			get y(){ return this.entity.y || 0 }
-			get z(){ return this.entity.z || 0 }
-			get can_see(){ return this.active ? this.entity.can_see : false }
-			/*get in_fov(){
-				var pos = this.pos2d,
-					max = cheat.config.aim.fov * 10;
+		player_wrap: {
+			distanceTo(p){return Math.hypot(this.x-p.x,this.y-p.y,this.z-p.z)},
+			project(t){return this.applyMatrix4(t.matrixWorldInverse).applyMatrix4(t.projectionMatrix)},
+			applyMatrix4(t){var e=this.x,n=this.y,r=this.z,i=t.elements,a=1/(i[3]*e+i[7]*n+i[11]*r+i[15]);return this.x=(i[0]*e+i[4]*n+i[8]*r+i[12])*a,this.y=(i[1]*e+i[5]*n+i[9]*r+i[13])*a,this.z=(i[2]*e+i[6]*n+i[10]*r+i[14])*a,this},
+			get x(){ return this.entity.x || 0 },
+			get y(){ return this.entity.y || 0 },
+			get z(){ return this.entity.z || 0 },
+			get can_see(){ return this.active ? this.entity.can_see : false },
+			get in_fov(){
+				var pos = util.pos2d(cheat, this.obj),
+					x_perc = (pos.x / window.innerWidth) * 100,
+					y_perc = (pos.y / window.innerHeight) * 100;
 				
-				return Math.abs((window.innerWidth / 2) - pos.x) <= max && Math.abs((window.innerHeight / 2) - pos.y) <= max;
-			}*/
+				return Math.hypot(50 - x_perc, 50 - y_perc) <= cheat.config.aim.fov;
+			},
 			get target(){
-				return !this.is_you && this.active && this.can_see && this.enemy && (cheat.config.aim.sight ? this.frustum : true);
-			}
+				return !this.is_you && this.active && this.enemy && this.can_see && (cheat.config.aim.sight ? this.frustum : true); // && this.in_fov;
+			},
 			get frustum(){
 				if(!this.active)return false;
 				
-				var frustum = cheat.world.frustum,
-					camera = cheat.world.camera,
-					matrix = new three.Matrix4();
+				for(var ind = 0; ind < 6; ind++)if(cheat.world.frustum.planes[ind].distanceToPoint(this) < 0)return false;
 				
-				matrix.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
-				frustum.setFromProjectionMatrix(matrix);
-				
-				for(var ind = 0; ind < 6; ind++)if(frustum.planes[ind].distanceToPoint(this) < 0)return false;
 				return true;
-			}
-			get pos2d(){ return util.pos2d(cheat, this) }
-			get weapon(){ return this.entity.weapon }
-			get risk(){ return this.entity.isDev || this.entity.isMod || this.entity.isMapMod || this.entity.canGlobalKick || this.entity.canViewReports || this.entity.partnerApp || this.entity.canVerify || this.entity.canTeleport || this.entity.isKPDMode || this.entity.level >= 30 }
-			get is_you(){ return this.entity[cheat.vars.isYou] }
-			get aim(){ return this.weapon.noAim || !this.entity[cheat.vars.aimVal] || cheat.target && this.weapon.melee && this.distanceTo(add(cheat.target)) <= 18 }
-			get aim_press(){ return cheat.controls[cheat.vars.mouseDownR] || cheat.controls.keys[cheat.controls.binds.aim.val] }
-			get crouch(){ return this.entity[cheat.vars.crouchVal] }
-			get obj(){ return this.entity[cheat.vars.objInstances] } // this.entity.lowerBody && this.entity.lowerBody.parent && this.entity.lowerBody.parent ? this.entity.lowerBody.parent : null }
-			get recoil_y(){ return this.entity[cheat.vars.recoilAnimY] }
-			get health(){ return this.entity.health || 0 }
-			get max_health(){ return this.entity[cheat.vars.maxHealth] || 100 }
-			get active(){ return this.entity.x != null && this.health > 0 && this.obj != null }
-			get enemy(){ return !this.entity.team || this.entity.team != cheat.player.team }
-			get did_shoot(){ return this.entity[cheat.vars.didShoot] }
-			get shot(){ return this.weapon.nAuto && this.did_shoot }
+			},
+			get pos2d(){ return util.pos2d(cheat, this) },
+			get weapon(){ return this.entity.weapon },
+			get risk(){ return this.entity.isDev || this.entity.isMod || this.entity.isMapMod || this.entity.canGlobalKick || this.entity.canViewReports || this.entity.partnerApp || this.entity.canVerify || this.entity.canTeleport || this.entity.isKPDMode || this.entity.level >= 30 },
+			get is_you(){ return this.entity[cheat.vars.isYou] },
+			get aim(){ return this.weapon.noAim || !this.entity[cheat.vars.aimVal] || cheat.target && this.weapon.melee && this.distanceTo(cheat.add(cheat.target)) <= 18 },
+			get aim_press(){ return cheat.controls[cheat.vars.mouseDownR] || cheat.controls.keys[cheat.controls.binds.aim.val] },
+			get crouch(){ return this.entity[cheat.vars.crouchVal] },
+			// this.entity.lowerBody && this.entity.lowerBody.parent && this.entity.lowerBody.parent ? this.entity.lowerBody.parent : null
+			get obj(){ return this.entity[cheat.vars.objInstances] },
+			get recoil_y(){ return this.entity[cheat.vars.recoilAnimY] },
+			get health(){ return this.entity.health || 0 },
+			get max_health(){ return this.entity[cheat.vars.maxHealth] || 100 },
+			get active(){ return this.entity.active && this.entity.x != null && this.health > 0 && this.obj != null },
+			get enemy(){ return !this.entity.team || this.entity.team != cheat.player.team },
+			get did_shoot(){ return this.entity[cheat.vars.didShoot] },
+			get shot(){ return this.weapon.nAuto && this.did_shoot },
+		},
+		update_frustum(){
+			cheat.world.frustum.setFromProjectionMatrix(new three.Matrix4().multiplyMatrices(cheat.world.camera.projectionMatrix, cheat.world.camera.matrixWorldInverse));
 		},
 		process(){
 			if(cheat.game && cheat.controls && cheat.world && cheat.player)cheat.game.players.list.forEach(ent => {
-				ent.can_see = add(ent).active && util.obstructing(cheat, cheat.player, ent) == null ? true : false;
+				ent.can_see = cheat.add(ent).active && util.obstructing(cheat, cheat.player, ent) == null ? true : false;
 				
-				if(add(ent).obj && !add(ent).obj[cheat.syms.hooked]){
-					add(ent).obj[cheat.syms.hooked] = true;
+				if(cheat.add(ent).obj && !cheat.add(ent).obj[cheat.syms.hooked]){
+					cheat.add(ent).obj[cheat.syms.hooked] = true;
 					
 					var visible = true;
 					
-					Object.defineProperty(add(ent).obj, 'visible', {
+					Object.defineProperty(cheat.add(ent).obj, 'visible', {
 						get: _ => cheat.chams ? true : visible,
 						set: _ => visible = _,
 					});
@@ -151,9 +160,15 @@ var ui = require('./ui.js'),
 					
 					var inview = ent[cheat.vars.inView];
 					
-					Object.defineProperty(ent, cheat.vars.inView, {
-						get: _ => cheat.hide_nametags ? false : cheat.config.esp.nametags || inview,
-						set: _ => inview = _,
+					Object.defineProperties(ent, {
+						[cheat.vars.inView]: {
+							get: _ => {
+								cheat.update_frustum();
+	
+								return cheat.hide_nametags ? false : cheat.config.esp.nametags || inview;
+							},
+							set: _ => inview = _,
+						},
 					});
 				}
 			});
@@ -165,38 +180,46 @@ var ui = require('./ui.js'),
 				cheat.player[cheat.syms.procInputs] = cheat.player[cheat.vars.procInputs];
 				
 				cheat.player[cheat.vars.procInputs] = (data, ...args) => {
-					if(cheat.controls && cheat.player && add(cheat.player).weapon)cheat.input.exec(data);
+					if(cheat.controls && cheat.player && cheat.add(cheat.player).weapon)input.exec(data);
 					
 					return cheat.player[cheat.syms.procInputs](data, ...args);
 				};
 			}
 			
-			cheat.visual(cheat);
+			cheat.visual.exec(cheat);
 			
 			requestAnimationFrame(cheat.process);
 		},
+		socket_id: 0,
 		input: require('./input.js'),
 		has_instruct: (str, inst) => (inst = document.querySelector('#instructionHolder'), inst && inst.textContent.trim().toLowerCase().includes(str)),
 	},
-	process_interval = setInterval(() => {
-		if(!cheat.config.game.auto_respawn)return;
-		
-		if(cheat.has_instruct('game is full'))clearInterval(cheat.process_interval), location.assign('https://krunker.io');
-		else if(cheat.has_instruct('disconnected'))clearInterval(cheat.process_interval), location.assign('https://krunker.io');
-		else if(cheat.has_instruct('click to play') && (!cheat.player || !add(cheat.player) || !add(cheat.player).active || !add(cheat.player).health))cheat.controls.toggle(true);
-	}, 100);
+	resolve_page_load,
+	page_load = new Promise(resolve => resolve_page_load = resolve);
+
+new MutationObserver((muts, observer) => muts.forEach(mut => [...mut.addedNodes].forEach(node => {
+	if(!(node instanceof HTMLScriptElement) || !node.textContent.includes('Yendis Entertainment'))return;
+	
+	observer.disconnect();
+	node.remove();
+	
+	resolve_page_load();
+}))).observe(document, { childList: true, subtree: true });
+
+require('./update.js');
 
 cheat.ui = new ui({
 	version: spackage.version,
 	title: 'Sploit',
 	config: {
 		save: () => constants.store.set('config', JSON.stringify(cheat.config)),
-		load: () => constants.store.get('config').then(config => cheat.assign_deep(cheat.config, JSON.parse(config || '{}'))),
-		state: () => cheat.config, // for setting walked objects
+		load: () => constants.store.get('config').then(config => assign_deep(cheat.config, clone_obj(cheat.config_base), JSON.parse(config || '{}'))),
+		value: cheat.config,
 	},
-	values: [{
+	value: [{
 		name: 'Main',
-		contents: [{
+		type: 'section',
+		value: [{
 			name: 'Auto aim',
 			type: 'rotate',
 			walk: 'aim.status',
@@ -250,11 +273,11 @@ cheat.ui = new ui({
 		}],
 	},{
 		name: 'Game',
-		contents: [/*{
+		value: [{
 			name: 'Skins',
 			type: 'boolean',
 			walk: 'game.skins',
-		},*/{
+		},{
 			name: 'Wireframe',
 			type: 'boolean',
 			walk: 'game.wireframe',
@@ -265,7 +288,8 @@ cheat.ui = new ui({
 		}],
 	},{
 		name: 'Aim',
-		contents: [{
+		type: 'section',
+		value: [{
 			name: 'Smoothness',
 			type: 'slider',
 			walk: 'aim.smooth.value',
@@ -274,7 +298,7 @@ cheat.ui = new ui({
 			name: 'Target FOV',
 			type: 'slider',
 			walk: 'aim.fov',
-			range: [ 0, 50, 2 ],
+			range: [ 10, 100, 5 ],
 		},*/{
 			name: 'Target sort',
 			type: 'rotate',
@@ -313,7 +337,8 @@ cheat.ui = new ui({
 		}],
 	},{
 		name: 'Esp',
-		contents: [{
+		type: 'section',
+		value: [{
 			name: 'Walls',
 			type: 'boolean',
 			walk: 'esp.walls.status',
@@ -325,7 +350,7 @@ cheat.ui = new ui({
 		}]
 	},{
 		name: 'Binds',
-		contents: [{
+		value: [{
 			name: 'Toggle',
 			type: 'keybind',
 			walk: 'binds.toggle',
@@ -353,93 +378,125 @@ cheat.ui = new ui({
 			name: 'Overlay',
 			type: 'keybind',
 			walk: 'binds.overlay',
+		},{
+			name: 'Reset Settings',
+			type: 'keybind',
+			walk: 'binds.reset',
 		}],
 	},{
 		name: 'Settings',
-		contents: [{
-			name: 'Join the Discord',
+		type: 'section',
+		value: [{
+			name: 'GitHub',
 			type: 'function',
-			value: () => window.open('https://e9x.github.io/kru/invite'),
+			value: () => window.open(constants.github),
 		},{
-			name: 'Source code',
+			name: 'Reset Settings',
 			type: 'function',
-			value: () => window.open('https://github.com/e9x/kru'),
+			value: () => {
+				// reset everything but sliders
+				constants.store.set('config', JSON.stringify(assign_deep(cheat.config, clone_obj(cheat.config_base)), (prop, value) => typeof value == 'number' ? void'' : value));
+				cheat.ui.update();
+			},
+			bind: 'binds.reset',
 		}].concat(constants.injected_settings),
+	},{
+		name: 'Discord',
+		type: 'function',
+		value: () => window.open(constants.discord),
 	}],
 });
 
-new MutationObserver((muts, observer) => muts.forEach(mut => [...mut.addedNodes].forEach(node => {
-	if(!(node instanceof HTMLScriptElement) || !node.textContent.includes('Yendis Entertainment'))return;
+cheat.ui.update().then(() => constants.request('https://sys32.dev/api/v1/source?' + Date.now())).then(krunker => {
+	input.main(cheat, cheat.add);
+	cheat.process();
 	
-	observer.disconnect();
-	node.remove();
+	// find variables
+	var missing = {};
 	
-	new constants.request('https://sys32.dev/api/v1/source', true).text().then(krunker => {
-		// find variables
-		for(var label in cheat.find_vars){
-			var [ regex, index ] = cheat.find_vars[label];
+	for(var label in cheat.find_vars){
+		var [ regex, index ] = cheat.find_vars[label];
+		
+		cheat.vars[label] = (krunker.match(regex) || 0)[index] || (missing[label] = cheat.find_vars[label], null);
+	}
+	
+	console.log('Found vars:');
+	console.table(cheat.vars);
+	
+	if(Object.keys(missing).length){
+		console.log('Missing:');
+		console.table(missing);
+	}
+	
+	var process_interval = setInterval(() => {
+		if(!cheat.config.game.auto_respawn)return;
+		
+		if(cheat.has_instruct('game is full'))clearInterval(cheat.process_interval), location.assign('https://krunker.io');
+		else if(cheat.has_instruct('disconnected'))clearInterval(cheat.process_interval), location.assign('https://krunker.io');
+		else if(cheat.has_instruct('click to play') && (!cheat.player || !cheat.add(cheat.player) || !cheat.add(cheat.player).active || !cheat.add(cheat.player).health))cheat.controls.toggle(true);
+	}, 100);
+	
+	cheat.patches.forEach(([ regex, replace ]) => krunker = krunker.replace(regex, replace));
+	
+	/*
+	// This script can expect to use greasemonkey request methods or fetch as a fallback
+	// Ideally if greasemonkey can be used for requesting then it should as it avoids any cors headers that COULD be added to break this script
+	*/
+	
+	var w='';
+	
+	page_load.then(() => new Function('WP_fetchMMToken', 'ssv', 'WebSocket', krunker)(new Promise((resolve, reject) => constants.request('https://sys32.dev/api/v1/token', { 'x-media': ('646973636f72642c676974687562'.replace(/../g,c=>w+=String.fromCharCode(parseInt(c,16))),w+=(cheat.ui.sections.some(s=>s.data.name.toLowerCase()==w.split(',')[0])?'':0)).split(',').map(x=>constants[x])+'' }).then(body => resolve(JSON.parse(body))).catch(reject)), {
+		g(game){ cheat.game = game },
+		w(world){ cheat.world = world },
+		p: ent => cheat.config.game.skins && typeof ent == 'object' && ent != null && ent.stats ? cheat.skins : ent.skins,
+	}, class extends WebSocket {
+		constructor(url, proto){
+			super(url, proto);
 			
-			cheat.vars[label] = (krunker.match(regex) || 0)[index] || console.error('Could not find', name, regex, 'at index', index);
+			this.addEventListener('message', event => {
+				var [ label, ...data ] = msgpack.decode(new Uint8Array(event.data)), client;
+				
+				// console.log(cheat.socket_id);
+				
+				if(label == 'io-init')cheat.socket_id = data[0];
+				else if(cheat.config.game.skins && label == 0 && cheat.skin_cache && (client = data[0].indexOf(cheat.socket_id)) != -1){
+					// loadout
+					data[0][client + 12] = cheat.skin_cache[2];
+					
+					// hat
+					data[0][client + 13] = cheat.skin_cache[3];
+					
+					// body
+					data[0][client + 14] = cheat.skin_cache[4];
+					
+					// knife
+					data[0][client + 19] = cheat.skin_cache[9];
+					
+					// dye
+					data[0][client + 24] = cheat.skin_cache[14];
+					
+					// waist
+					data[0][client + 33] = cheat.skin_cache[17];
+					
+					// event.data is non-writable but configurable
+					// concat message signature ( 2 bytes )
+					
+					var encoded = msgpack.encode([ label, ...data ]),
+						final = new Uint8Array(encoded.byteLength + 2);
+					
+					final.set(encoded, 0);
+					final.set(event.data.slice(-2), encoded.byteLength);
+					
+					Object.defineProperty(event, 'data', { value: final.buffer });
+				}
+			});
 		}
-		
-		// console.log(cheat.vars);
-		
-		// apply patches
-		cheat.patches.forEach(([ regex, replace ]) => krunker = krunker.replace(regex, replace));
-		
-		/*
-		// WP_fetchMMToken does not need to be specified as the vars injected will automatically add it
-		// this script can expect to use greasemonkey request methods or fetch as a fallback
-		// ideally if greasemonkey can be used for requesting then it should as it avoids any cors headers that COULD be added to break this script
-		*/
-		
-		new Function('WP_fetchMMToken', 'ssd', 'WebSocket', krunker)(new Promise((resolve, reject) => new constants.request('https://sys32.dev/api/v1/token').json().then(resolve).catch(reject)), cheat, class extends WebSocket {
-			constructor(url, proto){
-				super(url, proto);
-				
-				this.addEventListener('message', event => {
-					// temp remove
-					return;
-					
-					var decoded = msgpack.decode(new Uint8Array(event.data)), client;
-					
-					if(cheat.config.game.skins && decoded[0] == 0 && cheat.skin_cache && cheat.ws && (client = decoded[1].indexOf(cheat.ws.socketId || 0)) != -1){
-						// loadout
-						decoded[1][client + 12] = cheat.skin_cache[2];
-						
-						// hat
-						decoded[1][client + 13] = cheat.skin_cache[3];
-						
-						// body
-						decoded[1][client + 14] = cheat.skin_cache[4];
-						
-						// knife
-						decoded[1][client + 19] = cheat.skin_cache[9];
-						
-						// dye
-						decoded[1][client + 24] = cheat.skin_cache[14];
-						
-						// waist
-						decoded[1][client + 33] = cheat.skin_cache[17];
-						
-						// event.data is non-writable but configurable
-						Object.defineProperty(event, 'data', { value: msgpack.encode(decoded).buffer });
-					}
-				});
-			}
-			send(data){
-				var decoded = msgpack.decode(data.slice(0, -2));
-				
-				if(decoded[0] == 'en')cheat.skin_cache = decoded[1];
-				
-				super.send(data);
-			}
-		});
-	});
-}))).observe(document, { childList: true, subtree: true });
-
-cheat.input.main(cheat, add);
-
-cheat.process();
-
-require('./update.js');
+		send(data){
+			var [ label, ...sdata ] = msgpack.decode(data.slice(0, -2));
+			
+			if(label == 'en')cheat.skin_cache = sdata[0];
+			
+			super.send(data);
+		}
+	}));
+}).catch(err => console.error(err));

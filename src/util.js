@@ -26,8 +26,6 @@ exports.project3d = (pos, t) => exports.applyMatrix4(exports.applyMatrix4(pos, t
 exports.pos2d = (cheat, pos, aY = 0) => {
 	if(isNaN(pos.x) || isNaN(pos.y) || isNaN(pos.z))return { x: 0, y: 0 };
 	
-	if(!exports.cas)exports.cas = parent.document.querySelector('#game-overlay');
-	
 	pos = { x: pos.x, y: pos.y, z: pos.z };
 	
 	pos.y += aY;
@@ -38,8 +36,8 @@ exports.pos2d = (cheat, pos, aY = 0) => {
 	exports.project3d(pos, cheat.world.camera);
 	
 	return {
-		x: (pos.x + 1) / 2 * exports.cas.width,
-		y: (-pos.y + 1) / 2 * exports.cas.height,
+		x: (pos.x + 1) / 2 * cheat.visual.canvas.width,
+		y: (-pos.y + 1) / 2 * cheat.visual.canvas.height,
 	}
 };
 

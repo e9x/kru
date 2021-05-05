@@ -4,7 +4,7 @@ var util = require('./util.js'),
 	constants = require('./consts'),
 	three = require('three'),
 	v3 = ['x', 'y', 'z'],
-	canvas = constants.add_ele('canvas', document.documentElement, { style: 'top:0px;left:0px;background:#0000;pointer-events:none;position:absolute;width:100%;height:100%;z-index:8999999', width: window.innerWidth, height: window.innerHeight }),
+	canvas = constants.add_ele('canvas', document.documentElement, { style: 'top:0px;left:0px;background:#0000;pointer-events:none;position:absolute;z-index:8999999', width: window.innerWidth, height: window.innerHeight }),
 	ctx = canvas.getContext('2d', { alpha: true }),
 	resize_canvas = () => (canvas.width = window.innerWidth, canvas.height = window.innerHeight),
 	draw_text = (text_x, text_y, font_size, lines) => {
@@ -29,7 +29,7 @@ resize_canvas();
 
 window.addEventListener('resize', resize_canvas);
 
-module.exports = cheat => {
+exports.exec = cheat => {
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 	
 	// draw overlay stuff
@@ -40,8 +40,8 @@ module.exports = cheat => {
 		ctx.lineWidth = 2.6;
 		
 		var lines = [
-			[['#BBB', 'Player: '], ['#FFF', cheat.player ? v3.map(axis => axis + ': ' + cheat.add(cheat.player)[axis].toFixed(2)).join(', ') : 'N/A']],
-			[['#BBB', 'Target: '], ['#FFF', cheat.target && cheat.add(cheat.target).active ? cheat.target.alias + ', ' + v3.map(axis => axis + ': ' + cheat.add(cheat.target)[axis].toFixed(2)).join(', ') : 'N/A']],
+			[['#BBB', 'Player: '], ['#FFF', cheat.add(cheat.player).active ? v3.map(axis => axis + ': ' + cheat.add(cheat.player)[axis].toFixed(2)).join(', ') : 'N/A']],
+			[['#BBB', 'Target: '], ['#FFF', cheat.add(cheat.target).active ? cheat.target.alias + ', ' + v3.map(axis => axis + ': ' + cheat.add(cheat.target)[axis].toFixed(2)).join(', ') : 'N/A']],
 			[['#BBB', 'Aiming: '], [cheat.player && cheat.add(cheat.player).aiming ? '#0F0' : '#F00', cheat.player && cheat.add(cheat.player).aiming ? 'TRUE' : 'FALSE']],
 		];
 		
@@ -186,3 +186,5 @@ module.exports = cheat => {
 		}
 	});
 };
+
+exports.canvas = canvas;

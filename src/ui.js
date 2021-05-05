@@ -14,7 +14,7 @@ class Control {
 		this.button.addEventListener('click', () => (this.interact(), this.update()));
 		
 		this.ui.keybinds.push({
-			get code(){ return self.key },
+			get code(){ return [ self.key ] },
 			interact(){
 				if(self.ui.frame.style.display == 'none')return;
 				
@@ -30,7 +30,7 @@ class Control {
 		return walked[0][walked[1]];
 	}
 	walk(data){
-		var state = this.ui.config.state(),
+		var state = this.ui.config.value,
 			last_state,
 			last_key;
 		
@@ -151,7 +151,7 @@ class SliderControl extends Control {
 					max_val = this.data.range[1],
 					unit = this.data.range[2],
 					perc = ((event.pageX - slider_box.x) / slider_box.width) * 100,
-					value = +(((max_val - min_val)*perc/100) + min_val).toFixed(2);
+					value = Math.max((((max_val)*perc/100)).toFixed(2), min_val);
 				
 				if(unit)value = rtn(value, unit);
 				
@@ -163,8 +163,7 @@ class SliderControl extends Control {
 			};
 		
 		this.slider = constants.add_ele('div', this.container, { className: 'slider' });
-		this.background = constants.add_ele('div', this.slider, { className: 'background', style: 'width:' + (this.value / this.data.range[1] * 100 + '%') });
-		this.slider.dataset.value = this.value;
+		this.background = constants.add_ele('div', this.slider, { className: 'background' });
 		
 		this.slider.addEventListener('mousedown', event=>{
 			movement = { held: true, x: event.layerX, y: event.layerY }
@@ -185,27 +184,19 @@ class SliderControl extends Control {
 }
 
 module.exports = class {
-	window_listen(event, callback, options){
-		this.frame.contentWindow.addEventListener(event, callback, options);
-		window.addEventListener(event, callback, options);
-	}
-	update(){
-		this.footer.textContent = `Press ${this.toggle_keybind.code.map(constants.string_key).map(x => '[' + x + ']').join(' or ')} to toggle`;
-		
-		this.sections.forEach(section => section.controls.forEach(control => control.update()));
-	}
 	constructor(data){
 		this.data = data;
 		this.pos = { x: 0, y: 0 };
 		this.inputs = {};
 		this.keybinds = [];
 		this.config = this.data.config;
-		this.frame = constants.add_ele('iframe', document.documentElement, { style: 'z-index:9000000;border:none;position:absolute;background:#0000' });
-		this.panel = this.frame.contentWindow.document.body;
+		this.frame = constants.add_ele('iframe', document.documentElement, { style: 'z-index:9000000;border:none;position:absolute;background:#0000;display:none' });
+		this.panel = constants.add_ele('main', this.frame.contentWindow.document.documentElement);
 		
-		constants.add_ele('style', this.frame.contentWindow.document.head, { textContent: require('./ui.css')  });
+		constants.add_ele('style', this.panel, { textContent: require('./ui.css')  });
+		
 		// add custom font to main page
-		document.fonts.add(this.frame.contentWindow.document.fonts.values().next().value);
+		this.frame.contentWindow.document.fonts.ready.then(() => this.frame.contentWindow.document.fonts.forEach(font => document.fonts.add(font)));
 		
 		// clear all inputs when window is not focused
 		window.addEventListener('blur', () => this.inputs = {});
@@ -215,7 +206,9 @@ module.exports = class {
 			
 			this.inputs[event.code] = true;
 			
-			this.keybinds.find(keybind => [].concat(keybind.code).some(keycode => typeof keycode == 'string' && [ keycode, keycode.replace('Digit', 'Numpad') ].includes(event.code)) && event.preventDefault() + keybind.interact());
+			// console.log(this.keybinds);
+			// some(keycode => typeof keycode == 'string' && [ keycode, keycode.replace('Digit', 'Numpad') ]
+			this.keybinds.forEach(keybind => keybind.code.includes(event.code) && event.preventDefault() + keybind.interact());
 		});
 		
 		this.window_listen('keyup', event => this.inputs[event.code] = false);
@@ -238,15 +231,31 @@ module.exports = class {
 		this.sections_con = constants.add_ele('div', this.panel, { className: 'sections' });
 		this.sidebar_con = constants.add_ele('div', this.sections_con, { className: 'sidebar' });
 		
-		this.sections = data.values.map((tab, index) => {
+		this.keybinds.push({
+			code: [ 'F1' ],
+			interact: () => {
+				this.config.value.ui.visible ^= 1;
+				this.config.save();
+				this.update(false);
+			},
+		});
+		
+		this.sections = data.value.map((data, index) => {
 			var section = {
-				data: tab,
+				data: data,
 				node: constants.add_ele('section', this.sections_con),
-				show: () => section.node.classList.add('active'),
-				hide: () => section.node.classList.remove('active'),
+				show: () => {
+					section.node.classList.remove('hidden');
+					this.config.value.ui.page = index;
+					this.config.save();
+				},
+				hide: () => {
+					section.node.classList.add('hidden');
+				},
+				controls: [],
 			};
 			
-			section.controls = section.data.contents.map(data => {
+			if(section.data.type != 'function')section.controls = section.data.value.map(data => {
 				var construct;
 
 				switch(data.type){
@@ -262,39 +271,42 @@ module.exports = class {
 				return new construct(data, section, this);
 			});
 			
-			constants.add_ele('section', this.sidebar_con, { textContent: section.data.name }).addEventListener('click', () => {
-				this.sections.forEach(section => section.hide());
-				section.show();
+			constants.add_ele('div', this.sidebar_con, { className: 'open-section', textContent: section.data.name }).addEventListener('click', () => {
+				if(section.data.type == 'function')section.data.value();
+				else this.sections.forEach(section => section.hide()), section.show();
 			});
 			
 			return section;
 		});
 		
-		this.sections[0].show();
-		
 		this.footer = constants.add_ele('footer', this.panel);
+	}
+	window_listen(event, callback, options){
+		this.frame.contentWindow.addEventListener(event, callback, options);
+		document.addEventListener(event, callback, options);
+	}
+	async update(load = true){
+		if(load)await this.config.load();
 		
-		this.config.load().then(() => {
-			var self = this;
-			
-			var keybind = this.toggle_keybind = {
-				get code(){
-					return [ 'F1', self.config.state().binds.toggle ];
-				},
-				interact: () => {
-					this.frame.style.display = this.frame.style.display == 'none' ? 'block' : 'none';
-				},
-			};
-			
-			this.keybinds.push(keybind);
-			
-			this.update();
-		});
+		this.frame.style.display = this.config.value.ui.visible ? 'block' : 'none';
 		
-		setTimeout(() => (this.pos = { x: 20, y: (window.innerHeight / 2) - (this.panel.getBoundingClientRect().height / 2) }, this.apply_bounds()));
+		this.pos = { x: 20, y: (window.innerHeight / 2) - (this.panel.getBoundingClientRect().height / 2) };
 		
-		this.frame.style.width = this.panel.scrollWidth + 'px';
+		this.apply_bounds();
+		
+		this.frame.style.width = this.frame.style.height = 'unset';
+		
+		this.frame.style.width = this.panel.scrollWidth + 30 + 'px';
 		this.frame.style.height = this.panel.scrollHeight + 'px';
+		
+		this.sections.forEach(section => section.hide());
+		this.sections[this.config.value.ui.page].show();
+		
+		this.keybinds[0].code = [ 'F1', this.config.value.binds.toggle ];
+		
+		this.footer.textContent = `Press ${this.keybinds[0].code.map(constants.string_key).map(x => '[' + x + ']').join(' or ')} to toggle`;
+		
+		this.sections.forEach(section => section.controls.forEach(control => control.update()));
 	}
 	bounds(){
 		var size = this.panel.getBoundingClientRect();
@@ -317,4 +329,20 @@ module.exports = class {
 		
 		this.prev_pos = pos;
 	}
+};
+
+module.exports.panel = {
+	options(data){
+		var frame = constants.add_ele('iframe', document.documentElement, { style: 'margin:auto;top:0px;bottom:0px;left:0px;right:0px;z-index:9000000;border:none;position:absolute;background:#0000' }),
+			panel = constants.add_ele('main', frame.contentDocument.documentElement, { className: 'options' }),
+			title = constants.add_ele('div', panel, { innerHTML: data.title, className: 'title' });
+		
+		constants.add_ele('style', panel, { textContent: require('./ui.css')  });
+		
+		return new Promise(resolve => {
+			data.options.forEach((option, index) => constants.add_ele('div', panel, { className: 'control option', textContent: option[0] }).addEventListener('click', () => (frame.remove(), resolve(option[1]))));
+			frame.style.width = panel.scrollWidth + 'px';
+			frame.style.height = panel.scrollHeight + 'px';
+		});
+	},
 };

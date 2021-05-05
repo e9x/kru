@@ -1,5 +1,5 @@
 var constants = require('./consts.js'),
-	check_update = async () => new constants.request(constants.script).text().then(latest => {
+	check_update = async () => constants.request(constants.script).then(latest => {
 		
 		if(constants.extracted >= new Date(parse_headers(latest).extracted).getTime())return;
 		
