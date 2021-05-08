@@ -119,7 +119,7 @@ var util = require('./util'),
 				return ret;
 			},
 			get target(){
-				return !this.is_you && this.active && this.enemy && this.can_see && (cheat.config.aim.sight ? this.frustum : true) && this.in_fov;
+				return !this.is_you && this.active && this.enemy && this.can_see && (cheat.config.aim.sight ? this.in_fov : true);
 			},
 			get frustum(){
 				if(!this.active)return false;
@@ -263,9 +263,9 @@ cheat.ui = new cheat.UI({
 			vals: [
 				[ 'off', 'Off' ],
 				[ 'trigger', 'Triggerbot' ],
+				[ 'correction', 'Correction' ],
 				[ 'assist', 'Assist' ],
 				[ 'auto', 'Automatic' ],
-				[ 'correction', 'Correction' ],
 			],
 			key: 'binds.aim',
 		},{

@@ -20,7 +20,7 @@ var svg = require('./svg.json'),
 	keybinds = [],
 	inputs = {},
 	panels = [],
-	doc_input_active = doc => doc.activeElement && doc.activeElement.tagName == 'INPUT',
+	doc_input_active = doc => doc.activeElement && ['TEXTAREA', 'INPUT'].includes(doc.activeElement.tagName),
 	update_pe = event => {
 		for(var ind in panels){
 			if(!panels[ind].visible)continue;
@@ -665,7 +665,7 @@ class Editor extends PanelDraggable {
 		this.actions = this.listen_dragging(constants.add_ele('div', this.title, { className: 'actions' }));
 		
 		this.actions.insertAdjacentHTML('beforeend', svg.add_file);
-		this.actions.lastElementChild.addEventListener('click', async () => new Tab(await this.write_data({ uuid: gen_uuid(), name: 'new.css', active: true, value: '' }), this).focus());
+		this.actions.lastElementChild.addEventListener('click', async () => new Tab(await this.write_data(gen_uuid(), { name: 'new.css', active: true, value: '' }), this).focus());
 		
 		this.actions.insertAdjacentHTML('beforeend', svg.web);
 		this.actions.lastElementChild.addEventListener('click', () => this.prompt('Enter a CSS link').then(input => constants.request(input).then(async style => {
@@ -764,10 +764,11 @@ class Editor extends PanelDraggable {
 	save(){
 		this.data.save(this.tabs.map(tab => tab.uuid));
 	}
-	save_doc(){
+	async save_doc(){
 		this.saved = true;
 		this.tabs.forEach(tab => tab.focused && tab.data().then(data => tab.write_data({ name: data.name, active: data.active, value: this.mirror.getValue() })));
-		this.update();
+		await this.update();
+		await this.load();
 	}
 	async load(){
 		this.sheet.textContent = '';
