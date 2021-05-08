@@ -64,7 +64,7 @@ exports.main = (cheat, add) => {
 	exports.exec = data => {
 		var lp = add(cheat.player);
 		
-		var target = add(cheat.target).target || cheat.game.players.list.filter(player => add(player).target).sort((ent_1, ent_2) => sorts[cheat.config.aim.target_sorting || 'dist2d'](ent_1, ent_2) * (add(ent_1).frustum ? 1 : 0.5))[0],
+		var target = cheat.target = add(cheat.target).target ? cheat.target : cheat.game.players.list.filter(player => add(player).target).sort((ent_1, ent_2) => sorts[cheat.config.aim.target_sorting || 'dist2d'](ent_1, ent_2) * (add(ent_1).frustum ? 1 : 0.5))[0],
 			has_ammo = lp.weapon.melee || cheat.player[cheat.vars.ammos][cheat.player[cheat.vars.weaponIndex]];
 		
 		// bhop

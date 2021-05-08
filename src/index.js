@@ -119,7 +119,7 @@ var util = require('./util'),
 				return ret;
 			},
 			get target(){
-				return !this.is_you && this.active && this.enemy && this.can_see && (cheat.config.aim.sight ? this.in_fov : true);
+				return !this.is_you && this.active && this.enemy && this.can_see && (cheat.config.aim.fov == 100 ? cheat.config.aim.sight ? this.frustum : true : this.in_fov);
 			},
 			get frustum(){
 				if(!this.active)return false;
