@@ -17,7 +17,7 @@ var os = require('os'),
 		console.log('Build success, output at', compiler_out());
 	},
 	compiler,
-	minimize = !process.argv.includes('-server');
+	minimize = !process.argv.includes('-fast');
 
 compiler = webpack({
 	entry: path.join(__dirname, 'src', 'index.js'),

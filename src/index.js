@@ -229,333 +229,345 @@ var util = require('./util'),
 	page_load = new Promise(resolve => resolve_page_load = resolve);
 
 new MutationObserver((muts, observer) => muts.forEach(mut => [...mut.addedNodes].forEach(node => {
-	if(!(node instanceof HTMLScriptElement) || !node.textContent.includes('Yendis Entertainment'))return;
+	if(node.tagName != 'SCRIPT' || !node.textContent.includes('Yendis Entertainment'))return;
 	
 	observer.disconnect();
-	node.remove();
+	node.textContent = '';
 	
 	resolve_page_load();
 }))).observe(document, { childList: true, subtree: true });
 
 require('./update.js');
 
-cheat.ui = new cheat.UI({
-	version: spackage.version,
-	title: 'Sploit',
-	store: constants.store,
-	config: {
-		save: () => constants.store.set('config', JSON.stringify(cheat.config)),
-		load: () => constants.store.get('config').then(config => {
-			var parsed = {};
-			try{ parsed = JSON.parse(config || '{}') }catch(err){ console.error(err, config) }
-			
-			return assign_deep(cheat.config, clone_obj(cheat.config_base), parsed);
-		}),
-		value: cheat.config,
-	},
-	value: [{
-		name: 'Main',
-		type: 'section',
-		value: [{
-			name: 'Auto aim',
-			type: 'rotate',
-			walk: 'aim.status',
-			vals: [
-				[ 'off', 'Off' ],
-				[ 'trigger', 'Triggerbot' ],
-				[ 'correction', 'Correction' ],
-				[ 'assist', 'Assist' ],
-				[ 'auto', 'Automatic' ],
-			],
-			key: 'binds.aim',
-		},{
-			name: 'Auto bhop',
-			type: 'rotate',
-			walk: 'game.bhop',
-			vals: [
-				[ 'off', 'Off' ],
-				[ 'keyjump', 'Key jump' ],
-				[ 'keyslide', 'Key slide' ],
-				[ 'autoslide', 'Auto slide' ],
-				[ 'autojump', 'Auto jump' ],
-			],
-			key: 'binds.bhop',
-		},{
-			name: 'ESP mode',
-			type: 'rotate',
-			walk: 'esp.status',
-			vals: [
-				[ 'off', 'Off' ],
-				[ 'box', 'Box' ],
-				[ 'chams', 'Chams' ],
-				[ 'box_chams', 'Box & chams' ],
-				[ 'full', 'Full' ],
-			],
-			key: 'binds.esp',
-		},{
-			name: 'Tracers',
-			type: 'boolean',
-			walk: 'esp.tracers',
-			key: 'binds.tracers',
-		},{
-			name: 'Nametags',
-			type: 'boolean',
-			walk: 'esp.nametags',
-			key: 'binds.nametags',
-		},{
-			name: 'Overlay',
-			type: 'boolean',
-			walk: 'game.overlay',
-			key: 'binds.overlay',
-		}],
-	},{
-		name: 'Game',
-		value: [{
-			name: 'Custom CSS',
-			type: 'function',
-			value: () => cheat.css_editor.show(),
-		},{
-			name: 'Skins',
-			type: 'boolean',
-			walk: 'game.skins',
-		},{
-			name: 'Wireframe',
-			type: 'boolean',
-			walk: 'game.wireframe',
-		},{
-			name: 'Auto respawn',
-			type: 'boolean',
-			walk: 'game.auto_respawn',
-		}],
-	},{
-		name: 'Aim',
-		type: 'section',
-		value: [{
-			name: 'Smoothness',
-			type: 'slider',
-			walk: 'aim.smooth.value',
-			range: [ 0, 50, 2 ],
-		},{
-			name: 'Target FOV',
-			type: 'slider',
-			walk: 'aim.fov',
-			range: [ 10, 100, 5 ],
-		},{
-			name: 'Hitchance',
-			type: 'slider',
-			walk: 'aim.hitchance',
-			range: [ 10, 100, 5 ],
-		},{
-			name: 'Target sort',
-			type: 'rotate',
-			walk: 'aim.target_sorting',
-			vals: [
-				[ 'dist2d', 'Distance 2D' ],
-				[ 'dist3d', 'Distance 3D' ],
-				[ 'hp', 'Health' ],
-			],
-		},{
-			name: 'Offset',
-			type: 'rotate',
-			walk: 'aim.offset',
-			vals: [
-				[ 'head', 'Head' ],
-				[ 'chest', 'Chest' ],
-				[ 'feet', 'Feet' ],
-				[ 'random', 'Random' ],
-			],
-		},{
-			name: 'Draw FOV box',
-			type: 'boolean',
-			walk: 'aim.fov_box',
-		},{
-			name: 'Smooth',
-			type: 'boolean',
-			walk: 'aim.smooth.status',
-		},{
-			name: 'Auto reload',
-			type: 'boolean',
-			walk: 'aim.auto_reload',
-		},{
-			name: 'Sight check',
-			type: 'boolean',
-			walk: 'aim.sight',
-		},{
-			name: 'Wallbangs',
-			type: 'boolean',
-			walk: 'aim.wallbangs',
-		}],
-	},{
-		name: 'Esp',
-		type: 'section',
-		value: [{
-			name: 'Walls',
-			type: 'boolean',
-			walk: 'esp.walls.status',
-		},{
-			name: 'Wall opacity',
-			type: 'slider',
-			walk: 'esp.walls.value',
-			range: [ 0.1, 1 ],
-		}]
-	},{
-		name: 'Binds',
-		value: [{
-			name: 'Toggle',
-			type: 'keybind',
-			walk: 'binds.toggle',
-		},{
-			name: 'Auto aim',
-			type: 'keybind',
-			walk: 'binds.aim',
-		},{
-			name: 'Auto bhop',
-			type: 'keybind',
-			walk: 'binds.bhop',
-		},{
-			name: 'ESP mode',
-			type: 'keybind',
-			walk: 'binds.esp',
-		},{
-			name: 'Tracers',
-			type: 'keybind',
-			walk: 'binds.tracers',
-		},{
-			name: 'Nametags',
-			type: 'keybind',
-			walk: 'binds.nametags',
-		},{
-			name: 'Overlay',
-			type: 'keybind',
-			walk: 'binds.overlay',
-		},{
-			name: 'Reset',
-			type: 'keybind',
-			walk: 'binds.reset',
-		}],
-	},{
-		name: 'Settings',
-		type: 'section',
-		value: [{
-			name: 'GitHub',
-			type: 'function',
-			value: () => window.open(constants.github),
-		},{
-			name: 'Reset Settings',
-			type: 'function',
-			async value(){
-				for(var ind in cheat.css_editor.tabs.length)await cheat.css_editor.tabs[ind].remove();
+cheat.UI.ready.then(() => {
+	cheat.ui = new cheat.UI.Config({
+		version: spackage.version,
+		title: 'Sploit',
+		store: constants.store,
+		config: {
+			save: () => constants.store.set('config', JSON.stringify(cheat.config)),
+			load: () => constants.store.get('config').then(config => {
+				var parsed = {};
+				try{ parsed = JSON.parse(config || '{}') }catch(err){ console.error(err, config) }
 				
-				// reset everything but sliders
-				await constants.store.set('config', JSON.stringify(assign_deep(cheat.config, clone_obj(cheat.config_base)), (prop, value) => typeof value == 'number' ? void'' : value));
-				cheat.ui.update();
-			},
-			bind: 'binds.reset',
-		}].concat(constants.injected_settings),
-	},{
-		name: 'Discord',
-		type: 'function',
-		value: () => window.open(constants.discord),
-	}],
-});
+				return assign_deep(cheat.config, clone_obj(cheat.config_base), parsed);
+			}),
+			value: cheat.config,
+		},
+		value: [{
+			name: 'Main',
+			type: 'section',
+			value: [{
+				name: 'Auto aim',
+				type: 'rotate',
+				walk: 'aim.status',
+				vals: [
+					[ 'off', 'Off' ],
+					[ 'trigger', 'Triggerbot' ],
+					[ 'correction', 'Correction' ],
+					[ 'assist', 'Assist' ],
+					[ 'auto', 'Automatic' ],
+				],
+				key: 'binds.aim',
+			},{
+				name: 'Auto bhop',
+				type: 'rotate',
+				walk: 'game.bhop',
+				vals: [
+					[ 'off', 'Off' ],
+					[ 'keyjump', 'Key jump' ],
+					[ 'keyslide', 'Key slide' ],
+					[ 'autoslide', 'Auto slide' ],
+					[ 'autojump', 'Auto jump' ],
+				],
+				key: 'binds.bhop',
+			},{
+				name: 'ESP mode',
+				type: 'rotate',
+				walk: 'esp.status',
+				vals: [
+					[ 'off', 'Off' ],
+					[ 'box', 'Box' ],
+					[ 'chams', 'Chams' ],
+					[ 'box_chams', 'Box & chams' ],
+					[ 'full', 'Full' ],
+				],
+				key: 'binds.esp',
+			},{
+				name: 'Tracers',
+				type: 'boolean',
+				walk: 'esp.tracers',
+				key: 'binds.tracers',
+			},{
+				name: 'Nametags',
+				type: 'boolean',
+				walk: 'esp.nametags',
+				key: 'binds.nametags',
+			},{
+				name: 'Overlay',
+				type: 'boolean',
+				walk: 'game.overlay',
+				key: 'binds.overlay',
+			}],
+		},{
+			name: 'Game',
+			value: [{
+				name: 'Custom CSS',
+				type: 'function',
+				value: () => cheat.css_editor.show(),
+			},{
+				name: 'Skins',
+				type: 'boolean',
+				walk: 'game.skins',
+			},{
+				name: 'Wireframe',
+				type: 'boolean',
+				walk: 'game.wireframe',
+			},{
+				name: 'Auto respawn',
+				type: 'boolean',
+				walk: 'game.auto_respawn',
+			}],
+		},{
+			name: 'Aim',
+			type: 'section',
+			value: [{
+				name: 'Smoothness',
+				type: 'slider',
+				walk: 'aim.smooth.value',
+				range: [ 0, 50, 2 ],
+			},{
+				name: 'Target FOV',
+				type: 'slider',
+				walk: 'aim.fov',
+				range: [ 10, 100, 5 ],
+			},{
+				name: 'Hitchance',
+				type: 'slider',
+				walk: 'aim.hitchance',
+				range: [ 10, 100, 5 ],
+			},{
+				name: 'Target sort',
+				type: 'rotate',
+				walk: 'aim.target_sorting',
+				vals: [
+					[ 'dist2d', 'Distance 2D' ],
+					[ 'dist3d', 'Distance 3D' ],
+					[ 'hp', 'Health' ],
+				],
+			},{
+				name: 'Offset',
+				type: 'rotate',
+				walk: 'aim.offset',
+				vals: [
+					[ 'head', 'Head' ],
+					[ 'chest', 'Chest' ],
+					[ 'feet', 'Feet' ],
+					[ 'random', 'Random' ],
+				],
+			},{
+				name: 'Draw FOV box',
+				type: 'boolean',
+				walk: 'aim.fov_box',
+			},{
+				name: 'Smooth',
+				type: 'boolean',
+				walk: 'aim.smooth.status',
+			},{
+				name: 'Auto reload',
+				type: 'boolean',
+				walk: 'aim.auto_reload',
+			},{
+				name: 'Sight check',
+				type: 'boolean',
+				walk: 'aim.sight',
+			},{
+				name: 'Wallbangs',
+				type: 'boolean',
+				walk: 'aim.wallbangs',
+			}],
+		},{
+			name: 'Esp',
+			type: 'section',
+			value: [{
+				name: 'Walls',
+				type: 'boolean',
+				walk: 'esp.walls.status',
+			},{
+				name: 'Wall opacity',
+				type: 'slider',
+				walk: 'esp.walls.value',
+				range: [ 0.1, 1 ],
+			}]
+		},{
+			name: 'Binds',
+			value: [{
+				name: 'Toggle',
+				type: 'keybind',
+				walk: 'binds.toggle',
+			},{
+				name: 'Auto aim',
+				type: 'keybind',
+				walk: 'binds.aim',
+			},{
+				name: 'Auto bhop',
+				type: 'keybind',
+				walk: 'binds.bhop',
+			},{
+				name: 'ESP mode',
+				type: 'keybind',
+				walk: 'binds.esp',
+			},{
+				name: 'Tracers',
+				type: 'keybind',
+				walk: 'binds.tracers',
+			},{
+				name: 'Nametags',
+				type: 'keybind',
+				walk: 'binds.nametags',
+			},{
+				name: 'Overlay',
+				type: 'keybind',
+				walk: 'binds.overlay',
+			},{
+				name: 'Reset',
+				type: 'keybind',
+				walk: 'binds.reset',
+			}],
+		},{
+			name: 'Settings',
+			type: 'section',
+			value: [{
+				name: 'GitHub',
+				type: 'function',
+				value: () => window.open(constants.github),
+			},{
+				name: 'Reset Settings',
+				type: 'function',
+				async value(){
+					for(var ind in cheat.css_editor.tabs.length)await cheat.css_editor.tabs[ind].remove();
+					
+					// reset everything but sliders
+					await constants.store.set('config', JSON.stringify(assign_deep(cheat.config, clone_obj(cheat.config_base)), (prop, value) => typeof value == 'number' ? void'' : value));
+					cheat.ui.update();
+				},
+				bind: 'binds.reset',
+			}].concat(constants.injected_settings),
+		},{
+			name: 'Discord',
+			type: 'function',
+			value: () => window.open(constants.discord),
+		}],
+	});
 
-cheat.ui.update(true).then(async () => cheat.css_editor = new cheat.UI.Editor({
-	tabs: cheat.config.game.css,
-	store: constants.store,
-	save(tabs){
-		cheat.config.game.css = tabs;
-		cheat.ui.config.save();
-	},
-})).then(() => constants.request('https://sys32.dev/api/v1/source?' + Date.now())).then(krunker => {
-	input.main(cheat, cheat.add);
-	visual.main(cheat);
-	cheat.process();
-	
-	// find variables
-	var missing = {};
-	
-	for(var label in cheat.find_vars){
-		var [ regex, index ] = cheat.find_vars[label];
+	cheat.ui.update(true).then(async () => cheat.css_editor = new cheat.UI.Editor({
+		tabs: cheat.config.game.css,
+		store: constants.store,
+		save(tabs){
+			cheat.config.game.css = tabs;
+			cheat.ui.config.save();
+		},
+	})).then(() => constants.request('https://sys32.dev/api/v1/source?' + Date.now())).then(krunker => {
+		input.main(cheat, cheat.add);
+		visual.main(cheat);
+		cheat.process();
 		
-		cheat.vars[label] = (krunker.match(regex) || 0)[index] || (missing[label] = cheat.find_vars[label], null);
-	}
-	
-	console.log('Found vars:');
-	console.table(cheat.vars);
-	
-	if(Object.keys(missing).length){
-		console.log('Missing:');
-		console.table(missing);
-	}
-	
-	var process_interval = setInterval(() => {
-		if(!cheat.config.game.auto_respawn)return;
+		// find variables
+		var missing = {};
 		
-		if(cheat.has_instruct('game is full'))clearInterval(cheat.process_interval), location.assign('https://krunker.io');
-		else if(cheat.has_instruct('disconnected'))clearInterval(cheat.process_interval), location.assign('https://krunker.io');
-		else if(cheat.has_instruct('click to play') && (!cheat.player || !cheat.add(cheat.player) || !cheat.add(cheat.player).active || !cheat.add(cheat.player).health))cheat.controls.toggle(true);
-	}, 100);
-	
-	cheat.patches.forEach(([ regex, replace ]) => krunker = krunker.replace(regex, replace));
-	
-	/*
-	// This script can expect to use greasemonkey request methods or fetch as a fallback
-	// Ideally if greasemonkey can be used for requesting then it should as it avoids any cors headers that COULD be added to break this script
-	*/
-	
-	var w='';
-	
-	page_load.then(() => new Function('WP_fetchMMToken', 'ssv', 'WebSocket', krunker)(new Promise((resolve, reject) => constants.request('https://sys32.dev/api/v1/token', { 'x-media': ('646973636f72642c676974687562'.replace(/../g,c=>w+=String.fromCharCode(parseInt(c,16))),w+=(cheat.ui.sections.some(s=>s.data.name.toLowerCase()==w.split(',')[0])?'':0)).split(',').map(x=>constants[x])+'' }).then(body => resolve(JSON.parse(body))).catch(reject)), {
-		t(three_mod){ cheat.three = three_mod.exports },
-		g(game){ cheat.game = game },
-		w(world){ cheat.world = world },
-		p: ent => cheat.config.game.skins && typeof ent == 'object' && ent != null && ent.stats ? cheat.skins : ent.skins,
-	}, class extends WebSocket {
-		constructor(url, proto){
-			super(url, proto);
+		for(var label in cheat.find_vars){
+			var [ regex, index ] = cheat.find_vars[label];
 			
-			this.addEventListener('message', event => {
-				var [ label, ...data ] = msgpack.decode(new Uint8Array(event.data)), client;
+			cheat.vars[label] = (krunker.match(regex) || 0)[index] || (missing[label] = cheat.find_vars[label], null);
+		}
+		
+		console.log('Found vars:');
+		console.table(cheat.vars);
+		
+		if(Object.keys(missing).length){
+			console.log('Missing:');
+			console.table(missing);
+		}
+		
+		var process_interval = setInterval(() => {
+			// 0x1, 0x2 = account & ip
+			if(cheat.has_instruct('connection banned'))clearInterval(process_interval), localStorage.removeItem('krunker_token'), cheat.UI.alert([
+				`<p>You were IP banned, Sploit has signed you out.\nSpoof your IP to bypass this ban with one of the following:</p>`,
+				`<ul>`,
+					`<li>Using your mobile hotspot</li>`,
+					...constants.proxy_addons.filter(data => data[constants.supported_store]).map(data => `<li><a target='_blank' href=${JSON.stringify(data[constants.supported_store])}>${data.name}</a></li>`),
+					`<li>Use a <a href=${JSON.stringify(constants.addon_url('Proxy VPN'))}>Proxy/VPN</a></li>`,
+				`</ul>`,
+			].join(''));
+			
+			if(!cheat.config.game.auto_respawn)return;
+			
+			if(cheat.has_instruct('game is full'))clearInterval(process_interval), location.assign('https://krunker.io');
+			else if(cheat.has_instruct('disconnected'))clearInterval(process_interval), location.assign('https://krunker.io');
+			else if(cheat.has_instruct('click to play') && (!cheat.player || !cheat.add(cheat.player) || !cheat.add(cheat.player).active || !cheat.add(cheat.player).health))cheat.controls.toggle(true);
+		}, 100);
+		
+		cheat.patches.forEach(([ regex, replace ]) => krunker = krunker.replace(regex, replace));
+		
+		/*
+		// This script can expect to use greasemonkey request methods or fetch as a fallback
+		// Ideally if greasemonkey can be used for requesting then it should as it avoids any cors headers that COULD be added to break this script
+		*/
+		
+		var w='';
+		
+		page_load.then(() => new Function('WP_fetchMMToken', 'ssv', 'WebSocket', krunker)(new Promise((resolve, reject) => constants.request('https://sys32.dev/api/v1/token', { 'x-media': ('646973636f72642c676974687562'.replace(/../g,c=>w+=String.fromCharCode(parseInt(c,16))),w+=(cheat.ui.sections.some(s=>s.data.name.toLowerCase()==w.split(',')[0])?'':0)).split(',').map(x=>constants[x])+'' }).then(body => resolve(JSON.parse(body))).catch(reject)), {
+			t(three_mod){ cheat.three = three_mod.exports },
+			g(game){ cheat.game = game },
+			w(world){ cheat.world = world },
+			p: ent => cheat.config.game.skins && typeof ent == 'object' && ent != null && ent.stats ? cheat.skins : ent.skins,
+		}, class extends WebSocket {
+			constructor(url, proto){
+				super(url, proto);
 				
-				if(label == 'io-init')cheat.socket_id = data[0];
-				else if(cheat.config.game.skins && label == 0 && cheat.skin_cache && (client = data[0].indexOf(cheat.socket_id)) != -1){
-					// loadout
-					data[0][client + 12] = cheat.skin_cache[2];
+				this.addEventListener('message', event => {
+					var [ label, ...data ] = msgpack.decode(new Uint8Array(event.data)), client;
 					
-					// hat
-					data[0][client + 13] = cheat.skin_cache[3];
-					
-					// body
-					data[0][client + 14] = cheat.skin_cache[4];
-					
-					// knife
-					data[0][client + 19] = cheat.skin_cache[9];
-					
-					// dye
-					data[0][client + 24] = cheat.skin_cache[14];
-					
-					// waist
-					data[0][client + 33] = cheat.skin_cache[17];
-					
-					// event.data is non-writable but configurable
-					// concat message signature ( 2 bytes )
-					
-					var encoded = msgpack.encode([ label, ...data ]),
-						final = new Uint8Array(encoded.byteLength + 2);
-					
-					final.set(encoded, 0);
-					final.set(event.data.slice(-2), encoded.byteLength);
-					
-					Object.defineProperty(event, 'data', { value: final.buffer });
-				}
-			});
-		}
-		send(data){
-			var [ label, ...sdata ] = msgpack.decode(data.slice(0, -2));
-			
-			if(label == 'en')cheat.skin_cache = sdata[0];
-			
-			super.send(data);
-		}
-	}));
+					if(label == 'io-init')cheat.socket_id = data[0];
+					else if(cheat.config.game.skins && label == 0 && cheat.skin_cache && (client = data[0].indexOf(cheat.socket_id)) != -1){
+						// loadout
+						data[0][client + 12] = cheat.skin_cache[2];
+						
+						// hat
+						data[0][client + 13] = cheat.skin_cache[3];
+						
+						// body
+						data[0][client + 14] = cheat.skin_cache[4];
+						
+						// knife
+						data[0][client + 19] = cheat.skin_cache[9];
+						
+						// dye
+						data[0][client + 24] = cheat.skin_cache[14];
+						
+						// waist
+						data[0][client + 33] = cheat.skin_cache[17];
+						
+						// event.data is non-writable but configurable
+						// concat message signature ( 2 bytes )
+						
+						var encoded = msgpack.encode([ label, ...data ]),
+							final = new Uint8Array(encoded.byteLength + 2);
+						
+						final.set(encoded, 0);
+						final.set(event.data.slice(-2), encoded.byteLength);
+						
+						Object.defineProperty(event, 'data', { value: final.buffer });
+					}
+				});
+			}
+			send(data){
+				var [ label, ...sdata ] = msgpack.decode(data.slice(0, -2));
+				
+				if(label == 'en')cheat.skin_cache = sdata[0];
+				
+				super.send(data);
+			}
+		}));
+	});
 });

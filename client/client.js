@@ -25,19 +25,6 @@ var ws = require('ws'),
 	files = {
 		home: os.homedir(),
 	},
-	inject_gm = {
-		GM_getValue(key){
-			var file = path.join(files.sploit, key + '.json');
-			
-			return new this.Promise((resolve, reject) => fs.promises.readFile(file).then(data => resolve(data.toString())).catch(err => resolve(null)));
-		},
-		GM_setValue(key, value){
-			var file = path.join(files.sploit, key + '.json');
-			
-			return new this.Promise((resolve, reject) => (!Buffer.byteLength(value) ? fs.promises.unlink(file) : fs.promises.writeFile(file, value)).then(() => resolve()).catch(err => reject(err)));
-		},
-		GM_client_fetch: (url, headers) => fetch(url, { headers: headers }).then(res => res.text()),
-	},
 	eval_require = (func, base, cache = {}, base_require = mod.createRequire(base + '/')) => fn => {
 		var resolved = base_require.resolve(fn);
 		
@@ -51,7 +38,7 @@ var ws = require('ws'),
 			script = loaders[ext] ? loaders[ext](fs.readFileSync(resolved)) : fs.readFileSync(resolved) + '\n//@ sourceURL=' + resolved;
 		
 		try{
-			new func('__dirname', '__filename', 'module', 'exports', 'require', Object.keys(inject_gm), script)(mod.path, resolved, mod, mod.exports, eval_require(func, mod.path + '/', cache), ...Object.values(inject_gm).map(val => val.bind(func('return this')())));
+			new func('__dirname', '__filename', 'module', 'exports', 'require', script)(mod.path, resolved, mod, mod.exports, eval_require(func, mod.path + '/', cache));
 		}catch(err){
 			alert(resolved + ' - ' + util.format(err));
 		}
@@ -65,27 +52,7 @@ var ws = require('ws'),
 		
 		return mod.exports;
 	},
-	log = data => fs.promises.appendFile(files.log, (data instanceof Error ? '[' + data.name + '] ' : '') + util.format(data) + '\r\n');
-
-files.documents = path.join(files.home, 'Documents'),
-
-files.sploit = path.join(fs.existsSync(files.documents) ? files.documents : files.home, 'sploit');
-
-files.resources = path.join(files.sploit, 'resources');
-
-files.styles = path.join(files.sploit, 'styles');
-
-files.scripts = path.join(files.sploit, 'scripts');
-
-files.log = path.join(files.sploit, 'sploit.log');
-
-['sploit', 'resources', 'styles', 'scripts'].forEach(key => {
-	try{
-		if(!fs.existsSync(files[key]))fs.mkdirSync(files[key]);
-	}catch(err){
-		log(new Error('Could not access ' + key));
-	}
-});
+	log = data => console.log((data instanceof Error ? '[' + data.name + '] ' : '') + util.format(data) + '\r\n');
 
 nw.Window.open('https://krunker.io/', {
 	position: 'center',
@@ -98,17 +65,6 @@ nw.Window.open('https://krunker.io/', {
 	
 	win.on('document-start', window => {
 		if(window.parent != window || window.location.hostname != 'krunker.io' && !window.location.hostname.endsWith('.krunker.io') || window.location.pathname != '/')return;
-		
-		var style = window.document.createElement('style'),
-			interval = setInterval(() => window.document.head && (clearInterval(interval), window.document.head.appendChild(style)));
-		
-		fs.promises.readdir(files.styles).then(async read => {
-			var blobs = await Promise.all(read.map(file => fs.promises.readFile(path.join(files.styles, file)).then(data => window.URL.createObjectURL(new Blob([ data ]))))).catch(err => (log(err), false));
-			
-			style.textContent = blobs.map(blob => '@import url(' + JSON.stringify(blob) + ');');
-			
-			style.addEventListener('load', () => blobs.forEach(blob => window.URL.revokeObjectURL(blob)));
-		}).catch(log);
 		
 		// add keybinds
 		window.addEventListener('keydown', event => {

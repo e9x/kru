@@ -5,7 +5,7 @@ exports.main = cheat => {
 		constants = require('./consts'),
 		v3 = ['x', 'y', 'z'],
 		canvas = cheat.UI.canvas,
-		ctx = canvas.getContext('2d', { alpha: true }),
+		ctx = cheat.UI.ctx,
 		draw_text = (text_x, text_y, font_size, lines) => {
 			for(var text_index = 0; text_index < lines.length; text_index++){
 				var line = lines[text_index], xoffset = 0;
@@ -23,7 +23,7 @@ exports.main = cheat => {
 				}
 			}
 		};
-
+	
 	exports.exec = () => {
 		ctx.clearRect(0, 0, canvas.width, canvas.height);
 		
@@ -41,7 +41,7 @@ exports.main = cheat => {
 		// draw overlay
 		if(cheat.config.game.overlay && cheat.game){
 			ctx.strokeStyle = '#000'
-			ctx.font = 'Bold 14px Inconsolata, monospace';
+			ctx.font = 'bold 14px inconsolata, monospace';
 			ctx.textAlign = 'start';
 			ctx.lineWidth = 2.6;
 			

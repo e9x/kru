@@ -1,7 +1,11 @@
 @font-face {
-	font-family: 'Inconsolata';
+	font-family: 'inconsolata';
 	src: url('assets:inconsolata.woff2') format('truetype');
 	font-weight: 400;
+}
+
+html {
+	overflow: hidden;
 }
 
 main {
@@ -13,13 +17,14 @@ main {
 	--false: #A00;
 	--control-height: 36px;
 	--blue: #29F;
+	--opacity: 0.75;
 	position: absolute;
 	background: var(--background);
 	user-select: none;
 	color: var(--primary);
-	font: 13px Inconsolata, monospace;
+	font: 13px inconsolata, monospace;
 	padding: 2px 0px 2px 0px;
-	opacity: 0.75;
+	opacity: var(--opacity);
 }
 
 main a {
@@ -31,7 +36,7 @@ main a:hover {
 }
 
 main:hover, main.focus {
-	opacity: 1;
+	--opacity: 1;
 }
 
 main::after {
@@ -44,6 +49,7 @@ main::after {
 	pointer-events: none;
 	left: 0px;
 	top: 0px;
+	opacity: var(--opacity);
 }
 
 main.mobile {
@@ -54,13 +60,13 @@ main.mobile {
 main.prompt {
 	width: 490px;
 	padding: 10px;
-	height: fit-content;
+	height: min-content;
 }
 
 main.prompt > .description {
 	max-height: 325px;
 	overflow-y: auto;
-	line-height: 20px;
+	line-height: 16px;
 	margin-bottom: 7px;
 	white-space: pre-wrap;
 }
@@ -81,7 +87,7 @@ main.prompt > form {
 main.prompt > form > input {
 	width: 100%;
 	background: #FFF;
-	font: 14px Inconsolata,monospace;
+	font: 14px inconsolata,monospace;
 	line-height: 30px;
 	color: black;
 	padding: 0px 7px;
@@ -233,7 +239,7 @@ main * {
 .tab > .rename-input {
 	display: none;
 	background: #FFF;
-	font: 13px Inconsolata,monospace;
+	font: 13px inconsolata,monospace;
 	line-height: 20px;
 	color: black;
 	padding: 0px 7px;
@@ -370,7 +376,7 @@ section.hidden {
 }
 
 .control > .keybind {
-	font: 14px Inconsolata,monospace;
+	font: 14px inconsolata,monospace;
 	text-align: center;
 	color: black;
 	width: 100%;

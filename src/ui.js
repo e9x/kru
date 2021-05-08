@@ -14,9 +14,7 @@ var svg = require('./svg.json'),
 		lut[d2&0x3f|0x80]+lut[d2>>8&0xff]+'-'+lut[d2>>16&0xff]+lut[d2>>24&0xff]+
 		lut[d3&0xff]+lut[d3>>8&0xff]+lut[d3>>16&0xff]+lut[d3>>24&0xff];
 	},
-	frame = constants.add_ele('iframe', document.documentElement, { style: 'top:0;left:0;z-index:9000000;border:none;position:absolute;background:#0000;width:100vw;height:100vh;pointer-events:none' }),
-	// background:#0000;
-	canvas = constants.add_ele('canvas', frame.contentDocument.documentElement, { style: 'width:100%;height:100%;pointer-events:none' }),
+	frame = constants.crt_ele('iframe', { style: 'top:0;left:0;z-index:9000000;border:none;position:absolute;background:#0000;width:100vw;height:100vh;pointer-events:none' }),
 	keybinds = [],
 	inputs = {},
 	panels = [],
@@ -40,42 +38,53 @@ var svg = require('./svg.json'),
 	global_listen = (event, callback, options) => {
 		window.addEventListener(event, callback, options);
 		frame.contentWindow.addEventListener(event, callback, options);
-	};
+	},
+	canvas;
 
-resize_canvas();
+exports.ready = new Promise(resolve => frame.addEventListener('load', () => resolve()));
 
-frame.contentDocument.head.remove();
-frame.contentDocument.body.remove();
-
-global_listen('mousemove', update_pe);
-global_listen('mousedown', update_pe);
-global_listen('mouseup', update_pe);
-
-frame.allowtransparency = true;
-
-global_listen('keydown', event => {
-	if(event.repeat || doc_input_active(document) || doc_input_active(frame.contentDocument))return;
+exports.ready.then(() => {
+	canvas = exports.canvas = constants.add_ele('canvas', frame.contentWindow.document.documentElement);
 	
-	inputs[event.code] = true;
+	var ctx = exports.ctx = canvas.getContext('2d', { alpha: true });
 	
-	// some(keycode => typeof keycode == 'string' && [ keycode, keycode.replace('Digit', 'Numpad') ]
-	keybinds.forEach(keybind => keybind.code.includes(event.code) && event.preventDefault() + keybind.interact());
+	ctx.imageSmoothingEnabled = true;
+	
+	resize_canvas();
+
+	frame.contentWindow.document.head.remove();
+	frame.contentWindow.document.body.remove();
+
+	global_listen('mousemove', update_pe);
+	global_listen('mousedown', update_pe);
+	global_listen('mouseup', update_pe);
+	
+	global_listen('keydown', event => {
+		if(event.repeat || doc_input_active(document) || doc_input_active(frame.contentWindow.document))return;
+		
+		inputs[event.code] = true;
+		
+		// some(keycode => typeof keycode == 'string' && [ keycode, keycode.replace('Digit', 'Numpad') ]
+		keybinds.forEach(keybind => keybind.code.includes(event.code) && event.preventDefault() + keybind.interact());
+	});
+
+	global_listen('keyup', event => inputs[event.code] = false);
+
+	frame.contentWindow.addEventListener('contextmenu', event => !(event.target != null && event.target instanceof frame.contentWindow.HTMLTextAreaElement) && event.preventDefault());
+
+	window.addEventListener('blur', () => inputs = exports.inputs = {});
+	window.addEventListener('resize', resize_canvas);
+
+	constants.add_ele('style', frame.contentWindow.document.documentElement, { textContent: [
+		require('./ui.css'),
+		require('codemirror/theme/solarized.css'),
+		require('codemirror/lib/codemirror.css'),
+	].join('\n') });
+
+	require('codemirror/mode/css/css.js');
 });
 
-global_listen('keyup', event => inputs[event.code] = false);
-
-frame.contentWindow.addEventListener('contextmenu', event => !(event.target != null && event.target instanceof frame.contentWindow.HTMLTextAreaElement) && event.preventDefault());
-
-window.addEventListener('blur', () => inputs = UI.inputs = {});
-window.addEventListener('resize', resize_canvas);
-
-constants.add_ele('style', frame.contentDocument.documentElement, { textContent: [
-	require('./ui.css'),
-	require('codemirror/theme/solarized.css'),
-	require('codemirror/lib/codemirror.css'),
-].join('\n') });
-
-require('codemirror/mode/css/css.js');
+document.documentElement.appendChild(frame);
 
 class Panel {
 	constructor(data, type = ''){
@@ -114,46 +123,7 @@ class Panel {
 		this.hide();
 		this.node.remove();
 	}
-	alert(desc){
-		var panel = new Panel({}, 'prompt');
-		
-		Object.assign(this.node.style, { margin: 'auto', left: 0, right: 0, top: 0, bottom: 0 });
-		
-		constants.add_ele('div', panel.node, { innerHTML: desc, className: 'description' });
-		
-		var form = constants.add_ele('form', panel.node);
-		
-		constants.add_ele('button', form, { textContent: 'OK', className: 'submit single' });
-		
-		panel.focus();
-		
-		return new Promise(resolve => form.addEventListener('submit', event => (event.preventDefault(), panel.remove(), resolve()), { once: true }));
-	}
-	prompt(desc){
-		var panel = new Panel({}, 'prompt');
-		
-		Object.assign(panel.node.style, { margin: 'auto', left: 0, right: 0, top: 0, bottom: 0 });
-		
-		constants.add_ele('div', panel.node, { textContent: desc, className: 'description' });
-		
-		var form = constants.add_ele('form', panel.node),
-			input = constants.add_ele('input', form, { className: 'input' });
-		
-		constants.add_ele('button', form, { textContent: 'OK', className: 'submit' });
-		
-		var cancel = constants.add_ele('button', form, { textContent: 'Cancel', className: 'cancel' });
-		
-		panel.focus();
-		
-		return new Promise((resolve, reject) => form.addEventListener('submit', event => {
-			event.preventDefault();
-			
-			(event.submitter == cancel ? reject : resolve)(input.value);
-			
-			panel.remove();
-		}));
-	}
-}
+};
 
 class PanelDraggable extends Panel {
 	constructor(data, type){
@@ -439,7 +409,7 @@ class SliderControl extends Control {
 	}
 }
 
-class UI extends PanelDraggable {
+class Config extends PanelDraggable {
 	constructor(data){
 		super(data, 'config');
 		
@@ -529,7 +499,7 @@ class Tab {
 	constructor(uuid, ui){
 		this.ui = ui;
 		
-		if(!uuid)throw new Error('bad UUID');
+		if(!uuid)throw new Error('bad UexportsD');
 		
 		this.uuid = uuid;
 		
@@ -668,11 +638,11 @@ class Editor extends PanelDraggable {
 		this.actions.lastElementChild.addEventListener('click', async () => new Tab(await this.write_data(gen_uuid(), { name: 'new.css', active: true, value: '' }), this).focus());
 		
 		this.actions.insertAdjacentHTML('beforeend', svg.web);
-		this.actions.lastElementChild.addEventListener('click', () => this.prompt('Enter a CSS link').then(input => constants.request(input).then(async style => {
+		this.actions.lastElementChild.addEventListener('click', () => exports.prompt('Enter a CSS link').then(input => constants.request(input).then(async style => {
 			var name = input.split('/').slice(-1)[0];
 			
 			new Tab(await this.write_data(gen_uuid(), { name: name, active: true, value: style }), this).focus();
-		}).catch(err => (this.alert('Loading failed: ' + err), 1))));
+		}).catch(err => (exports.alert('Loading failed: ' + err), 1))));
 		
 		this.actions.insertAdjacentHTML('beforeend', svg.save);
 		this.saven = this.actions.lastElementChild;
@@ -682,7 +652,7 @@ class Editor extends PanelDraggable {
 		this.actions.insertAdjacentHTML('beforeend', svg.reload);
 		this.actions.lastElementChild.addEventListener('click', () => this.load());
 		
-		constants.add_ele('div', this.actions, { textContent: '?', className: 'help button' }).addEventListener('click', event => this.alert([
+		constants.add_ele('div', this.actions, { textContent: '?', className: 'help button' }).addEventListener('click', event => exports.alert([
 			`<h3>Glossary:</h3><ul>`,
 				`<li>Menu bar - set of buttons found in the top left of the panel.</li>`,
 			`</ul>`,
@@ -781,9 +751,49 @@ class Editor extends PanelDraggable {
 	}
 };
 
-module.exports = UI;
-UI.Tab = Tab;
-UI.Editor = Editor;
-UI.canvas = canvas;
-UI.keybinds = keybinds;
-UI.inputs = inputs;
+exports.Config = Config;
+exports.Tab = Tab;
+exports.Editor = Editor;
+exports.keybinds = keybinds;
+exports.inputs = inputs;
+
+exports.alert = desc => {
+	var panel = new Panel({}, 'prompt');
+	
+	Object.assign(panel.node.style, { margin: 'auto', left: 0, right: 0, top: 0, bottom: 0 });
+	
+	constants.add_ele('div', panel.node, { innerHTML: desc, className: 'description' });
+	
+	var form = constants.add_ele('form', panel.node);
+	
+	constants.add_ele('button', form, { textContent: 'OK', className: 'submit single' });
+	
+	panel.focus();
+	
+	return new Promise(resolve => form.addEventListener('submit', event => (event.preventDefault(), panel.remove(), resolve()), { once: true }));
+};
+
+exports.prompt = desc => {
+	var panel = new Panel({}, 'prompt');
+	
+	Object.assign(panel.node.style, { margin: 'auto', left: 0, right: 0, top: 0, bottom: 0 });
+	
+	constants.add_ele('div', panel.node, { textContent: desc, className: 'description' });
+	
+	var form = constants.add_ele('form', panel.node),
+		input = constants.add_ele('input', form, { className: 'input' });
+	
+	constants.add_ele('button', form, { textContent: 'OK', className: 'submit' });
+	
+	var cancel = constants.add_ele('button', form, { textContent: 'Cancel', className: 'cancel' });
+	
+	panel.focus();
+	
+	return new Promise((resolve, reject) => form.addEventListener('submit', event => {
+		event.preventDefault();
+		
+		(event.submitter == cancel ? reject : resolve)(input.value);
+		
+		panel.remove();
+	}));
+};
