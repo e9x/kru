@@ -20,7 +20,7 @@ var svg = require('./svg.json'),
 	keybinds = [],
 	inputs = {},
 	panels = [],
-	doc_input_active = doc => false, // doc.activeElement && doc.activeElement.tagName == 'INPUT',
+	doc_input_active = doc => doc.activeElement && doc.activeElement.tagName == 'INPUT',
 	update_pe = event => {
 		for(var ind in panels){
 			if(!panels[ind].visible)continue;
