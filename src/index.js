@@ -18,6 +18,7 @@ var util = require('./util'),
 		UI: require('./ui'),
 		add: ent => Object.setPrototypeOf({ entity: typeof ent == 'object' && ent != null ? ent : {} }, cheat.player_wrap),
 		syms: {
+			shot: Symbol(),
 			procInputs: Symbol(),
 			hooked: Symbol(),
 			isAI: Symbol(),
@@ -164,7 +165,8 @@ var util = require('./util'),
 			get enemy(){ return !this.entity.team || this.entity.team != cheat.player.team },
 			get did_shoot(){ return this.entity[cheat.vars.didShoot] },
 			get auto_weapon(){ return this.weapon.nAuto },
-			get shot(){ return this.auto_weapon && this.did_shoot },
+			get shot(){ return this.entity[cheat.syms.shot] },
+			// this.auto_weapon ? (this.entity[cheat.syms.shot] || false) : this.did_shoot },
 		},
 		update_frustum(){
 			cheat.world.frustum.setFromProjectionMatrix(new cheat.three.Matrix4().multiplyMatrices(cheat.world.camera.projectionMatrix, cheat.world.camera.matrixWorldInverse));
@@ -209,7 +211,7 @@ var util = require('./util'),
 				cheat.player[cheat.syms.procInputs] = cheat.player[cheat.vars.procInputs];
 				
 				cheat.player[cheat.vars.procInputs] = (data, ...args) => {
-					if(cheat.controls && cheat.player && cheat.add(cheat.player).weapon)input.exec(data);
+					if(cheat.controls && cheat.player && cheat.add(cheat.player).weapon)input.exec(data), input.final(data);
 					
 					return cheat.player[cheat.syms.procInputs](data, ...args);
 				};
@@ -260,10 +262,10 @@ cheat.ui = new cheat.UI({
 			walk: 'aim.status',
 			vals: [
 				[ 'off', 'Off' ],
-				[ 'triggerbot', 'Triggerbot' ],
+				[ 'trigger', 'Triggerbot' ],
 				[ 'assist', 'Assist' ],
-				[ 'silent', 'Silent' ],
-				// [ 'hidden', 'Hidden' ],
+				[ 'auto', 'Automatic' ],
+				[ 'correction', 'Correction' ],
 			],
 			key: 'binds.aim',
 		},{
@@ -338,12 +340,12 @@ cheat.ui = new cheat.UI({
 			type: 'slider',
 			walk: 'aim.fov',
 			range: [ 10, 100, 5 ],
-		}/*,{
+		},{
 			name: 'Hitchance',
 			type: 'slider',
 			walk: 'aim.hitchance',
 			range: [ 10, 100, 5 ],
-		}*/,{
+		},{
 			name: 'Target sort',
 			type: 'rotate',
 			walk: 'aim.target_sorting',

@@ -50,16 +50,22 @@ exports.main = (cheat, add) => {
 	
 	setInterval(() => y_offset_rand = y_offset_types[~~(Math.random() * y_offset_types.length)], 2000);
 	
-	exports.exec = data => {
-		/*var lp = add(cheat.player);
+	// after inputs
+	exports.final = data => {
+		var lp = add(cheat.player);
 		
-		if(lp.auto_weapon && lp.did_shoot && !lp.shot){
-			cheat.player.__shot = true;
-			setTimeout(() => cheat.player.__shot = false, lp.weapon.rate);
-		}*/
+		// lp.auto_weapon && 
+		if(data[keys.shoot] && !lp.entity[cheat.syms.shot]){
+			lp.entity[cheat.syms.shot] = true;
+			setTimeout(() => lp.entity[cheat.syms.shot] = false, lp.weapon.rate);
+		}
+	};
+	
+	exports.exec = data => {
+		var lp = add(cheat.player);
 		
 		var target = add(cheat.target).target || cheat.game.players.list.filter(player => add(player).target).sort((ent_1, ent_2) => sorts[cheat.config.aim.target_sorting || 'dist2d'](ent_1, ent_2) * (add(ent_1).frustum ? 1 : 0.5))[0],
-			has_ammo = add(cheat.player).weapon.melee || cheat.player[cheat.vars.ammos][cheat.player[cheat.vars.weaponIndex]];
+			has_ammo = lp.weapon.melee || cheat.player[cheat.vars.ammos][cheat.player[cheat.vars.weaponIndex]];
 		
 		// bhop
 		if(cheat.config.game.bhop != 'off' && (cheat.UI.inputs.Space || cheat.config.game.bhop == 'autojump' || cheat.config.game.bhop == 'autoslide')){
@@ -71,7 +77,7 @@ exports.main = (cheat, add) => {
 		}
 		
 		// auto reload, currentAmmo set earlier
-		if(cheat.player && !has_ammo && (cheat.config.aim.status == 'silent' || cheat.config.aim.auto_reload))data[keys.reload] = 1;
+		if(cheat.player && !has_ammo && (cheat.config.aim.status == 'auto' || cheat.config.aim.auto_reload))data[keys.reload] = 1;
 		
 		if(has_ammo && cheat.config.aim.status != 'off' && target && cheat.player.health){
 			var y_val = target.y + (target[cheat.syms.isAI] ? -(target.dat.mSize / 2) : (target.jumpBobY * 0.072) + 1 - add(target).crouch * 3);
@@ -89,26 +95,35 @@ exports.main = (cheat, add) => {
 					break;
 			};
 			
-			var y_dire = util.getDir(add(cheat.player).z, add(cheat.player).x, target.z, target.x),
-				x_dire = util.getXDire(add(cheat.player).x, add(cheat.player).y, add(cheat.player).z, target.x, y_val, target.z),
+			var y_dire = util.getDir(lp.z, lp.x, target.z, target.x),
+				x_dire = util.getXDire(lp.x, lp.y, lp.z, target.x, y_val, target.z),
 				rot = {
-					x: round(Math.max(-util.halfpi, Math.min(util.halfpi, x_dire - add(cheat.player).recoil_y * 0.27)) % util.pi2, 3) || 0,
+					x: round(Math.max(-util.halfpi, Math.min(util.halfpi, x_dire - lp.recoil_y * 0.27)) % util.pi2, 3) || 0,
 					y: util.normal_radian(round(y_dire % util.pi2, 3)) || 0,
 				};
 			
-			if(cheat.config.aim.status == 'silent' && !cheat.config.aim.smooth.status || ['silent', 'triggerbot'].includes(cheat.config.aim.status))data[keys.shoot] = +enemy_sight(data);
+			if(cheat.config.aim.status == 'correction'){
+				if(!lp.shot && data[keys.shoot]){
+					data[keys.xdir] = rot.x * 1000;
+					data[keys.ydir] = rot.y * 1000;
+				}
+				
+				return;
+			}
+			
+			if(cheat.config.aim.status == 'auto' && !cheat.config.aim.smooth.status || ['auto', 'trigger'].includes(cheat.config.aim.status))data[keys.shoot] = +enemy_sight(data);
 			
 			// if fully aimed or weapon cant even be aimed or weapon is melee and nearby, shoot
-			if(cheat.config.aim.status == 'silent' && !cheat.config.aim.smooth.status && add(cheat.player).aim)data[keys.shoot] = add(cheat.player).shot ? 0 : 1;
+			if(cheat.config.aim.status == 'auto' && !cheat.config.aim.smooth.status && lp.aim)data[keys.shoot] = lp.shot ? 0 : 1;
 			
-			if(cheat.config.aim.status != 'silent' && cheat.config.aim.status == 'assist' && !add(cheat.player).aim_press)return;
+			if(cheat.config.aim.status != 'auto' && cheat.config.aim.status == 'assist' && !lp.aim_press)return;
 			
 			if(cheat.config.aim.smooth.status)rot = smooth({ xD: rot.x, yD: rot.y });
 			
 			// always assist when smooth enabled
 			
 			// silent + aim
-			if(cheat.config.aim.smooth.status && cheat.config.aim.status == 'silent')data[keys.scope] = 1;
+			if(cheat.config.aim.smooth.status && cheat.config.aim.status == 'auto')data[keys.scope] = 1;
 			
 			switch(cheat.config.aim.smooth.status ? 'assist' : cheat.config.aim.status){
 				case'assist':
@@ -120,7 +135,7 @@ exports.main = (cheat, add) => {
 					data[keys.ydir] = rot.y * 1000;
 					
 					break
-				case'silent':
+				case'auto':
 					
 					data[keys.scope] = 1;
 					data[keys.xdir] = rot.x * 1000;
@@ -130,7 +145,7 @@ exports.main = (cheat, add) => {
 			}
 			
 			// 1/3 of width is head
-			// if(data[keys.shoot] && (Math.random() * 100) > cheat.config.aim.hitchance)data[keys.ydir] += 100;
+			if(!lp.shot && (Math.random() * 100) > cheat.config.aim.hitchance)data[keys.ydir] += 75;
 			// cheat.update_frustum();
 		}
 	};

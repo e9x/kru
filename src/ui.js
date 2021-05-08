@@ -246,7 +246,7 @@ class PanelDraggable extends Panel {
 		this.node.style.top = bounds.y.toFixed(1) + '%';
 	}
 	show(){
-		this.focus();
+		// this.focus();
 		
 		super.show();
 		
