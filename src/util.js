@@ -1,7 +1,6 @@
 'use strict';
 
-var util = require('./util'),
-	three = require('three');
+var util = require('./util');
 
 exports.pi2 = Math.PI * 2;
 exports.halfpi = Math.PI / 2;
@@ -36,8 +35,8 @@ exports.pos2d = (cheat, pos, aY = 0) => {
 	exports.project3d(pos, cheat.world.camera);
 	
 	return {
-		x: (pos.x + 1) / 2 * cheat.visual.canvas.width,
-		y: (-pos.y + 1) / 2 * cheat.visual.canvas.height,
+		x: (pos.x + 1) / 2 * cheat.UI.canvas.width,
+		y: (-pos.y + 1) / 2 * cheat.UI.canvas.height,
 	}
 };
 

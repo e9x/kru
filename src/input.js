@@ -2,10 +2,8 @@
 
 exports.main = (cheat, add) => {
 	var util = require('./util'),
-		three = require('three'),
 		keys = {frame: 0, delta: 1, xdir: 2, ydir: 3, moveDir: 4, shoot: 5, scope: 6, jump: 7, reload: 8, crouch: 9, weaponScroll: 10, weaponSwap: 11, moveLock: 12},
 		round = (n, r) => Math.round(n * Math.pow(10, r)) / Math.pow(10, r),
-		raycaster = new three.Raycaster(),
 		dist_center = pos => Math.hypot((window.innerWidth / 2) - pos.x, (window.innerHeight / 2) - pos.y),
 		sorts = {
 			dist3d: (ent_1, ent_2) => add(ent_1).distanceTo(ent_2),
@@ -18,22 +16,32 @@ exports.main = (cheat, add) => {
 				// speed = horizontal speed
 				turn = (50 - cheat.config.aim.smooth.value) / 10000,
 				speed = (50 - cheat.config.aim.smooth.value) / 10000,
-				ang = util.getAngleDst(cheat.controls.object.rotation.y, target.yD);
+				x_ang = util.getAngleDst(cheat.controls[cheat.vars.pchObjc].rotation.x, target.xD),
+				y_ang = util.getAngleDst(cheat.controls.object.rotation.y, target.yD);
 			
-			cheat.controls.object.rotation.y += ang * aj * turn, ang = util.getAngleDst(cheat.controls[cheat.vars.pchObjc].rotation.x, target.xD), 
+			return {
+				y: cheat.controls.object.rotation.y + y_ang * aj * turn,
+				x: cheat.controls[cheat.vars.pchObjc].rotation.x + x_ang * aj * turn,
+			};
 			
-			cheat.controls[cheat.vars.pchObjc].rotation.x += ang * aj * turn, ang = util.getD3D(cheat.controls.object.position.x, cheat.controls.object.position.y, cheat.controls.object.position.z, target.x, target.y, target.z) * aj * speed;
-			
-			var al = util.getDir(cheat.controls.object.position.z, cheat.controls.object.position.x, target.z, target.x),
+			/*
+			var z_ang = util.getD3D(cheat.controls.object.position.x, cheat.controls.object.position.y, cheat.controls.object.position.z, target.x, target.y, target.z) * aj * speed,
+				al = util.getDir(cheat.controls.object.position.z, cheat.controls.object.position.x, target.z, target.x),
 				am = util.getXDire(cheat.controls.object.position.x, cheat.controls.object.position.y, cheat.controls.object.position.z, target.x, target.y, target.z);
 			
-			cheat.controls.object.position.x -= ang * Math.sin(al) * Math.cos(am), cheat.controls.object.position.y += ang * Math.sin(am), 
-			cheat.controls.object.position.z -= ang * Math.cos(al) * Math.cos(am), cheat.world.updateFrustum();
+			cheat.controls.object.position.x -= z_ang * Math.sin(al) * Math.cos(am);
+			cheat.controls.object.position.y += z_ang * Math.sin(am);
+			cheat.controls.object.position.z -= z_ang * Math.cos(al) * Math.cos(am);
+			
+			cheat.world.update_frustum();
+			*/
 		},
 		y_offset_types = ['head', 'chest', 'feet'],
 		y_offset_rand = 'head',
 		enemy_sight = data => {
 			if(add(cheat.player).shot)return;
+			
+			var raycaster = new cheat.three.Raycaster();
 			
 			raycaster.setFromCamera({ x: 0, y: 0 }, cheat.world.camera);
 			
@@ -43,15 +51,22 @@ exports.main = (cheat, add) => {
 	setInterval(() => y_offset_rand = y_offset_types[~~(Math.random() * y_offset_types.length)], 2000);
 	
 	exports.exec = data => {
-		var target = cheat.game.players.list.filter(player => add(player).target).sort((ent_1, ent_2) => sorts[cheat.config.aim.target_sorting || 'dist2d'](ent_1, ent_2) * (add(ent_1).frustum ? 1 : 0.5))[0],
+		/*var lp = add(cheat.player);
+		
+		if(lp.auto_weapon && lp.did_shoot && !lp.shot){
+			cheat.player.__shot = true;
+			setTimeout(() => cheat.player.__shot = false, lp.weapon.rate);
+		}*/
+		
+		var target = add(cheat.target).target || cheat.game.players.list.filter(player => add(player).target).sort((ent_1, ent_2) => sorts[cheat.config.aim.target_sorting || 'dist2d'](ent_1, ent_2) * (add(ent_1).frustum ? 1 : 0.5))[0],
 			has_ammo = add(cheat.player).weapon.melee || cheat.player[cheat.vars.ammos][cheat.player[cheat.vars.weaponIndex]];
 		
 		// bhop
-		if(cheat.config.game.bhop != 'off' && (cheat.ui.inputs.Space || cheat.config.game.bhop == 'autojump' || cheat.config.game.bhop == 'autoslide')){
+		if(cheat.config.game.bhop != 'off' && (cheat.UI.inputs.Space || cheat.config.game.bhop == 'autojump' || cheat.config.game.bhop == 'autoslide')){
 			cheat.controls.keys[cheat.controls.binds.jump.val] ^= 1;
 			if(cheat.controls.keys[cheat.controls.binds.jump.val])cheat.controls.didPressed[cheat.controls.binds.jump.val] = 1;
 			
-			if((document.activeElement.nodeName != 'INPUT' && cheat.config.game.bhop == 'keyslide' && cheat.ui.inputs.Space || cheat.config.game.bhop == 'autoslide') && cheat.player[cheat.vars.yVel] < -0.02 && cheat.player.canSlide)setTimeout(() => cheat.controls.keys[cheat.controls.binds.crouch.val] = 0, 325), data[keys.crouch] = 1;
+			if((document.activeElement.nodeName != 'INPUT' && cheat.config.game.bhop == 'keyslide' && cheat.UI.inputs.Space || cheat.config.game.bhop == 'autoslide') && cheat.player[cheat.vars.yVel] < -0.02 && cheat.player.canSlide)setTimeout(() => cheat.controls.keys[cheat.controls.binds.crouch.val] = 0, 325), data[keys.crouch] = 1;
 			// cheat.controls.keys[cheat.controls.binds.crouch.val] = 1;
 		}
 		
@@ -88,28 +103,34 @@ exports.main = (cheat, add) => {
 			
 			if(cheat.config.aim.status != 'silent' && cheat.config.aim.status == 'assist' && !add(cheat.player).aim_press)return;
 			
-			switch(cheat.config.aim.status){
+			if(cheat.config.aim.smooth.status)rot = smooth({ xD: rot.x, yD: rot.y });
+			
+			// always assist when smooth enabled
+			
+			// silent + aim
+			if(cheat.config.aim.smooth.status && cheat.config.aim.status == 'silent')data[keys.scope] = 1;
+			
+			switch(cheat.config.aim.smooth.status ? 'assist' : cheat.config.aim.status){
 				case'assist':
+				
+					cheat.controls[cheat.vars.pchObjc].rotation.x = rot.x;
+					cheat.controls.object.rotation.y = rot.y;
 					
-					if(cheat.config.aim.smooth.status)smooth({ xD: rot.x, yD: rot.y }); else {
-						cheat.controls[cheat.vars.pchObjc].rotation.x = rot.x;
-						cheat.controls.object.rotation.y = rot.y;
-						
-						data[keys.xdir] = rot.x * 1000;
-						data[keys.ydir] = rot.y * 1000;
-					}
+					data[keys.xdir] = rot.x * 1000;
+					data[keys.ydir] = rot.y * 1000;
 					
 					break
 				case'silent':
 					
 					data[keys.scope] = 1;
-					
-					if(cheat.config.aim.smooth.status)smooth({ xD: rot.x, yD: rot.y });
-					else data[keys.xdir] = rot.x * 1000, data[keys.ydir] = rot.y * 1000;
+					data[keys.xdir] = rot.x * 1000;
+					data[keys.ydir] = rot.y * 1000;
 					
 					break
 			}
 			
+			// 1/3 of width is head
+			// if(data[keys.shoot] && (Math.random() * 100) > cheat.config.aim.hitchance)data[keys.ydir] += 100;
 			// cheat.update_frustum();
 		}
 	};

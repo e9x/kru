@@ -26,19 +26,17 @@ var ws = require('ws'),
 		home: os.homedir(),
 	},
 	inject_gm = {
-		GM_getValue(key, value){
+		GM_getValue(key){
 			var file = path.join(files.sploit, key + '.json');
 			
-			try{
-				return fs.readFileSync(file).toString();
-			}catch(err){
-				return null;
-			}
+			return new this.Promise((resolve, reject) => fs.promises.readFile(file).then(data => resolve(data.toString())).catch(err => resolve(null)));
 		},
 		GM_setValue(key, value){
-			fs.promises.writeFile(path.join(files.sploit, key + '.json'), value);
+			var file = path.join(files.sploit, key + '.json');
+			
+			return new this.Promise((resolve, reject) => (!Buffer.byteLength(value) ? fs.promises.unlink(file) : fs.promises.writeFile(file, value)).then(() => resolve()).catch(err => reject(err)));
 		},
-		GM_client_fetch: (url, headers) => (console.log(headers), fetch(url, { headers: headers }).then(res => res.text())),
+		GM_client_fetch: (url, headers) => fetch(url, { headers: headers }).then(res => res.text()),
 	},
 	eval_require = (func, base, cache = {}, base_require = mod.createRequire(base + '/')) => fn => {
 		var resolved = base_require.resolve(fn);
@@ -53,9 +51,9 @@ var ws = require('ws'),
 			script = loaders[ext] ? loaders[ext](fs.readFileSync(resolved)) : fs.readFileSync(resolved) + '\n//@ sourceURL=' + resolved;
 		
 		try{
-			new func('__dirname', '__filename', 'module', 'exports', 'require', Object.keys(inject_gm), script)(mod.path, resolved, mod, mod.exports, eval_require(func, mod.path + '/', cache), ...Object.values(inject_gm));
+			new func('__dirname', '__filename', 'module', 'exports', 'require', Object.keys(inject_gm), script)(mod.path, resolved, mod, mod.exports, eval_require(func, mod.path + '/', cache), ...Object.values(inject_gm).map(val => val.bind(func('return this')())));
 		}catch(err){
-			alert(util.format(err));
+			alert(resolved + ' - ' + util.format(err));
 		}
 		
 		if(path.basename(resolved) == 'consts.js')mod.exports.injected_settings = [{

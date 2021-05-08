@@ -1,12 +1,6 @@
 /*! ieee754. BSD-3-Clause License. Feross Aboukhadijeh <https://feross.org/opensource> */
 
 /**
- * @license
- * Copyright 2010-2021 Three.js Authors
- * SPDX-License-Identifier: MIT
- */
-
-/**
  * event-lite.js - Light-weight EventEmitter (less than 1KB when gzipped)
  *
  * @copyright Yusuke Kawasaki

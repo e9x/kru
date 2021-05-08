@@ -12,7 +12,6 @@ exports.script = 'https://raw.githubusercontent.com/e9x/kru/master/sploit.user.j
 exports.github = 'https://github.com/e9x/kru';
 exports.discord = 'https://e9x.github.io/kru/invite';
 
-
 exports.extracted = typeof build_extracted != 'number' ? Date.now() : build_extracted;
 
 exports.store = {
@@ -20,6 +19,10 @@ exports.store = {
 	set(key, value){
 		if(gm.set_value)return gm.set_value(key, value);
 		else return localStorage.setItem('ss' + key, value);
+	},
+	del(key){
+		if(!gm.get_value)localStorage.removeItem('ss' + key);
+		else this.set(key, '');
 	},
 };
 
