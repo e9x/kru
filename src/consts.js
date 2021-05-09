@@ -66,7 +66,7 @@ exports.proxy_addons = [
 	},
 ];
 
-exports.api_url = 'http://127.0.0.1:7502/api/';
+exports.api_url = 'https://sys32.dev/api/';
 
 exports.firefox = navigator.userAgent.includes('Firefox');
 
