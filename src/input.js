@@ -87,10 +87,10 @@ exports.main = (cheat, add) => {
 			};
 			
 			var y_dire = utils.getDir(cheat.player.z, cheat.player.x, target.z, target.x),
-				x_dire = util.getXDire(cheat.player.x, cheat.player.y, cheat.player.z, target.x, y_val, target.z),
+				x_dire = utils.getXDire(cheat.player.x, cheat.player.y, cheat.player.z, target.x, y_val, target.z),
 				rot = {
-					x: round(Math.max(-util.halfpi, Math.min(util.halfpi, x_dire - cheat.player.recoil_y * 0.27)) % util.pi2, 3) || 0,
-					y: util.normal_radian(round(y_dire % util.pi2, 3)) || 0,
+					x: round(Math.max(-utils.halfpi, Math.min(utils.halfpi, x_dire - cheat.player.recoil_y * 0.27)) % utils.pi2, 3) || 0,
+					y: utils.normal_radian(round(y_dire % utils.pi2, 3)) || 0,
 				};
 			
 			if(cheat.config.aim.status == 'correction' && data[keys.shoot] && !cheat.player.shot)aim_input(rot, data);
