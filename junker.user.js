@@ -4,6 +4,7 @@
 // @homepage     https://skidlamer.github.io/wp
 // @description  Junk in Your Krunk Guaranteed
 // @author       SkidLamer - From The Gaming Gurus
+// @extracted     Sun, 09 May 2021 19:19:29 GMT
 // @supportURL   https://skidlamer.github.io/wp
 // @updateURL    https://skidlamer.github.io/js/Krunker%20Junker.user.js
 // @downloadURL  https://skidlamer.github.io/js/Krunker%20Junker.user.js
