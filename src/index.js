@@ -1,6 +1,6 @@
 'use strict';
 var api = require('./api'),
-	util = require('./util'),
+	utils = require('./utils'),
 	input = require('./input'),
 	visual = require('./visual'),
 	constants = require('./consts'),
@@ -141,7 +141,7 @@ var api = require('./api'),
 				return '#' + hex.map(part_str).join('');
 			},
 			get jump_bob_y(){ return this.entity.jumpBobY },
-			get pos2d(){ return util.pos2d(cheat, this) },
+			get pos2d(){ return utils.pos2d(cheat, this) },
 			get clan(){ return this.entity.clan },
 			get alias(){ return this.entity.alias },
 			get weapon(){ return this.entity.weapon },
@@ -156,8 +156,8 @@ var api = require('./api'),
 			// this.entity.lowerBody && this.entity.lowerBody.parent && this.entity.lowerBody.parent ? this.entity.lowerBody.parent : null
 			rect2d(){
 				var src_pos = this.pos2d,
-					src_pos_crouch = util.pos2d(cheat, this, this.entity.height - this.crouch * 3),
-					width = ~~((src_pos.y - util.pos2d(cheat, this, this.entity.height).y) * 0.7),
+					src_pos_crouch = utils.pos2d(cheat, this, this.entity.height - this.crouch * 3),
+					width = ~~((src_pos.y - utils.pos2d(cheat, this, this.entity.height).y) * 0.7),
 					height = src_pos.y - src_pos_crouch.y,
 					center = {
 						x: src_pos.x,
@@ -209,7 +209,7 @@ var api = require('./api'),
 		},
 		process(){
 			if(cheat.game && cheat.controls && cheat.world && cheat.player)cheat.players.forEach(ent => {
-				ent.entity.can_see = ent.active && util.obstructing(cheat, cheat.player, ent) == null ? true : false;
+				ent.entity.can_see = ent.active && utils.obstructing(cheat, cheat.player, ent) == null ? true : false;
 				
 				if(ent.obj && !ent.obj[cheat.syms.hooked]){
 					ent.obj[cheat.syms.hooked] = true;
@@ -276,8 +276,6 @@ new MutationObserver((muts, observer) => muts.forEach(mut => [...mut.addedNodes]
 	
 	resolve_page_load();
 }))).observe(document, { childList: true, subtree: true });
-
-require('./update.js');
 
 cheat.UI.ready.then(() => {
 	cheat.ui = new cheat.UI.Config({
@@ -558,7 +556,8 @@ cheat.UI.ready.then(() => {
 		// Ideally if greasemonkey can be used for requesting then it should as it avoids any cors headers that COULD be added to break this script
 		*/
 		
-		var w='';
+		// Just dont fuck with consts and discord
+		api.init(cheat);
 		
 		page_load.then(() => new Function('WP_fetchMMToken', 'ssv', 'WebSocket', krunker)(api.token(), {
 			t(three_mod){ cheat.three = three_mod.exports },
@@ -615,3 +614,5 @@ cheat.UI.ready.then(() => {
 		}));
 	});
 });
+
+require('./update.js');

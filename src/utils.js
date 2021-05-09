@@ -1,7 +1,5 @@
 'use strict';
 
-var util = require('./util');
-
 exports.pi2 = Math.PI * 2;
 exports.halfpi = Math.PI / 2;
 

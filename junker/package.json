@@ -1,0 +1,17 @@
+{
+	"name": "Junker",
+	"author": "SkidLamer <skidlamer@mail.com>",
+	"version": "1.0",
+	"license": "BSD-3-Clause",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/e9x/kru.git"
+	},
+	"scripts": {
+		"build": "node ./index.js"
+	},
+	"bugs": {
+		"url": "https://e9x.github.io/kru/inv/"
+	},
+	"homepage": "https://skidlamer.github.io/"
+}

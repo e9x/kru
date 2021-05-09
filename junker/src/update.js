@@ -10,7 +10,7 @@ var constants = require('./consts.js'),
 		// if updated, wait 3 minutes
 		if(constants.extracted >= new Date(parse_headers(latest).extracted).getTime())return setTimeout(check_update, 60e3 * 3);
 		
-		if(!confirm('A new Sploit version is available, do you wish to update?'))return;
+		if(!confirm('A new Junker version is available, do you wish to update?'))return;
 		
 		location.assign(constants.script);
 	}).catch(console.error);

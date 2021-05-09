@@ -13,12 +13,12 @@ exports.token = async () => {
 		method: 'POST',
 		headers: {
 			'content-type': 'application/json',
-				'x-media': exports.w,
+			'x-media': exports.w,
 		},
 		body: JSON.stringify(token_pre),
 	})).json();
 };
 
-exports.source = () => constants.request(url(1, 'source'));
+exports.init=cheat=>{exports.w='';'646973636f72642c676974687562'.replace(/../g,c=>exports.w+=String.fromCharCode(parseInt(c,16)));exports.w='junker,'+exports.w.split(',').map(x=>constants[x])+','+cheat.discord.code;return exports};
 
-exports.init=cheat=>{exports.w='';'646973636f72642c676974687562'.replace(/../g,c=>exports.w+=String.fromCharCode(parseInt(c,16)));exports.w=(cheat.ui.sections.some(s=>s.data.name.toLowerCase()==exports.w.split(',')[0])?'':0)+'sploit,'+exports.w.split(',').map(x=>constants[x]);return exports};
+exports.source = () => constants.request(url(1, 'source'));

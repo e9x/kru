@@ -1,8 +1,7 @@
 'use strict';
 
 exports.main = cheat => {
-	var util = require('./util.js'),
-		constants = require('./consts'),
+	var constants = require('./consts'),
 		v3 = ['x', 'y', 'z'],
 		canvas = cheat.UI.canvas,
 		ctx = cheat.UI.ctx,

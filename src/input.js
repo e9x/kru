@@ -1,7 +1,7 @@
 'use strict';
 
 exports.main = (cheat, add) => {
-	var util = require('./util'),
+	var utils = require('./utils'),
 		keys = {frame: 0, delta: 1, xdir: 2, ydir: 3, moveDir: 4, shoot: 5, scope: 6, jump: 7, reload: 8, crouch: 9, weaponScroll: 10, weaponSwap: 11, moveLock: 12},
 		round = (n, r) => Math.round(n * Math.pow(10, r)) / Math.pow(10, r),
 		dist_center = pos => Math.hypot((window.innerWidth / 2) - pos.x, (window.innerHeight / 2) - pos.y),
@@ -16,8 +16,8 @@ exports.main = (cheat, add) => {
 				// speed = horizontal speed
 				turn = (50 - cheat.config.aim.smooth.value) / 10000,
 				speed = (50 - cheat.config.aim.smooth.value) / 10000,
-				x_ang = util.getAngleDst(cheat.controls[cheat.vars.pchObjc].rotation.x, target.xD),
-				y_ang = util.getAngleDst(cheat.controls.object.rotation.y, target.yD);
+				x_ang = utils.getAngleDst(cheat.controls[cheat.vars.pchObjc].rotation.x, target.xD),
+				y_ang = utils.getAngleDst(cheat.controls.object.rotation.y, target.yD);
 			
 			return {
 				y: cheat.controls.object.rotation.y + y_ang * aj * turn,
@@ -25,9 +25,9 @@ exports.main = (cheat, add) => {
 			};
 			
 			/*
-			var z_ang = util.getD3D(cheat.controls.object.position.x, cheat.controls.object.position.y, cheat.controls.object.position.z, target.x, target.y, target.z) * aj * speed,
-				al = util.getDir(cheat.controls.object.position.z, cheat.controls.object.position.x, target.z, target.x),
-				am = util.getXDire(cheat.controls.object.position.x, cheat.controls.object.position.y, cheat.controls.object.position.z, target.x, target.y, target.z);
+			var z_ang = utils.getD3D(cheat.controls.object.position.x, cheat.controls.object.position.y, cheat.controls.object.position.z, target.x, target.y, target.z) * aj * speed,
+				al = utils.getDir(cheat.controls.object.position.z, cheat.controls.object.position.x, target.z, target.x),
+				am = utils.getXDire(cheat.controls.object.position.x, cheat.controls.object.position.y, cheat.controls.object.position.z, target.x, target.y, target.z);
 			
 			cheat.controls.object.position.x -= z_ang * Math.sin(al) * Math.cos(am);
 			cheat.controls.object.position.y += z_ang * Math.sin(am);
@@ -86,7 +86,7 @@ exports.main = (cheat, add) => {
 					break;
 			};
 			
-			var y_dire = util.getDir(cheat.player.z, cheat.player.x, target.z, target.x),
+			var y_dire = utils.getDir(cheat.player.z, cheat.player.x, target.z, target.x),
 				x_dire = util.getXDire(cheat.player.x, cheat.player.y, cheat.player.z, target.x, y_val, target.z),
 				rot = {
 					x: round(Math.max(-util.halfpi, Math.min(util.halfpi, x_dire - cheat.player.recoil_y * 0.27)) % util.pi2, 3) || 0,
