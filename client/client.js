@@ -9,8 +9,7 @@ Code: ${event.error instanceof Error ? event.error.code : ''}
 Stack:
 ${(event.error instanceof Error ? event.error : new Error()).stack}`));*/
 
-var ws = require('ws'),
-	os = require('os'),
+var vm = require('vm'),
 	fs = require('fs'),
 	mod = require('module'),
 	util = require('util'),
@@ -21,9 +20,6 @@ var ws = require('ws'),
 	loaders = {
 		'.json': source => 'module.exports=' + JSON.stringify(JSON.parse(source)),
 		'.css': require(path.join(__dirname, '..', 'src', 'css.js')),
-	},
-	files = {
-		home: os.homedir(),
 	},
 	eval_require = (func, base, cache = {}, base_require = mod.createRequire(base + '/')) => fn => {
 		var resolved = base_require.resolve(fn);
@@ -38,17 +34,11 @@ var ws = require('ws'),
 			script = loaders[ext] ? loaders[ext](fs.readFileSync(resolved)) : fs.readFileSync(resolved) + '\n//@ sourceURL=' + resolved;
 		
 		try{
+			new vm.Script(script, { filename : resolved });
 			new func('__dirname', '__filename', 'module', 'exports', 'require', script)(mod.path, resolved, mod, mod.exports, eval_require(func, mod.path + '/', cache));
 		}catch(err){
-			alert(resolved + ' - ' + util.format(err));
+			return alert(util.format(err));
 		}
-		
-		if(path.basename(resolved) == 'consts.js')mod.exports.injected_settings = [{
-			name: 'Open resource folder',
-			type: 'function',
-			key: 'F6',
-			value: () => child_process.exec('start ' + files.sploit),
-		}];
 		
 		return mod.exports;
 	},
@@ -126,3 +116,5 @@ chrome.webRequest.onBeforeRequest.addListener(details => {
 		url.pathname.startsWith('/tagmanager/pptm.') ||
 	false };
 }, { urls: [ '<all_urls>' ] }, [ 'blocking' ]);
+
+console.log('test');

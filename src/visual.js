@@ -46,15 +46,15 @@ exports.main = cheat => {
 			ctx.lineWidth = 2.6;
 			
 			var lines = [
-				[['#BBB', 'Player: '], ['#FFF', cheat.add(cheat.player).active ? v3.map(axis => axis + ': ' + cheat.add(cheat.player)[axis].toFixed(2)).join(', ') : 'N/A']],
-				[['#BBB', 'Target: '], ['#FFF', cheat.add(cheat.target).active ? cheat.target.alias + ', ' + v3.map(axis => axis + ': ' + cheat.add(cheat.target)[axis].toFixed(2)).join(', ') : 'N/A']],
-				[['#BBB', 'Aiming: '], [cheat.player && cheat.add(cheat.player).aiming ? '#0F0' : '#F00', cheat.player && cheat.add(cheat.player).aiming ? 'TRUE' : 'FALSE']],
+				[['#BBB', 'Player: '], ['#FFF', cheat.player.active ? v3.map(axis => axis + ': ' + cheat.player[axis].toFixed(2)).join(', ') : 'N/A']],
+				[['#BBB', 'Target: '], ['#FFF', cheat.target.active ? cheat.target.alias + ', ' + v3.map(axis => axis + ': ' + cheat.target[axis].toFixed(2)).join(', ') : 'N/A']],
+				[['#BBB', 'Aiming: '], [cheat.player && cheat.player.aiming ? '#0F0' : '#F00', cheat.player && cheat.player.aiming ? 'TRUE' : 'FALSE']],
 			];
 			
 			draw_text(15, ((canvas.height / 2) - (lines.length * 14)  / 2), 14, lines);
 		}
 		
-		if(!cheat.game || !cheat.controls || !cheat.world || !cheat.player)return;
+		if(!cheat.game || !cheat.world || !cheat.player)return;
 		
 		cheat.world.scene.children.forEach(obj => {
 			if(obj.type != 'Mesh' || !obj.dSrc || obj.material[cheat.syms.hooked])return;
@@ -76,45 +76,42 @@ exports.main = cheat => {
 			});
 		});
 		
-		cheat.game.players.list.forEach(ent => {
-			if(!cheat.add(ent).active || !cheat.add(ent).frustum || cheat.add(ent).is_you)return;
+		cheat.players.forEach(ent => {
+			if(!ent.active || !ent.frustum || ent.is_you)return;
 			
-			var rect = cheat.add(ent).rect2d(),
-				// teammate = green, enemy = red, risk + enemy = orange
-				cham_color = cheat.add(ent).is_you ? '#FFF' : cheat.add(ent).enemy ? cheat.add(ent).risk ? '#F70' : '#F00' : '#0F0',
-				cham_color_full = parseInt(cham_color.substr(1).split('').map(e => e+e).join(''), 16); // turn #FFF into #FFFFF
+			var rect = ent.rect2d();
 			
-			if(cheat.add(ent).obj)cheat.add(ent).obj.traverse(obj => {
+			if(ent.obj)ent.obj.traverse(obj => {
 				if(obj.type != 'Mesh')return;
 				
 				obj.material.wireframe = !!cheat.config.game.wireframe;
 				
-				if(cheat.add(ent).is_you || obj[cheat.syms.hooked])return;
+				if(ent.is_you || obj[cheat.syms.hooked])return;
 				
 				obj[cheat.syms.hooked] = true;
 				
 				var orig_mat = obj.material;
 				
 				Object.defineProperty(obj, 'material', {
-					get: _ => cheat.chams ? new cheat.three.MeshBasicMaterial({
+					get: _ => ent.draw_chams ? new cheat.three.MeshBasicMaterial({
 						transparent: true,
 						fog: false,
 						depthTest: false,
-						color: cheat.add(ent).enemy ? cheat.add(ent).risk ? '#F70' : '#F00' : '#0F0',
+						color: ent.esp_color,
 					}) : orig_mat,
 					set: _ => orig_mat = _,
 				});
 			});
 			
 			// box ESP
-			if(cheat.box){
-				ctx.strokeStyle = cham_color
+			if(ent.draw_box){
+				ctx.strokeStyle = ent.esp_color;
 				ctx.lineWidth = 1.5;
 				ctx.strokeRect(rect.left, rect.top, rect.width, rect.height);
 			}
 			
 			// health bar, red - yellow - green gradient
-			var hp_perc = (ent.health / cheat.add(ent).max_health) * 100;
+			var hp_perc = (ent.health / ent.max_health) * 100;
 			
 			if(cheat.config.esp.status == 'full' || cheat.config.esp.health_bars){
 				var box_ps = [ rect.left - rect.width / 2, rect.top, rect.width / 4, rect.height ],
@@ -141,13 +138,12 @@ exports.main = cheat => {
 			}
 			
 			// full ESP
-			cheat.hide_nametags = cheat.config.esp.status == 'full'
 			if(cheat.config.esp.status == 'full'){
 				// text stuff
 				var hp_red = hp_perc < 50 ? 255 : Math.round(510 - 5.10 * hp_perc),
 					hp_green = hp_perc < 50 ? Math.round(5.1 * hp_perc) : 255,
 					hp_color = '#' + ('000000' + (hp_red * 65536 + hp_green * 256 + 0 * 1).toString(16)).slice(-6),
-					player_dist = cheat.add(cheat.player).distanceTo(cheat.add(ent)),
+					player_dist = cheat.player.distanceTo(ent),
 					font_size = ~~(11 - (player_dist * 0.005));
 				
 				ctx.textAlign = 'middle';
@@ -157,21 +153,21 @@ exports.main = cheat => {
 				
 				draw_text(rect.right + (rect.width / 2), rect.top, font_size, [
 					[['#FB8', ent.alias], ['#FFF', ent.clan ? ' [' + ent.clan + ']' : '']],
-						[[hp_color, ent.health + '/' + cheat.add(ent).max_health + ' HP']],
+						[[hp_color, ent.health + '/' + ent.max_health + ' HP']],
 					// player weapon & ammo
 					[['#FFF', ent.weapon.name ],
 						['#BBB', '['],
 						['#FFF', (ent.weapon.ammo || 'N') + '/' + (ent.weapon.ammo || 'A') ],
 						['#BBB', ']']],
-					[['#BBB', 'Risk: '], [(cheat.add(ent).risk ? '#0F0' : '#F00'), cheat.add(ent).risk]],
-					[['#BBB', 'Shootable: '], [(cheat.add(ent).can_see ? '#0F0' : '#F00'), cheat.add(ent).can_see]],
+					[['#BBB', 'Risk: '], [(ent.risk ? '#0F0' : '#F00'), ent.risk]],
+					[['#BBB', 'Shootable: '], [(ent.can_see ? '#0F0' : '#F00'), ent.can_see]],
 					[['#BBB', '['], ['#FFF', ~~(player_dist / 10) + 'm'], ['#BBB', ']']],
 				]);
 			}
 			
 			// tracers
 			if(cheat.config.esp.tracers){
-				ctx.strokeStyle = cham_color;
+				ctx.strokeStyle = ent.esp_color;
 				ctx.lineWidth = 1.75;
 				ctx.lineCap = 'round';
 				

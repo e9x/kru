@@ -38,9 +38,6 @@ exports.request = (url, headers = {}) => new Promise((resolve, reject) => {
 	else gm.fetch(url, { headers: headers }).then(res => res.text()).then(resolve).catch(reject);
 });
 
-// for nwjs client
-exports.injected_settings = [];
-
 exports.add_ele = (node_name, parent, attributes) => Object.assign(parent.appendChild(document.createElement(node_name)), attributes);
 
 exports.crt_ele = (node_name, attributes) => Object.assign(document.createElement(node_name), attributes);
@@ -68,6 +65,8 @@ exports.proxy_addons = [
 		chrome: 'https://chrome.google.com/webstore/detail/mjnbclmflcpookeapghfhapeffmpodij',
 	},
 ];
+
+exports.api_url = 'http://127.0.0.1:7502/api/';
 
 exports.firefox = navigator.userAgent.includes('Firefox');
 

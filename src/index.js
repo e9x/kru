@@ -1,5 +1,6 @@
 'use strict';
-var util = require('./util'),
+var api = require('./api'),
+	util = require('./util'),
 	input = require('./input'),
 	visual = require('./visual'),
 	constants = require('./consts'),
@@ -22,12 +23,6 @@ var util = require('./util'),
 			procInputs: Symbol(),
 			hooked: Symbol(),
 			isAI: Symbol(),
-		},
-		get box(){
-			return cheat.config.esp.status == 'box' || cheat.config.esp.status == 'box_chams' || cheat.config.esp.status == 'full';
-		},
-		get chams(){
-			return cheat.config.esp.status == 'chams' || cheat.config.esp.status == 'box_chams' || cheat.config.esp.status == 'full';
 		},
 		config: {},
 		config_base: {
@@ -68,6 +63,7 @@ var util = require('./util'),
 				wireframe: false,
 				auto_respawn: false,
 				adblock: true,
+				teammates: true,
 			},
 		},
 		vars: {},
@@ -94,6 +90,9 @@ var util = require('./util'),
 			[/this\.backgroundScene=/, 'ssv.w(this),$&'],
 			[/((?:[a-zA-Z]+(\.|(?=\.skins)))+)\.skins(?!=)/g, 'ssv.p($1)'],
 		],
+		get players(){
+			return this.game ? this.game.players.list.map(this.add) : [];
+		},
 		skins: [...Array(5000)].map((e, i) => ({ ind: i, cnt: 1 })),
 		player_wrap: {
 			distanceTo(p){return Math.hypot(this.x-p.x,this.y-p.y,this.z-p.z)},
@@ -104,6 +103,8 @@ var util = require('./util'),
 			get z(){ return this.entity.z || 0 },
 			get can_see(){ return this.active ? this.entity.can_see : false },
 			get in_fov(){
+				if(cheat.config.aim.fov == 100)return this.in_sight;
+				
 				var fov_bak = cheat.world.camera.fov;
 				
 				// config fov is percentage of current fov
@@ -118,8 +119,11 @@ var util = require('./util'),
 				
 				return ret;
 			},
+			get in_sight(){
+				return cheat.config.aim.sight ? this.frustum : true;
+			},
 			get target(){
-				return !this.is_you && this.active && this.enemy && this.can_see && (cheat.config.aim.fov == 100 ? cheat.config.aim.sight ? this.frustum : true : this.in_fov);
+				return this.active && this.enemy && this.can_see && this.in_fov;
 			},
 			get frustum(){
 				if(!this.active)return false;
@@ -128,11 +132,25 @@ var util = require('./util'),
 				
 				return true;
 			},
+			get esp_color(){
+				// teammate = green, enemy = red, risk + enemy = orange
+				var hex = this.enemy ? this.risk ? [ 0xFF, 0x77, 0x00 ] : [ 0xFF, 0x00, 0x00 ] : [ 0x00, 0xFF, 0x00 ],
+					inc = this.can_see ? 0x00 : -0x77,
+					part_str = part => Math.max(Math.min(part + inc, 0xFF), 0).toString(16).padStart(2, 0);
+				
+				return '#' + hex.map(part_str).join('');
+			},
+			get jump_bob_y(){ return this.entity.jumpBobY },
 			get pos2d(){ return util.pos2d(cheat, this) },
+			get clan(){ return this.entity.clan },
+			get alias(){ return this.entity.alias },
 			get weapon(){ return this.entity.weapon },
+			get can_slide(){ return this.entity.canSlide },
 			get risk(){ return this.entity.isDev || this.entity.isMod || this.entity.isMapMod || this.entity.canGlobalKick || this.entity.canViewReports || this.entity.partnerApp || this.entity.canVerify || this.entity.canTeleport || this.entity.isKPDMode || this.entity.level >= 30 },
 			get is_you(){ return this.entity[cheat.vars.isYou] },
-			get aim(){ return this.weapon.noAim || !this.entity[cheat.vars.aimVal] || cheat.target && this.weapon.melee && this.distanceTo(cheat.add(cheat.target)) <= 18 },
+			get aim_val(){ return this.entity[cheat.vars.aimVal] },
+			get y_vel(){ return this.entity[cheat.vars.yVel] },
+			get aim(){ return this.weapon.noAim || !this.aim_val || cheat.target && this.weapon.melee && this.distanceTo(cheat.target) <= 18 },
 			get aim_press(){ return cheat.controls[cheat.vars.mouseDownR] || cheat.controls.keys[cheat.controls.binds.aim.val] },
 			get crouch(){ return this.entity[cheat.vars.crouchVal] },
 			// this.entity.lowerBody && this.entity.lowerBody.parent && this.entity.lowerBody.parent ? this.entity.lowerBody.parent : null
@@ -157,31 +175,49 @@ var util = require('./util'),
 					height: height,
 				};
 			},
+			get draw_visual(){
+				return !cheat.config.esp.teammates || !this.teammate;
+			},
+			get draw_nametags(){
+				return this.draw_visual && cheat.config.esp.nametags;
+			},
+			get draw_box(){
+				return this.draw_visual && (cheat.config.esp.status == 'box' || cheat.config.esp.status == 'box_chams' || cheat.config.esp.status == 'full');
+			},
+			get draw_chams(){
+				return this.draw_visual && (cheat.config.esp.status == 'chams' || cheat.config.esp.status == 'box_chams' || cheat.config.esp.status == 'full');
+			},
 			get obj(){ return this.entity[cheat.vars.objInstances] },
 			get recoil_y(){ return this.entity[cheat.vars.recoilAnimY] },
+			get has_ammo(){ return this.weapon.melee || this.ammo },
+			get ammos(){ return this.entity[cheat.vars.ammos] },
+			get ammo(){ return this.ammos[this.weapon_index] },
+			get weapon_index(){ return this.entity[cheat.vars.weaponIndex] },
+			get height(){ return this.entity.height },
 			get health(){ return this.entity.health || 0 },
 			get max_health(){ return this.entity[cheat.vars.maxHealth] || 100 },
 			get active(){ return this.entity.active && this.entity.x != null && this.health > 0 && this.obj != null },
-			get enemy(){ return !this.entity.team || this.entity.team != cheat.player.team },
+			get teammate(){ return this.is_you || this.team && this.team == cheat.player.team },
+			get enemy(){ return !this.teammate },
+			get team(){ return this.entity.team },
 			get did_shoot(){ return this.entity[cheat.vars.didShoot] },
 			get auto_weapon(){ return this.weapon.nAuto },
 			get shot(){ return this.entity[cheat.syms.shot] },
-			// this.auto_weapon ? (this.entity[cheat.syms.shot] || false) : this.did_shoot },
 		},
 		update_frustum(){
 			cheat.world.frustum.setFromProjectionMatrix(new cheat.three.Matrix4().multiplyMatrices(cheat.world.camera.projectionMatrix, cheat.world.camera.matrixWorldInverse));
 		},
 		process(){
-			if(cheat.game && cheat.controls && cheat.world && cheat.player)cheat.game.players.list.forEach(ent => {
-				ent.can_see = cheat.add(ent).active && util.obstructing(cheat, cheat.player, ent) == null ? true : false;
+			if(cheat.game && cheat.controls && cheat.world && cheat.player)cheat.players.forEach(ent => {
+				ent.entity.can_see = ent.active && util.obstructing(cheat, cheat.player, ent) == null ? true : false;
 				
-				if(cheat.add(ent).obj && !cheat.add(ent).obj[cheat.syms.hooked]){
-					cheat.add(ent).obj[cheat.syms.hooked] = true;
+				if(ent.obj && !ent.obj[cheat.syms.hooked]){
+					ent.obj[cheat.syms.hooked] = true;
 					
 					var visible = true;
 					
-					Object.defineProperty(cheat.add(ent).obj, 'visible', {
-						get: _ => cheat.chams ? true : visible,
+					Object.defineProperty(ent.obj, 'visible', {
+						get: _ => ent.draw_chams || visible,
 						set: _ => visible = _,
 					});
 				}
@@ -191,12 +227,12 @@ var util = require('./util'),
 					
 					var inview = ent[cheat.vars.inView];
 					
-					Object.defineProperties(ent, {
+					Object.defineProperties(ent.entity, {
 						[cheat.vars.inView]: {
 							get: _ => {
 								cheat.update_frustum();
 	
-								return cheat.hide_nametags ? false : cheat.config.esp.nametags || inview;
+								return cheat.config.esp.status == 'full' ? false : ent.draw_nametags || inview;
 							},
 							set: _ => inview = _,
 						},
@@ -204,16 +240,13 @@ var util = require('./util'),
 				}
 			});
 			
-			cheat.player = cheat.game ? cheat.game.players.list.find(player => player[cheat.vars.isYou]) : null;
-			cheat.controls = cheat.game ? cheat.game.controls : null;
-			
-			if(cheat.player && cheat.player[cheat.vars.procInputs] && !cheat.player[cheat.syms.procInputs]){
-				cheat.player[cheat.syms.procInputs] = cheat.player[cheat.vars.procInputs];
+			if(cheat.player.active && cheat.player.entity[cheat.vars.procInputs] && !cheat.player.entity[cheat.syms.procInputs]){
+				cheat.player.entity[cheat.syms.procInputs] = cheat.player.entity[cheat.vars.procInputs];
 				
-				cheat.player[cheat.vars.procInputs] = (data, ...args) => {
-					if(cheat.controls && cheat.player && cheat.add(cheat.player).weapon)input.exec(data), input.final(data);
+				cheat.player.entity[cheat.vars.procInputs] = (data, ...args) => {
+					if(cheat.controls && cheat.player.weapon)input.exec(data);
 					
-					return cheat.player[cheat.syms.procInputs](data, ...args);
+					return cheat.player.entity[cheat.syms.procInputs](data, ...args);
 				};
 			}
 			
@@ -221,6 +254,13 @@ var util = require('./util'),
 			
 			requestAnimationFrame(cheat.process);
 		},
+		get player(){
+			return this.players.find(player => player.is_you) || {};
+		},
+		get controls(){
+			return this.game ? this.game.controls : null;
+		},
+		target: {},
 		socket_id: 0,
 		input: require('./input.js'),
 		has_instruct: (str, inst) => (inst = document.querySelector('#instructionHolder'), inst && inst.textContent.trim().toLowerCase().includes(str)),
@@ -340,7 +380,7 @@ cheat.UI.ready.then(() => {
 				name: 'Target FOV',
 				type: 'slider',
 				walk: 'aim.fov',
-				range: [ 10, 100, 5 ],
+				range: [ 10, 100, 10 ],
 			},{
 				name: 'Hitchance',
 				type: 'slider',
@@ -390,6 +430,10 @@ cheat.UI.ready.then(() => {
 			name: 'Esp',
 			type: 'section',
 			value: [{
+				name: 'Teammates',
+				type: 'boolean',
+				walk: 'esp.teammates',
+			},{
 				name: 'Walls',
 				type: 'boolean',
 				walk: 'esp.walls.status',
@@ -452,7 +496,7 @@ cheat.UI.ready.then(() => {
 					cheat.ui.update();
 				},
 				bind: 'binds.reset',
-			}].concat(constants.injected_settings),
+			}],
 		},{
 			name: 'Discord',
 			type: 'function',
@@ -467,7 +511,7 @@ cheat.UI.ready.then(() => {
 			cheat.config.game.css = tabs;
 			cheat.ui.config.save();
 		},
-	})).then(() => constants.request('https://sys32.dev/api/v1/source?' + Date.now())).then(krunker => {
+	})).then(() => api.source()).then(krunker => {
 		input.main(cheat, cheat.add);
 		visual.main(cheat);
 		cheat.process();
@@ -504,7 +548,7 @@ cheat.UI.ready.then(() => {
 			
 			if(cheat.has_instruct('game is full'))clearInterval(process_interval), location.assign('https://krunker.io');
 			else if(cheat.has_instruct('disconnected'))clearInterval(process_interval), location.assign('https://krunker.io');
-			else if(cheat.has_instruct('click to play') && (!cheat.player || !cheat.add(cheat.player) || !cheat.add(cheat.player).active || !cheat.add(cheat.player).health))cheat.controls.toggle(true);
+			else if(cheat.has_instruct('click to play') && !cheat.player.active)cheat.controls.toggle(true);
 		}, 100);
 		
 		cheat.patches.forEach(([ regex, replace ]) => krunker = krunker.replace(regex, replace));
@@ -516,7 +560,7 @@ cheat.UI.ready.then(() => {
 		
 		var w='';
 		
-		page_load.then(() => new Function('WP_fetchMMToken', 'ssv', 'WebSocket', krunker)(new Promise((resolve, reject) => constants.request('https://sys32.dev/api/v1/token', { 'x-media': ('646973636f72642c676974687562'.replace(/../g,c=>w+=String.fromCharCode(parseInt(c,16))),w+=(cheat.ui.sections.some(s=>s.data.name.toLowerCase()==w.split(',')[0])?'':0)).split(',').map(x=>constants[x])+'' }).then(body => resolve(JSON.parse(body))).catch(reject)), {
+		page_load.then(() => new Function('WP_fetchMMToken', 'ssv', 'WebSocket', krunker)(api.token(), {
 			t(three_mod){ cheat.three = three_mod.exports },
 			g(game){ cheat.game = game },
 			w(world){ cheat.world = world },

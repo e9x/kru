@@ -48,8 +48,6 @@ exports.ready.then(() => {
 	
 	var ctx = exports.ctx = canvas.getContext('2d', { alpha: true });
 	
-	ctx.imageSmoothingEnabled = true;
-	
 	resize_canvas();
 
 	frame.contentWindow.document.head.remove();
