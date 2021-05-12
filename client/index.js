@@ -1,4 +1,4 @@
-// get-process | where-object { $_.path -like '*nwjs*' } | stop-process; node E:\sys\kru\client
+// taskkill /F /IM "nw.exe"; node E:\sys\kru\client
 'use strict';
 if(typeof nw == 'undefined'){
 	var os = require('os'),
@@ -12,7 +12,7 @@ if(typeof nw == 'undefined'){
 		__dirname,
 		'--enable-logging=stdout',
 		'--remote-debugging-port=9222',
-		// '--disable-frame-rate-limit',
+		'--disable-frame-rate-limit',
 		// '--max-gum-fps="9999"'
 	], { stdio: 'inherit', stderr: 'inherit' }).on('close', () => {
 		process.nextTick(() => process.exit(0));

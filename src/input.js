@@ -7,7 +7,11 @@ exports.main = (cheat, add) => {
 		dist_center = pos => Math.hypot((window.innerWidth / 2) - pos.x, (window.innerHeight / 2) - pos.y),
 		sorts = {
 			dist3d: (ent_1, ent_2) => ent_1.distanceTo(ent_2),
-			dist2d: (ent_1, ent_2) => dist_center(ent_1.pos2d) - dist_center(ent_2.pos2d),
+			dist2d: (ent_1, ent_2) => {
+				if(!ent_1.rect)console.log(ent_1);
+				
+				return dist_center(ent_1.rect()) - dist_center(ent_2.rect());
+			},
 			hp: (ent_1, ent_2) => ent_1.health - ent_2.health,
 		},
 		smooth = target	=> {
@@ -45,7 +49,7 @@ exports.main = (cheat, add) => {
 			
 			raycaster.setFromCamera({ x: 0, y: 0 }, cheat.world.camera);
 			
-			if(cheat.player.aim && raycaster.intersectObjects(cheat.players.filter(ent => ent.target).map(ent => ent.obj), true).length)return true;
+			if(cheat.player.aim && raycaster.intersectObjects(cheat.game.players.list.map(cheat.add).filter(ent => ent.can_target).map(ent => ent.obj), true).length)return true;
 		},
 		aim_input = (rot, data) => {
 			data[keys.xdir] = rot.x * 1000;
@@ -59,22 +63,21 @@ exports.main = (cheat, add) => {
 	setInterval(() => y_offset_rand = y_offset_types[~~(Math.random() * y_offset_types.length)], 2000);
 	
 	exports.exec = data => {
-		var target = cheat.target = (cheat.target.target ? cheat.target : cheat.players.filter(player => player.target).sort((ent_1, ent_2) => sorts[cheat.config.aim.target_sorting || 'dist2d'](ent_1, ent_2) * (ent_1.frustum ? 1 : 0.5))[0]) || {},
+		var target = cheat.target = cheat.target && cheat.target.can_target ? cheat.target : cheat.game.players.list.map(cheat.add).filter(player => player.can_target).sort((ent_1, ent_2) => sorts[cheat.config.aim.target_sorting || 'dist2d'](ent_1, ent_2) * (ent_1.frustum ? 1 : 0.5))[0],
 			can_shoot = !data[keys.reloading] && cheat.player.has_ammo;
 		
 		// bhop
-		if(cheat.config.game.bhop != 'off' && (cheat.UI.inputs.Space || cheat.config.game.bhop == 'autojump' || cheat.config.game.bhop == 'autoslide')){
+		if(cheat.focused && cheat.config.game.bhop != 'off' && (cheat.UI.inputs.Space || cheat.config.game.bhop == 'autojump' || cheat.config.game.bhop == 'autoslide')){
 			cheat.controls.keys[cheat.controls.binds.jump.val] ^= 1;
 			if(cheat.controls.keys[cheat.controls.binds.jump.val])cheat.controls.didPressed[cheat.controls.binds.jump.val] = 1;
 			
-			if((document.activeElement.nodeName != 'INPUT' && cheat.config.game.bhop == 'keyslide' && cheat.UI.inputs.Space || cheat.config.game.bhop == 'autoslide') && cheat.player.y_vel < -0.02 && cheat.player.can_slide)setTimeout(() => cheat.controls.keys[cheat.controls.binds.crouch.val] = 0, 325), cheat.controls.keys[cheat.controls.binds.crouch.val] = 1;
-			// ;
+			if((cheat.config.game.bhop == 'keyslide' && cheat.UI.inputs.Space || cheat.config.game.bhop == 'autoslide') && cheat.player.y_vel < -0.02 && cheat.player.can_slide)setTimeout(() => cheat.controls.keys[cheat.controls.binds.crouch.val] = 0, 325), cheat.controls.keys[cheat.controls.binds.crouch.val] = 1;
 		}
 		
 		if(!cheat.player.has_ammo && (cheat.config.aim.status == 'auto' || cheat.config.aim.auto_reload))data[keys.reload] = 1;
 		
 		if(can_shoot && cheat.config.aim.status == 'trigger')data[keys.shoot] = +enemy_sight() || data[keys.shoot];
-		else if(can_shoot && cheat.config.aim.status != 'off' && target.active && cheat.player.health){
+		else if(can_shoot && cheat.config.aim.status != 'off' && target && cheat.player.health){
 			var y_val = target.y + (target[cheat.syms.isAI] ? -(target.dat.mSize / 2) : (target.jump_bob_y * 0.072) + 1 - target.crouch * 3);
 			
 			switch(cheat.config.aim.offset != 'random' ? cheat.config.aim.offset : y_offset_rand){
@@ -118,7 +121,7 @@ exports.main = (cheat, add) => {
 		
 		if(data[keys.shoot] && !cheat.player.entity[cheat.syms.shot]){
 			cheat.player.entity[cheat.syms.shot] = true;
-			setTimeout(() => cheat.player.entity[cheat.syms.shot] = false, cheat.player.weapon.rate);
+			setTimeout(() => cheat.player.entity[cheat.syms.shot] = false, cheat.player.weapon.rate + 1);
 		}
 	}
 };

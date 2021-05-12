@@ -37,17 +37,17 @@ var api = require('./api'),
 				overlay: 'Digit8',
 			},
 			aim: {
-				target_sorting: 'dist2d',
-				offset: 'head',
 				status: 'off',
+				offset: 'random',
+				target_sorting: 'dist2d',
 				smooth: {
-					status: false,
-					value: 15,
+					status: true,
+					value: 10,
 				},
 				hitchance: 100,
 				// percentage of screen
 				fov_box: false,
-				fov: 100,
+				fov: 70,
 			},
 			esp: {
 				status: 'off',
@@ -63,7 +63,6 @@ var api = require('./api'),
 				wireframe: false,
 				auto_respawn: false,
 				adblock: true,
-				teammates: true,
 			},
 		},
 		vars: {},
@@ -90,8 +89,11 @@ var api = require('./api'),
 			[/this\.backgroundScene=/, 'ssv.w(this),$&'],
 			[/((?:[a-zA-Z]+(\.|(?=\.skins)))+)\.skins(?!=)/g, 'ssv.p($1)'],
 		],
-		get players(){
-			return this.game ? this.game.players.list.map(this.add) : [];
+		get draw_box(){
+			return cheat.config.esp.status == 'box' || cheat.config.esp.status == 'box_chams' || cheat.config.esp.status == 'full';
+		},
+		get draw_chams(){
+			return cheat.config.esp.status == 'chams' || cheat.config.esp.status == 'box_chams' || cheat.config.esp.status == 'full';
 		},
 		skins: [...Array(5000)].map((e, i) => ({ ind: i, cnt: 1 })),
 		player_wrap: {
@@ -101,9 +103,10 @@ var api = require('./api'),
 			get x(){ return this.entity.x || 0 },
 			get y(){ return this.entity.y || 0 },
 			get z(){ return this.entity.z || 0 },
-			get can_see(){ return this.active ? this.entity.can_see : false },
+			get can_see(){ return this.entity.can_see },
 			get in_fov(){
-				if(cheat.config.aim.fov == 100)return this.in_sight;
+				if(!this.active)return false;
+				if(cheat.config.aim.fov == 110)return true;
 				
 				var fov_bak = cheat.world.camera.fov;
 				
@@ -119,10 +122,7 @@ var api = require('./api'),
 				
 				return ret;
 			},
-			get in_sight(){
-				return cheat.config.aim.sight ? this.frustum : true;
-			},
-			get target(){
+			get can_target(){
 				return this.active && this.enemy && this.can_see && this.in_fov;
 			},
 			get frustum(){
@@ -141,7 +141,6 @@ var api = require('./api'),
 				return '#' + hex.map(part_str).join('');
 			},
 			get jump_bob_y(){ return this.entity.jumpBobY },
-			get pos2d(){ return utils.pos2d(cheat, this) },
 			get clan(){ return this.entity.clan },
 			get alias(){ return this.entity.alias },
 			get weapon(){ return this.entity.weapon },
@@ -150,12 +149,11 @@ var api = require('./api'),
 			get is_you(){ return this.entity[cheat.vars.isYou] },
 			get aim_val(){ return this.entity[cheat.vars.aimVal] },
 			get y_vel(){ return this.entity[cheat.vars.yVel] },
-			get aim(){ return this.weapon.noAim || !this.aim_val || cheat.target && this.weapon.melee && this.distanceTo(cheat.target) <= 18 },
+			get aim(){ return this.weapon.noAim || !this.aim_val || cheat.target && cheat.target.active && this.weapon.melee && this.distanceTo(cheat.target) <= 18 },
 			get aim_press(){ return cheat.controls[cheat.vars.mouseDownR] || cheat.controls.keys[cheat.controls.binds.aim.val] },
 			get crouch(){ return this.entity[cheat.vars.crouchVal] },
-			// this.entity.lowerBody && this.entity.lowerBody.parent && this.entity.lowerBody.parent ? this.entity.lowerBody.parent : null
-			rect2d(){
-				var src_pos = this.pos2d,
+			rect(){
+				var src_pos = utils.pos2d(cheat, this),
 					src_pos_crouch = utils.pos2d(cheat, this, this.entity.height - this.crouch * 3),
 					width = ~~((src_pos.y - utils.pos2d(cheat, this, this.entity.height).y) * 0.7),
 					height = src_pos.y - src_pos_crouch.y,
@@ -175,92 +173,69 @@ var api = require('./api'),
 					height: height,
 				};
 			},
-			get draw_visual(){
-				return !cheat.config.esp.teammates || !this.teammate;
-			},
-			get draw_nametags(){
-				return this.draw_visual && cheat.config.esp.nametags;
-			},
-			get draw_box(){
-				return this.draw_visual && (cheat.config.esp.status == 'box' || cheat.config.esp.status == 'box_chams' || cheat.config.esp.status == 'full');
-			},
-			get draw_chams(){
-				return this.draw_visual && (cheat.config.esp.status == 'chams' || cheat.config.esp.status == 'box_chams' || cheat.config.esp.status == 'full');
-			},
 			get obj(){ return this.entity[cheat.vars.objInstances] },
 			get recoil_y(){ return this.entity[cheat.vars.recoilAnimY] },
 			get has_ammo(){ return this.weapon.melee || this.ammo },
-			get ammos(){ return this.entity[cheat.vars.ammos] },
-			get ammo(){ return this.ammos[this.weapon_index] },
-			get weapon_index(){ return this.entity[cheat.vars.weaponIndex] },
+			get ammo(){ return this.entity[cheat.vars.ammos][this.entity[cheat.vars.weaponIndex]] },
 			get height(){ return this.entity.height },
 			get health(){ return this.entity.health || 0 },
 			get max_health(){ return this.entity[cheat.vars.maxHealth] || 100 },
 			get active(){ return this.entity.active && this.entity.x != null && this.health > 0 && this.obj != null },
-			get teammate(){ return this.is_you || this.team && this.team == cheat.player.team },
+			get teammate(){ return this.is_you || cheat.player && this.team && this.team == cheat.player.team },
 			get enemy(){ return !this.teammate },
 			get team(){ return this.entity.team },
-			get did_shoot(){ return this.entity[cheat.vars.didShoot] },
 			get auto_weapon(){ return this.weapon.nAuto },
-			get shot(){ return this.entity[cheat.syms.shot] },
+			get shot(){ return this.weapon.nAuto ? this.entity[cheat.vars.didShoot] : this.entity[cheat.syms.shot] },
 		},
 		update_frustum(){
 			cheat.world.frustum.setFromProjectionMatrix(new cheat.three.Matrix4().multiplyMatrices(cheat.world.camera.projectionMatrix, cheat.world.camera.matrixWorldInverse));
 		},
 		process(){
-			if(cheat.game && cheat.controls && cheat.world && cheat.player)cheat.players.forEach(ent => {
-				ent.entity.can_see = ent.active && utils.obstructing(cheat, cheat.player, ent) == null ? true : false;
+			if(cheat.game && cheat.world){
+				cheat.controls = cheat.game.controls;
 				
-				if(ent.obj && !ent.obj[cheat.syms.hooked]){
-					ent.obj[cheat.syms.hooked] = true;
+				for(var ent of cheat.game.players.list){
+					let player = cheat.add(ent);
 					
-					var visible = true;
+					if(!player.active)continue;
 					
-					Object.defineProperty(ent.obj, 'visible', {
-						get: _ => ent.draw_chams || visible,
-						set: _ => visible = _,
-					});
-				}
-				
-				if(!ent[cheat.syms.hooked]){
-					ent[cheat.syms.hooked] = true;
+					if(player.is_you)cheat.player = player;
 					
-					var inview = ent[cheat.vars.inView];
+					if(cheat.player)player.entity.can_see = player.active && utils.obstructing(cheat, cheat.player, player) == null ? true : false;
 					
-					Object.defineProperties(ent.entity, {
-						[cheat.vars.inView]: {
-							get: _ => {
-								cheat.update_frustum();
-	
-								return cheat.config.esp.status == 'full' ? false : ent.draw_nametags || inview;
+					if(!player[cheat.syms.hooked]){
+						player[cheat.syms.hooked] = true;
+						
+						var inview = player[cheat.vars.inView];
+						
+						Object.defineProperties(player.entity, {
+							[cheat.vars.inView]: {
+								get: _ => {
+									cheat.update_frustum();
+		
+									return cheat.config.esp.status == 'full' ? false : cheat.config.esp.nametags || inview;
+								},
+								set: _ => inview = _,
 							},
-							set: _ => inview = _,
-						},
-					});
-				}
-			});
-			
-			if(cheat.player.active && cheat.player.entity[cheat.vars.procInputs] && !cheat.player.entity[cheat.syms.procInputs]){
-				cheat.player.entity[cheat.syms.procInputs] = cheat.player.entity[cheat.vars.procInputs];
-				
-				cheat.player.entity[cheat.vars.procInputs] = (data, ...args) => {
-					if(cheat.controls && cheat.player.weapon)input.exec(data);
+						});
+					}
 					
-					return cheat.player.entity[cheat.syms.procInputs](data, ...args);
-				};
-			}
+					if(cheat.player && cheat.player.entity[cheat.vars.procInputs] && !cheat.player.entity[cheat.syms.procInputs]){
+						cheat.player.entity[cheat.syms.procInputs] = cheat.player.entity[cheat.vars.procInputs];
+						
+						cheat.player.entity[cheat.vars.procInputs] = (data, ...args) => {
+							if(cheat.controls && cheat.player.weapon)input.exec(data);
+							
+							return cheat.player.entity[cheat.syms.procInputs](data, ...args);
+						};
+					}
+				}
+			};
 			
 			visual.exec();
 			
 			requestAnimationFrame(cheat.process);
 		},
-		get player(){
-			return this.players.find(player => player.is_you) || {};
-		},
-		get controls(){
-			return this.game ? this.game.controls : null;
-		},
-		target: {},
 		socket_id: 0,
 		input: require('./input.js'),
 		has_instruct: (str, inst) => (inst = document.querySelector('#instructionHolder'), inst && inst.textContent.trim().toLowerCase().includes(str)),
@@ -373,12 +348,14 @@ cheat.UI.ready.then(() => {
 				name: 'Smoothness',
 				type: 'slider',
 				walk: 'aim.smooth.value',
+				unit: 'U',
 				range: [ 0, 50, 2 ],
 			},{
 				name: 'Target FOV',
 				type: 'slider',
 				walk: 'aim.fov',
-				range: [ 10, 100, 10 ],
+				range: [ 10, 110, 10 ],
+				labels: { 110: 'Ignore FOV' },
 			},{
 				name: 'Hitchance',
 				type: 'slider',
@@ -416,10 +393,6 @@ cheat.UI.ready.then(() => {
 				type: 'boolean',
 				walk: 'aim.auto_reload',
 			},{
-				name: 'Sight check',
-				type: 'boolean',
-				walk: 'aim.sight',
-			},{
 				name: 'Wallbangs',
 				type: 'boolean',
 				walk: 'aim.wallbangs',
@@ -428,10 +401,6 @@ cheat.UI.ready.then(() => {
 			name: 'Esp',
 			type: 'section',
 			value: [{
-				name: 'Teammates',
-				type: 'boolean',
-				walk: 'esp.teammates',
-			},{
 				name: 'Walls',
 				type: 'boolean',
 				walk: 'esp.walls.status',
@@ -538,7 +507,7 @@ cheat.UI.ready.then(() => {
 				`<ul>`,
 					`<li>Using your mobile hotspot</li>`,
 					...constants.proxy_addons.filter(data => data[constants.supported_store]).map(data => `<li><a target='_blank' href=${JSON.stringify(data[constants.supported_store])}>${data.name}</a></li>`),
-					`<li>Use a <a href=${JSON.stringify(constants.addon_url('Proxy VPN'))}>Proxy/VPN</a></li>`,
+					`<li>Use a <a target="_blank" href=${JSON.stringify(constants.addon_url('Proxy VPN'))}>Proxy/VPN</a></li>`,
 				`</ul>`,
 			].join(''));
 			
@@ -556,10 +525,11 @@ cheat.UI.ready.then(() => {
 		// Ideally if greasemonkey can be used for requesting then it should as it avoids any cors headers that COULD be added to break this script
 		*/
 		
-		// Just dont fuck with consts and discord
 		api.init(cheat);
 		
-		page_load.then(() => new Function('WP_fetchMMToken', 'ssv', 'WebSocket', krunker)(api.token(), {
+		
+		// WP_fetchMMToken-- https://sys32.dev/api/v1/server/src/theatre.js
+		page_load.then(async () => new Function('WP_fetchMMToken', 'ssv', 'WebSocket', krunker)(api.token(), {
 			t(three_mod){ cheat.three = three_mod.exports },
 			g(game){ cheat.game = game },
 			w(world){ cheat.world = world },
@@ -615,4 +585,10 @@ cheat.UI.ready.then(() => {
 	});
 });
 
+document.addEventListener('pointerlockchange', () => {
+	cheat.focused = document.pointerLockElement != null;
+});
+
 require('./update.js');
+
+window.cheat = cheat;

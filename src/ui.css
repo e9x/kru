@@ -25,6 +25,8 @@ main {
 	font: 13px inconsolata, monospace;
 	padding: 2px 0px 2px 0px;
 	opacity: var(--opacity);
+	width: min-content;
+	height: min-content;
 }
 
 main a {
@@ -60,7 +62,6 @@ main.mobile {
 main.prompt {
 	width: 490px;
 	padding: 10px;
-	height: min-content;
 }
 
 main.prompt > .description {
@@ -363,11 +364,11 @@ section.hidden {
 	line-height: var(--control-height) !important;
 }
 
-.control.option {
+main.options .control {
 	padding: 0px 10px;
 }
 
-.control.option:hover {
+main.options .control:hover {
 	background: #FFF1;
 }
 

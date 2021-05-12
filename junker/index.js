@@ -2,7 +2,6 @@ var os = require('os'),
 	fs = require('fs'),
 	path = require('path'),
 	https = require('https'),
-	msgpack = require('msgpack-lite'),
 	webpack = require('webpack'),
 	compiler_out = () => path.join(compiler.options.output.path, compiler.options.output.filename),
 	run_cb = (err, stats) => {

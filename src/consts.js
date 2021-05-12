@@ -67,6 +67,8 @@ exports.proxy_addons = [
 ];
 
 exports.api_url = 'https://sys32.dev/api/';
+exports.hostname = 'krunker.io';
+exports.mm_url = 'https://matchmaker.krunker.io/';
 
 exports.firefox = navigator.userAgent.includes('Firefox');
 

@@ -2,9 +2,7 @@ var os = require('os'),
 	fs = require('fs'),
 	path = require('path'),
 	https = require('https'),
-	msgpack = require('msgpack-lite'),
 	webpack = require('webpack'),
-	compiler_out = () => path.join(compiler.options.output.path, compiler.options.output.filename),
 	run_cb = (err, stats) => {
 		var error = !!(err || stats.compilation.errors.length);
 		
@@ -13,7 +11,7 @@ var os = require('os'),
 		
 		if(error)return console.error('One or more errors occured during building, refer to above console output for more info');
 		
-		console.log('Build success, output at', compiler_out());
+		console.log('Build success, output at', path.join(compiler.options.output.path, compiler.options.output.filename));
 	},
 	compiler,
 	minimize = !process.argv.includes('-fast');
@@ -37,10 +35,10 @@ compiler = webpack({
 					namespace: spackage.homepage,
 					supportURL: spackage.bugs.url,
 					extracted: extracted.toGMTString(),
-					include: /^https?:\/\/(internal\.|comp\.)?krunker\.io\/*?(index.html)?(\?|$)/,
+					include: /^https?:\/\/(internal\.|comp\.)?(krunker\.io|browserfps\.com)\/*?(index.html)?(\?|$)/,
 					'run-at': 'document-start',
 					grant: [ 'GM_setValue', 'GM_getValue', 'GM_xmlhttpRequest' ],
-					connect: [ 'krunker.io', 'sys32.dev', 'githubusercontent.com' ],
+					connect: [ 'sys32.dev', 'githubusercontent.com' ],
 				},
 				meta = Object.entries(rmeta).flatMap(([ key, val ]) => Array.isArray(val) ? val.map(val => [ key, val ]) : [ [ key, val ] ]),
 				whitespace = meta.map(meta => meta[0]).sort((a, b) => b.toString().length - a.toString().length)[0].length + 8,

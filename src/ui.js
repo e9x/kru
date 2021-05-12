@@ -121,6 +121,9 @@ class Panel {
 		this.hide();
 		this.node.remove();
 	}
+	fix_center(){
+		Object.assign(this.node.style, { margin: 'auto', left: 0, right: 0, top: 0, bottom: 0 });
+	}
 };
 
 class PanelDraggable extends Panel {
@@ -402,7 +405,7 @@ class SliderControl extends Control {
 		super.update();
 		this.button.style.display = 'none';
 		this.background.style.width = ((this.value / this.data.range[1]) * 100) + '%';
-		this.slider.dataset.value = this.value;
+		this.slider.dataset.value = this.data.labels && this.data.labels[this.value] || this.value + (this.data.unit == null ? '%' : this.data.unit);
 		this.label.textContent = this.name + ':';
 	}
 }
@@ -758,7 +761,7 @@ exports.inputs = inputs;
 exports.alert = desc => {
 	var panel = new Panel({}, 'prompt');
 	
-	Object.assign(panel.node.style, { margin: 'auto', left: 0, right: 0, top: 0, bottom: 0 });
+	panel.fix_center();
 	
 	constants.add_ele('div', panel.node, { innerHTML: desc, className: 'description' });
 	
@@ -774,7 +777,7 @@ exports.alert = desc => {
 exports.prompt = desc => {
 	var panel = new Panel({}, 'prompt');
 	
-	Object.assign(panel.node.style, { margin: 'auto', left: 0, right: 0, top: 0, bottom: 0 });
+	panel.fix_center();
 	
 	constants.add_ele('div', panel.node, { textContent: desc, className: 'description' });
 	
@@ -794,4 +797,17 @@ exports.prompt = desc => {
 		
 		panel.remove();
 	}));
+};
+
+exports.options = (title, options) => {
+	var panel = new Panel({}, 'options'),
+		title = constants.add_ele('div', panel.node, { textContent: title, className: 'title' });
+	
+	panel.fix_center();
+	
+	panel.focus();
+	
+	return new Promise(resolve => {
+		options.forEach((option, index) => constants.add_ele('div', panel.node, { className: 'control', textContent: option[0] }).addEventListener('click', () => (panel.hide(), resolve(option[1]))));
+	});
 };

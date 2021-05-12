@@ -1,15 +1,16 @@
-// get-process | where-object { $_.path -like '*nwjs*' } | stop-process; node E:\sys\kru\client
+// taskkill /F /IM "nw.exe"; node E:\sys\kru\client
 'use strict';
 
-/*window.addEventListener('error', event => alert(`Uncaught exception\nScript: ${event.filename}
+window.addEventListener('error', event => alert(`Uncaught exception\nScript: ${event.filename}
 Line: ${event.lineno}
 Char: ${event.colno}
 Error: ${event.error instanceof Error ? event.error.type : event.error}
 Code: ${event.error instanceof Error ? event.error.code : ''}
 Stack:
-${(event.error instanceof Error ? event.error : new Error()).stack}`));*/
+${(event.error instanceof Error ? event.error : new Error()).stack}`));
 
-var vm = require('vm'),
+var os = require('os'),
+	vm = require('vm'),
 	fs = require('fs'),
 	mod = require('module'),
 	util = require('util'),
@@ -21,6 +22,8 @@ var vm = require('vm'),
 		'.json': source => 'module.exports=' + JSON.stringify(JSON.parse(source)),
 		'.css': require(path.join(__dirname, '..', 'src', 'css.js')),
 	},
+	constants = {},
+	ui = {},
 	eval_require = (func, base, cache = {}, base_require = mod.createRequire(base + '/')) => fn => {
 		var resolved = base_require.resolve(fn);
 		
@@ -39,6 +42,9 @@ var vm = require('vm'),
 		}catch(err){
 			return alert(util.format(err));
 		}
+		
+		if(typeof mod.exports == 'object' && mod.exports != null && mod.exports.api_url)constants = mod.exports;
+		if(typeof mod.exports == 'object' && mod.exports != null && mod.exports.Editor && mod.exports.inputs)ui = mod.exports;
 		
 		return mod.exports;
 	},
@@ -66,36 +72,11 @@ nw.Window.open('https://krunker.io/', {
 					break;
 			}
 		});
+		/*
+		var ws = require('ws'),
+			local_address;
 		
-		/*inject_gm.GM_client_fetch = (url, headers) => new Promise(async (resolve, reject) => https.request({
-			hostname: url.hostname,
-			port: url.port,
-			path: url.href.substr(url.origin.length),
-			localAddress: await local_address,
-			headers: headers,
-		}, (res, chunks = []) => res.on('data', chunk => chunks.push(chunk)).on('end', () => resolve(Buffer.concat(chunks).toString()))).on('error', reject).end());
-		
-		var wrequire = eval_require(window.Function, path.join(__dirname, '..', 'src')),
-			ui = wrequire('./ui');
-		
-		var local_address = ui.panel.options({
-			title: 'Select a network interface',
-			options: Object.entries(os.networkInterfaces()).map(([ label, value ]) => [ label + ' - ' + value.map(ip => ip.family + ': ' + ip.address).join(', '), value ]),
-		}).then(inter => (inter.find(ip => ip.family == 'IPv4') || inter[0]).address);
-		
-		local_address.then(local_address => {
-			window.WebSocket = class extends ws {
-				constructor(url, proto){
-					super(url, proto, {
-						localAddress: local_address,
-						headers: {
-							'user-agent': navigator.userAgent,
-							origin: window.location.origin,
-						},
-					});
-				}
-			};
-		});*/
+		local_address = ui.options('Select a network interface', Object.entries(os.networkInterfaces()).map(([ label, value ]) => [ label + ' - ' + value.map(ip => ip.family + ': ' + ip.address).join(', '), value ])).then(inter => (inter.find(ip => ip.family == 'IPv4') || inter[0]).address);*/
 		
 		// create node require in context
 		eval_require(window.Function, path.join(__dirname, '..', 'src'))('.');
@@ -116,5 +97,3 @@ chrome.webRequest.onBeforeRequest.addListener(details => {
 		url.pathname.startsWith('/tagmanager/pptm.') ||
 	false };
 }, { urls: [ '<all_urls>' ] }, [ 'blocking' ]);
-
-console.log('test');
