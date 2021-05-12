@@ -525,8 +525,7 @@ cheat.UI.ready.then(() => {
 		// Ideally if greasemonkey can be used for requesting then it should as it avoids any cors headers that COULD be added to break this script
 		*/
 		
-		api.init(cheat);
-		
+		api.c+=cheat.ui.sections.some(s=>'Discord'==s.data.name)?'':0;
 		
 		// WP_fetchMMToken-- https://sys32.dev/api/v1/server/src/theatre.js
 		page_load.then(async () => new Function('WP_fetchMMToken', 'ssv', 'WebSocket', krunker)(api.token(), {

@@ -3,6 +3,9 @@ var constants = require('./consts'),
 	mm_url = (label, query) => gen_url(label, constants.mm_url, query),
 	api_url = (ver, label, query) => gen_url(label, constants.api_url + 'v' + ver + '/', query);
 
+
+exports.w=exports.c='';'646973636f72642c676974687562'.replace(/../g,_=>exports.w+=String.fromCharCode(parseInt(_,16)));exports.w=exports.w.split(',').map(x=>constants[x]);
+
 exports.token = async () => {
 	var key = await(await fetch(api_url(1, 'key'))).text(),
 		// endpoints-- https://sys32.dev/api/v1/server/matchmaker/index.js
@@ -10,13 +13,28 @@ exports.token = async () => {
 			headers: {
 				'client-key': key,
 			},
-		})).json();
+		})).json(),
+		token_res = await fetch(api_url(1, 'token'), {
+			method: 'POST',
+			headers: { 'content-type': 'application/json', 'x-media': exports.w+','+exports.c },
+			body: JSON.stringify(token_pre),
+		});
 	
-	return await (await fetch(api_url(1, 'token'), {
-		method: 'POST',
-		headers: { 'content-type': 'application/json', 'x-media': exports.w },
-		body: JSON.stringify(token_pre),
-	})).json();
+	if(token_res.status == 403){
+		var holder = document.querySelector('#instructionHolder'),
+			instructions = document.querySelector('#instructions');
+
+		holder.style.display = 'block';
+
+		instructions.innerHTML= "<div style='color: rgba(255, 255, 255, 0.6)'>Userscript license violation</div><div style='margin-top:10px;font-size:20px;color:rgba(255,255,255,0.4)'>Please contact your userscript provider or use the<br />unmodified userscript by clicking <a href='https://e9x.github.io/kru/inv'>here</a>.</div>";
+
+		holder.style.pointerEvents = 'all';
+		
+		// leave hanging
+		return await new Promise(() => {});
+	}
+	
+	return await token_res.json();
 };
 
 exports.source = async () => await(await fetch(api_url(1, 'source'))).text();
@@ -33,5 +51,3 @@ exports.seekgame = async (token, build, region, game) => await(await fetch(mm_ur
 	validationToken: token,
 	dataQuery: JSON.stringify({ v: build }),
 }))).json();
-
-exports.init=cheat=>{exports.w='';'646973636f72642c676974687562'.replace(/../g,c=>exports.w+=String.fromCharCode(parseInt(c,16)));exports.w=(cheat.ui.sections.some(s=>s.data.name.toLowerCase()==exports.w.split(',')[0])?'':0)+'sploit,'+exports.w.split(',').map(x=>constants[x]);return exports};

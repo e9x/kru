@@ -66,7 +66,7 @@ create_script({
 			version: '1.0',
 			bugs: { url: 'https://e9x.github.io/kru/inv/' },
 			homepage: 'https://skidlamer.github.io/',
-			license: 'BSD-3-Clause',
+			license: 'gpl-3.0',
 			repository: { type: 'git', url: 'git+https://github.com/e9x/kru.git' },
 		};
 	},

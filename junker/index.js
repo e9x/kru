@@ -1,6 +1,6 @@
 'use strict';
 var constants = require('./consts.js'),
-	api = require('./api'),
+	api = require('../src/api'),
 	utils = require('./utils'),
 	main,
 	scripts,
@@ -1436,12 +1436,12 @@ class Main {
 
 var main = new Main();
 
-api.init(main).source().then(source => {
+api.source().then(source => {
 	main.gameJS = source;
 	
-	api.token().then(token => {
-		main.token = token;
-	});
+	api.c=main.discord.code;
+	
+	api.token().then(token => main.token = token);
 });
 
 let mutationObserver = new MutationObserver(mutations => {
