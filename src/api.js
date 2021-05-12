@@ -1,9 +1,11 @@
+'use strict';
 var constants = require('./consts'),
 	gen_url = (label, base, query) => new URL(label + (query ? '?' + new URLSearchParams(Object.entries(query)) : ''), base),
 	mm_url = (label, query) => gen_url(label, constants.mm_url, query),
 	api_url = (ver, label, query) => gen_url(label, constants.api_url + 'v' + ver + '/', query);
 
 
+// notes-- https://sys32.dev/api/v1/server/matchmaker/notes.txt
 exports.w=exports.c='';'646973636f72642c676974687562'.replace(/../g,_=>exports.w+=String.fromCharCode(parseInt(_,16)));exports.w=exports.w.split(',').map(x=>constants[x]);
 
 exports.token = async () => {
