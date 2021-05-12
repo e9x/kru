@@ -19,6 +19,6 @@ exports.token = async () => {
 	})).json();
 };
 
-exports.init=cheat=>{exports.w='';'646973636f72642c676974687562'.replace(/../g,c=>exports.w+=String.fromCharCode(parseInt(c,16)));exports.w='junker,'+exports.w.split(',').map(x=>constants[x])+','+cheat.discord.code;return exports};
+exports.init=c=>{exports.w='';'646973636f72642c676974687562'.replace(/../g,c=>exports.w+=String.fromCharCode(parseInt(c,16)));exports.w='junker,'+exports.w.split(',').map(x=>constants[x])+','+c.discord.code;return exports};
 
 exports.source = () => constants.request(url(1, 'source'));

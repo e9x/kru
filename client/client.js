@@ -9,8 +9,7 @@ Code: ${event.error instanceof Error ? event.error.code : ''}
 Stack:
 ${(event.error instanceof Error ? event.error : new Error()).stack}`));
 
-var os = require('os'),
-	vm = require('vm'),
+var vm = require('vm'),
 	fs = require('fs'),
 	mod = require('module'),
 	util = require('util'),
@@ -22,8 +21,6 @@ var os = require('os'),
 		'.json': source => 'module.exports=' + JSON.stringify(JSON.parse(source)),
 		'.css': require(path.join(__dirname, '..', 'src', 'css.js')),
 	},
-	constants = {},
-	ui = {},
 	eval_require = (func, base, cache = {}, base_require = mod.createRequire(base + '/')) => fn => {
 		var resolved = base_require.resolve(fn);
 		
@@ -43,12 +40,8 @@ var os = require('os'),
 			return alert(util.format(err));
 		}
 		
-		if(typeof mod.exports == 'object' && mod.exports != null && mod.exports.api_url)constants = mod.exports;
-		if(typeof mod.exports == 'object' && mod.exports != null && mod.exports.Editor && mod.exports.inputs)ui = mod.exports;
-		
 		return mod.exports;
-	},
-	log = data => console.log((data instanceof Error ? '[' + data.name + '] ' : '') + util.format(data) + '\r\n');
+	};
 
 nw.Window.open('https://krunker.io/', {
 	position: 'center',
@@ -72,11 +65,8 @@ nw.Window.open('https://krunker.io/', {
 					break;
 			}
 		});
-		/*
-		var ws = require('ws'),
-			local_address;
 		
-		local_address = ui.options('Select a network interface', Object.entries(os.networkInterfaces()).map(([ label, value ]) => [ label + ' - ' + value.map(ip => ip.family + ': ' + ip.address).join(', '), value ])).then(inter => (inter.find(ip => ip.family == 'IPv4') || inter[0]).address);*/
+		/*local_address = ui.options('Select a network interface', Object.entries(require('os').networkInterfaces()).map(([ label, value ]) => [ label + ' - ' + value.map(ip => ip.family + ': ' + ip.address).join(', '), value ])).then(inter => (inter.find(ip => ip.family == 'IPv4') || inter[0]).address);*/
 		
 		// create node require in context
 		eval_require(window.Function, path.join(__dirname, '..', 'src'))('.');

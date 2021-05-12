@@ -14,8 +14,6 @@
 	"homepage": "https://e9x.github.io/kru/",
 	"license": "BSD-3-Clause",
 	"dependencies": {
-		"electron": "^12.0.7",
-		"nw": "^0.52.2-sdk",
-		"ws": "^7.4.5"
+		"nw": "^0.52.2-sdk"
 	}
 }
