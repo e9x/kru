@@ -1,6 +1,5 @@
 'use strict';
-var constants = require('./consts.js'),
-	api = require('../src/api'),
+var api = require('../src/api'),
 	utils = require('./utils'),
 	main,
 	scripts,
