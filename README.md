@@ -47,3 +47,7 @@ node index.js -once
 # Userscript
 
 Install [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo) then install the [Userscript](https://raw.githubusercontent.com/e9x/kru/master/sploit.user.js)
+
+# Junker
+
+[Greasyfork](https://greasyfork.org/en/scripts/426394-junker)
