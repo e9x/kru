@@ -56,7 +56,7 @@ ${source}`));
 				for(var ind = 0; ind < stats.compilation.errors.length; ind++)error = true, console.error(stats.compilation.errors[ind]);
 				if(err)console.error(err);
 				
-				if(error)return console.error('Build of', script.output, 'failed');
+				if(error)return console.error('Build of', script.output, 'fail');
 				else console.log('Build of', script.output, 'success');
 			});
 		});

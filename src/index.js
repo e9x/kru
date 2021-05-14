@@ -19,7 +19,6 @@ var api = require('./api'),
 		UI: require('./ui'),
 		add: ent => Object.setPrototypeOf({ entity: typeof ent == 'object' && ent != null ? ent : {} }, cheat.player_wrap),
 		syms: {
-			shot: Symbol(),
 			procInputs: Symbol(),
 			hooked: Symbol(),
 			isAI: Symbol(),
@@ -83,7 +82,7 @@ var api = require('./api'),
 			objInstances: [/lowerBody\),\w+\|\|\w+\.(\w+)\./, 1],
 		},
 		patches: [
-			// get vars
+			[/(&&(\w+)\.\w+&&)(\2\.cnBSeen)(\){if\(\(\w+=\2\.objInstances\.pos)/, '$1ssv.n($3)$4'],
 			[/this\.moveObj=func/, 'ssv.g(this),$&'],
 			[/(\((\w+),\w+,\w+\){)([a-z ';\.\(\),]+ACESFilmic)/, '$1ssv.t($2);$3'],
 			[/this\.backgroundScene=/, 'ssv.w(this),$&'],
@@ -184,8 +183,8 @@ var api = require('./api'),
 			get teammate(){ return this.is_you || cheat.player && this.team && this.team == cheat.player.team },
 			get enemy(){ return !this.teammate },
 			get team(){ return this.entity.team },
-			get auto_weapon(){ return this.weapon.nAuto },
-			get shot(){ return this.weapon.nAuto ? this.entity[cheat.vars.didShoot] : this.entity[cheat.syms.shot] },
+			get auto_weapon(){ return !this.weapon.nAuto },
+			get shot(){ return this.weapon.nAuto && this.entity[cheat.vars.didShoot] },
 		},
 		update_frustum(){
 			cheat.world.frustum.setFromProjectionMatrix(new cheat.three.Matrix4().multiplyMatrices(cheat.world.camera.projectionMatrix, cheat.world.camera.matrixWorldInverse));
@@ -203,20 +202,19 @@ var api = require('./api'),
 					
 					if(cheat.player)player.entity.can_see = player.active && utils.obstructing(cheat, cheat.player, player) == null ? true : false;
 					
-					if(!player.entity[cheat.syms.hooked]){
+					/*if(!player.entity[cheat.syms.hooked]){
 						player.entity[cheat.syms.hooked] = true;
 						
 						var inview = player.entity[cheat.vars.inView];
 						
 						Object.defineProperty(player.entity, cheat.vars.inView, {
 							get: _ => {
-								if(!cheat.config.esp.nametags)cheat.update_frustum();
+								cheat.update_frustum();
 								
-								return cheat.config.esp.status == 'full' ? false : cheat.config.esp.nametags ? true : inview;
 							},
 							set: _ => inview = _,
 						});
-					}
+					}*/
 					
 					if(cheat.player && cheat.player.entity[cheat.vars.procInputs] && !cheat.player.entity[cheat.syms.procInputs]){
 						cheat.player.entity[cheat.syms.procInputs] = cheat.player.entity[cheat.vars.procInputs];
@@ -530,6 +528,7 @@ cheat.UI.ready.then(() => {
 			t(three_mod){ cheat.three = three_mod.exports },
 			g(game){ cheat.game = game },
 			w(world){ cheat.world = world },
+			n: inview => cheat.config.esp.status == 'full' ? false : (cheat.config.esp.nametags || inview),
 			p: ent => cheat.config.game.skins && typeof ent == 'object' && ent != null && ent.stats ? cheat.skins : ent.skins,
 		}, class extends WebSocket {
 			constructor(url, proto){

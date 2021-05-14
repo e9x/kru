@@ -96,7 +96,7 @@ exports.main = (cheat, add) => {
 					y: utils.normal_radian(round(y_dire % utils.pi2, 3)) || 0,
 				};
 			
-			if(cheat.config.aim.status == 'correction' && data[keys.shoot] && !cheat.player.shot)aim_input(rot, data);
+			if(cheat.config.aim.status == 'correction' && data[keys.shoot] && (cheat.player.auto_weapon ? true : !cheat.player.entity[cheat.vars.didShoot]))aim_input(rot, data);
 			if(cheat.config.aim.status == 'auto'){
 				data[keys.scope] = 1;
 				
@@ -117,11 +117,6 @@ exports.main = (cheat, add) => {
 				
 				if(!cheat.player.shot && (Math.random() * 100) > cheat.config.aim.hitchance)data[keys.ydir] += 75;
 			}
-		}
-		
-		if(data[keys.shoot] && !cheat.player.entity[cheat.syms.shot]){
-			cheat.player.entity[cheat.syms.shot] = true;
-			setTimeout(() => cheat.player.entity[cheat.syms.shot] = false, cheat.player.weapon.rate + 1);
 		}
 	}
 };
