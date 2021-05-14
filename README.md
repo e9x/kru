@@ -30,7 +30,7 @@ Obfuscator.io was used temporarily as a replacement of randomizing variables (fo
 
 # Building
 
-To build the userscript, you will need [NodeJS](https://nodejs.org/en/download/)
+To build the userscripts, you will need [NodeJS](https://nodejs.org/en/download/)
 
 If you are on windows, download and unzip the repository and run `build.bat`
 

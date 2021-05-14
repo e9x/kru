@@ -203,20 +203,18 @@ var api = require('./api'),
 					
 					if(cheat.player)player.entity.can_see = player.active && utils.obstructing(cheat, cheat.player, player) == null ? true : false;
 					
-					if(!player[cheat.syms.hooked]){
-						player[cheat.syms.hooked] = true;
+					if(!player.entity[cheat.syms.hooked]){
+						player.entity[cheat.syms.hooked] = true;
 						
-						var inview = player[cheat.vars.inView];
+						var inview = player.entity[cheat.vars.inView];
 						
-						Object.defineProperties(player.entity, {
-							[cheat.vars.inView]: {
-								get: _ => {
-									cheat.update_frustum();
-		
-									return cheat.config.esp.status == 'full' ? false : cheat.config.esp.nametags || inview;
-								},
-								set: _ => inview = _,
+						Object.defineProperty(player.entity, cheat.vars.inView, {
+							get: _ => {
+								if(!cheat.config.esp.nametags)cheat.update_frustum();
+								
+								return cheat.config.esp.status == 'full' ? false : cheat.config.esp.nametags ? true : inview;
 							},
+							set: _ => inview = _,
 						});
 					}
 					
@@ -590,4 +588,4 @@ document.addEventListener('pointerlockchange', () => {
 
 require('./update.js');
 
-window.cheat = cheat;
+// window.cheat = cheat;
