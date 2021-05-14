@@ -467,7 +467,7 @@ cheat.UI.ready.then(() => {
 		}],
 	});
 
-	cheat.ui.update(true).then(async () => cheat.css_editor = new cheat.UI.Editor({
+	cheat.ui.update(true).then(() => cheat.css_editor = new cheat.UI.Editor({
 		tabs: cheat.config.game.css,
 		store: constants.store,
 		save(tabs){
