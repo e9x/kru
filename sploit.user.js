@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name           Krunker Sploit
+// @name           Sploit
 // @author         Divide
 // @source         https://github.com/e9x/kru
 // @description    Powerful Krunker.IO mod
@@ -7,7 +7,7 @@
 // @license        gpl-3.0
 // @namespace      https://e9x.github.io/
 // @supportURL     https://e9x.github.io/kru/inv/
-// @extracted      Sat, 15 May 2021 05:28:56 GMT
+// @extracted      Sat, 15 May 2021 05:30:32 GMT
 // @include        /^https?:\/\/(internal\.|comp\.)?(krunker\.io|browserfps\.com)\/*?(index.html)?(\?|$)/
 // @run-at         document-start
 // @connect        sys32.dev
@@ -27,7 +27,7 @@
   \***********************/
 /***/ ((module) => {
 
-module.exports={"name":"Krunker Sploit","author":"Divide","version":"1.6.11","main":"index.js","description":"Powerful Krunker.IO mod","license":"gpl-3.0","repository":{"type":"git","url":"git+https://github.com/e9x/kru.git"},"scripts":{"build":"node ./index.js"},"bugs":{"url":"https://e9x.github.io/kru/inv/"},"homepage":"https://e9x.github.io/","dependencies":{"codemirror":"^5.61.0","css-tree":"^1.1.3","msgpack-lite":"^0.1.26","terser":"^5.6.1","webpack":"^5.31.0"}}
+module.exports={"name":"Sploit","author":"Divide","version":"1.6.11","main":"index.js","description":"Powerful Krunker.IO mod","license":"gpl-3.0","repository":{"type":"git","url":"git+https://github.com/e9x/kru.git"},"scripts":{"build":"node ./index.js"},"bugs":{"url":"https://e9x.github.io/kru/inv/"},"homepage":"https://e9x.github.io/","dependencies":{"codemirror":"^5.61.0","css-tree":"^1.1.3","msgpack-lite":"^0.1.26","terser":"^5.6.1","webpack":"^5.31.0"}}
 
 /***/ }),
 
@@ -13730,7 +13730,7 @@ exports.script = 'https://raw.githubusercontent.com/e9x/kru/master/sploit.user.j
 exports.github = 'https://github.com/e9x/kru';
 exports.discord = 'https://e9x.github.io/kru/invite';
 
-exports.extracted = typeof 1621056536723 != 'number' ? Date.now() : 1621056536723;
+exports.extracted = typeof 1621056632362 != 'number' ? Date.now() : 1621056632362;
 
 exports.store = {
 	get: async key => gm.get_value ? await gm.get_value(key) : localStorage.getItem('ss' + key),

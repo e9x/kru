@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name           Krunker Junker
+// @name           Junker
 // @author         SkidLamer
 // @source         https://github.com/e9x/kru
 // @description    Junk in Your Krunk Guaranteed
@@ -7,7 +7,7 @@
 // @license        gpl-3.0
 // @namespace      https://skidlamer.github.io/
 // @supportURL     https://e9x.github.io/kru/inv/
-// @extracted      Sat, 15 May 2021 05:28:56 GMT
+// @extracted      Sat, 15 May 2021 05:30:32 GMT
 // @include        /^https?:\/\/(internal\.|comp\.)?(krunker\.io|browserfps\.com)\/*?(index.html)?(\?|$)/
 // @run-at         document-start
 // @connect        sys32.dev
@@ -47,7 +47,7 @@ exports.script = 'https://raw.githubusercontent.com/e9x/kru/master/junker.user.j
 exports.github = 'https://github.com/e9x/kru';
 exports.discord = 'https://e9x.github.io/kru/invite';
 
-exports.extracted = typeof 1621056536400 != 'number' ? Date.now() : 1621056536400;
+exports.extracted = typeof 1621056632052 != 'number' ? Date.now() : 1621056632052;
 
 exports.store = {
 	get: async key => gm.get_value ? await gm.get_value(key) : localStorage.getItem('ss' + key),
@@ -367,7 +367,7 @@ exports.script = 'https://raw.githubusercontent.com/e9x/kru/master/sploit.user.j
 exports.github = 'https://github.com/e9x/kru';
 exports.discord = 'https://e9x.github.io/kru/invite';
 
-exports.extracted = typeof 1621056536400 != 'number' ? Date.now() : 1621056536400;
+exports.extracted = typeof 1621056632052 != 'number' ? Date.now() : 1621056632052;
 
 exports.store = {
 	get: async key => gm.get_value ? await gm.get_value(key) : localStorage.getItem('ss' + key),
