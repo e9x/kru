@@ -230,6 +230,20 @@ class PanelDraggable extends Panel {
 	}
 }
 
+class TextElement {
+	constructor(data, section, ui){
+		this.data = data;
+		this.ui = ui;
+		this.container = constants.add_ele('div', section.node, { className: 'control' });
+		this.node = constants.add_ele('div', this.container, { className: 'text' });
+	}
+	update(){
+		// toodo: add bold, italics, and size properties
+		// set back to textContent when no longer adding links or use markdown stuff
+		this.node.innerHTML = this.data.name;
+	}
+}
+
 class Control {
 	constructor(data, section, ui){
 		var self = this;
@@ -458,6 +472,7 @@ class Config extends PanelDraggable {
 					case'function': construct = FunctionControl; break;
 					case'textbox': construct = TextBoxControl; break;
 					case'slider': construct = SliderControl; break;
+					case'text': construct = TextElement; break;
 					default: throw new TypeError('Unknown type: ' + data.type); break;
 				}
 

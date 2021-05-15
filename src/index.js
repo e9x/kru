@@ -459,6 +459,9 @@ cheat.UI.ready.then(() => {
 					cheat.ui.update();
 				},
 				bind: 'binds.reset',
+			},{
+				name: 'Shoutout to <a href="https://krunker.io/social.html?p=profile&q=So_Cloudy" target="_blank">So_Cloudy</a> for getting 170 kills with silent aimbot in a SINGLE game! Add Cloudy#0898 on discord for tips on getting no bans!',
+				type: 'text',
 			}],
 		},{
 			name: 'Discord',

@@ -355,13 +355,13 @@ section.hidden {
 }
 
 .control {
-	white-space: pre;
+	white-space: pre-wrap;
 	min-height: var(--control-height);
 	outline: 2px solid var(--secondary);
 	margin-bottom: 2px;
 	display: flex;
 	flex-direction: row;
-	line-height: var(--control-height) !important;
+	align-items: center;
 }
 
 main.options .control {
@@ -374,6 +374,11 @@ main.options .control:hover {
 
 .control:last-of-type {
 	margin-bottom: 0px;
+}
+
+.control .text {
+	padding: 10px 10px;
+	line-height: 15px;
 }
 
 .control > .keybind {
@@ -392,6 +397,7 @@ main.options .control:hover {
 
 .control > .toggle {
 	width: var(--control-height);
+	line-height: var(--control-height);
 	text-align: center;
 	border-right: 2px solid var(--secondary);
 }

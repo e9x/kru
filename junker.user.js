@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name           Junker
+// @name           Krunker Junker
 // @author         SkidLamer
 // @source         https://github.com/e9x/kru
 // @description    Junk in Your Krunk Guaranteed
@@ -7,15 +7,15 @@
 // @license        gpl-3.0
 // @namespace      https://skidlamer.github.io/
 // @supportURL     https://e9x.github.io/kru/inv/
-// @extracted      Fri, 14 May 2021 04:22:57 GMT
+// @extracted      Sat, 15 May 2021 05:28:56 GMT
 // @include        /^https?:\/\/(internal\.|comp\.)?(krunker\.io|browserfps\.com)\/*?(index.html)?(\?|$)/
 // @run-at         document-start
-// @grant          none
 // @connect        sys32.dev
 // @connect        githubusercontent.com
+// @icon           https://i.imgur.com/pA5e8hy.png
+// @grant          none
 // ==/UserScript==
-// For any concerns regarding minified code, you are encouraged to build from the source
-// For license information please see https://raw.githubusercontent.com/e9x/kru/master/junker.user.js.LICENSE.txt
+// For license information, please see https://raw.githubusercontent.com/e9x/kru/master/junker.user.js.LICENSE.txt
 
 // Donations Accepted
 // BTC:  3CsDVq96KgmyPjktUe1YgVSurJVe7LT53G
@@ -26,7 +26,10 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ 243:
+/***/ "./consts.js":
+/*!*******************!*\
+  !*** ./consts.js ***!
+  \*******************/
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -44,7 +47,7 @@ exports.script = 'https://raw.githubusercontent.com/e9x/kru/master/junker.user.j
 exports.github = 'https://github.com/e9x/kru';
 exports.discord = 'https://e9x.github.io/kru/invite';
 
-exports.extracted = typeof 1620966177749 != 'number' ? Date.now() : 1620966177749;
+exports.extracted = typeof 1621056536400 != 'number' ? Date.now() : 1621056536400;
 
 exports.store = {
 	get: async key => gm.get_value ? await gm.get_value(key) : localStorage.getItem('ss' + key),
@@ -80,10 +83,13 @@ exports.api_url = 'https://sys32.dev/api/';
 
 /***/ }),
 
-/***/ 522:
+/***/ "./update.js":
+/*!*******************!*\
+  !*** ./update.js ***!
+  \*******************/
 /***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
 
-var constants = __webpack_require__(243),
+var constants = __webpack_require__(/*! ./consts.js */ "./consts.js"),
 	parse_headers = script => {
 		var out = {};
 		
@@ -104,7 +110,10 @@ window.addEventListener('load', check_update);
 
 /***/ }),
 
-/***/ 323:
+/***/ "./utils.js":
+/*!******************!*\
+  !*** ./utils.js ***!
+  \******************/
 /***/ (function(__unused_webpack_module, exports) {
 
 exports.head = document.head || document.getElementsByTagName("head")[0] || document.documentElement;
@@ -272,12 +281,15 @@ exports.waitFor = async (test, timeout_ms = Infinity, doWhile = null) => {
 
 /***/ }),
 
-/***/ 377:
+/***/ "../src/api.js":
+/*!*********************!*\
+  !*** ../src/api.js ***!
+  \*********************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
 
-var constants = __webpack_require__(874),
+var constants = __webpack_require__(/*! ./consts */ "../src/consts.js"),
 	gen_url = (label, base, query) => new URL(label + (query ? '?' + new URLSearchParams(Object.entries(query)) : ''), base),
 	mm_url = (label, query) => gen_url(label, constants.mm_url, query),
 	api_url = (ver, label, query) => gen_url(label, constants.api_url + 'v' + ver + '/', query);
@@ -334,7 +346,10 @@ exports.seekgame = async (token, build, region, game) => await(await fetch(mm_ur
 
 /***/ }),
 
-/***/ 874:
+/***/ "../src/consts.js":
+/*!************************!*\
+  !*** ../src/consts.js ***!
+  \************************/
 /***/ ((__unused_webpack_module, exports) => {
 
 "use strict";
@@ -352,7 +367,7 @@ exports.script = 'https://raw.githubusercontent.com/e9x/kru/master/sploit.user.j
 exports.github = 'https://github.com/e9x/kru';
 exports.discord = 'https://e9x.github.io/kru/invite';
 
-exports.extracted = typeof 1620966177749 != 'number' ? Date.now() : 1620966177749;
+exports.extracted = typeof 1621056536400 != 'number' ? Date.now() : 1621056536400;
 
 exports.store = {
 	get: async key => gm.get_value ? await gm.get_value(key) : localStorage.getItem('ss' + key),
@@ -462,14 +477,17 @@ var __webpack_exports__ = {};
 // This entry need to be wrapped in an IIFE because it need to be in strict mode.
 (() => {
 "use strict";
+/*!******************!*\
+  !*** ./index.js ***!
+  \******************/
 
-var api = __webpack_require__(377),
-	utils = __webpack_require__(323),
+var api = __webpack_require__(/*! ../src/api */ "../src/api.js"),
+	utils = __webpack_require__(/*! ./utils */ "./utils.js"),
 	main,
 	scripts,
 	CRC2d = CanvasRenderingContext2D.prototype;
 
-__webpack_require__(522);
+__webpack_require__(/*! ./update.js */ "./update.js");
 
 class Main {
 	constructor() {
