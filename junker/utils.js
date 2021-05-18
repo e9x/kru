@@ -136,8 +136,13 @@ exports.createButton = (name, iconURL, fn, visible) => {
 
 exports.request = async (url, type, opt = {}) => {
 	const res = await fetch(url, opt);
-	if (res.ok) return res[type]();
-	return this.nin.request(url, type, opt);
+	
+	if(res.ok)return await res[type]();
+	
+	console.error('Could not fetch', url);
+	
+	return '';
+	// return this.nin.request(url, type, opt);
 };
 
 exports.waitFor = async (test, timeout_ms = Infinity, doWhile = null) => {

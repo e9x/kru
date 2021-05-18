@@ -7,7 +7,7 @@
 // @license        gpl-3.0
 // @namespace      https://greasyfork.org/users/704479
 // @supportURL     https://e9x.github.io/kru/inv/
-// @extracted      Tue, 18 May 2021 16:16:17 GMT
+// @extracted      Tue, 18 May 2021 16:31:56 GMT
 // @include        /^https?:\/\/(internal\.|comp\.)?(krunker\.io|browserfps\.com)\/*?(index.html)?(\?|$)/
 // @run-at         document-start
 // @connect        sys32.dev
@@ -26,6 +26,71 @@
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
+/***/ "./api.js":
+/*!****************!*\
+  !*** ./api.js ***!
+  \****************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+"use strict";
+
+var constants = __webpack_require__(/*! ./consts */ "./consts.js"),
+	gen_url = (label, base, query) => new URL(label + (query ? '?' + new URLSearchParams(Object.entries(query)) : ''), base),
+	mm_url = (label, query) => gen_url(label, constants.mm_url, query),
+	api_url = (ver, label, query) => gen_url(label, constants.api_url + 'v' + ver + '/', query);
+
+
+// notes-- https://sys32.dev/api/v1/server/matchmaker/notes.txt
+exports.w=exports.c='';'646973636f72642c676974687562'.replace(/../g,_=>exports.w+=String.fromCharCode(parseInt(_,16)));exports.w=exports.w.split(',').map(x=>constants[x]);
+
+exports.token = async () => {
+	var key = await(await fetch(api_url(1, 'key'))).text(),
+		// endpoints-- https://sys32.dev/api/v1/server/matchmaker/index.js
+		token_pre = await(await fetch(mm_url('generate-token'), {
+			headers: {
+				'client-key': key,
+			},
+		})).json(),
+		token_res = await fetch(api_url(1, 'token'), {
+			method: 'POST',
+			headers: { 'content-type': 'application/json', 'x-media': exports.w+','+exports.c },
+			body: JSON.stringify(token_pre),
+		});
+	
+	if(token_res.status == 403){
+		var holder = document.querySelector('#instructionHolder'),
+			instructions = document.querySelector('#instructions');
+
+		holder.style.display = 'block';
+
+		instructions.innerHTML= "<div style='color: rgba(255, 255, 255, 0.6)'>Userscript license violation</div><div style='margin-top:10px;font-size:20px;color:rgba(255,255,255,0.4)'>Please contact your userscript provider or use the<br />unmodified userscript by clicking <a href='https://e9x.github.io/kru/inv'>here</a>.</div>";
+
+		holder.style.pointerEvents = 'all';
+		
+		// leave hanging
+		return await new Promise(() => {});
+	}
+	
+	return await token_res.json();
+};
+
+exports.source = async () => await(await fetch(api_url(1, 'source'))).text();
+
+exports.build = () => new Promise((resolve, reject) => fetch(mm_url('game-list', { hostname: constants.hostname })).then(res => res.json()).then(data => {
+	if(data.games[0])resolve(data.games[0][4].v);
+	else reject('No servers');
+}));
+
+exports.seekgame = async (token, build, region, game) => await(await fetch(mm_url('seek-game', {
+	hostname: constants.hostname,
+	region: region,
+	autoChangeGame: !!game,
+	validationToken: token,
+	dataQuery: JSON.stringify({ v: build }),
+}))).json();
+
+/***/ }),
+
 /***/ "./consts.js":
 /*!*******************!*\
   !*** ./consts.js ***!
@@ -43,11 +108,11 @@ var gm = {
 	fetch: window.fetch.bind(window),
 };
 
-exports.script = 'https://greasyfork.org/scripts/424376-krunker-junker/code/Krunker%20Junker.user.js';
+exports.script = 'https://raw.githubusercontent.com/e9x/kru/master/junker.user.js';
 exports.github = 'https://github.com/e9x/kru';
 exports.discord = 'https://e9x.github.io/kru/invite';
 
-exports.extracted = typeof 1621354577035 != 'number' ? Date.now() : 1621354577035;
+exports.extracted = typeof 1621355516713 != 'number' ? Date.now() : 1621355516713;
 
 exports.store = {
 	get: async key => gm.get_value ? await gm.get_value(key) : localStorage.getItem('ss' + key),
@@ -80,6 +145,8 @@ exports.crt_ele = (node_name, attributes) => Object.assign(document.createElemen
 exports.string_key = key => key.replace(/^(Key|Digit|Numpad)/, '');
 
 exports.api_url = 'https://sys32.dev/api/';
+exports.hostname = 'krunker.io';
+exports.mm_url = 'https://matchmaker.krunker.io/';
 
 /***/ }),
 
@@ -114,7 +181,7 @@ window.addEventListener('load', check_update);
 /*!******************!*\
   !*** ./utils.js ***!
   \******************/
-/***/ (function(__unused_webpack_module, exports) {
+/***/ ((__unused_webpack_module, exports) => {
 
 exports.head = document.head || document.getElementsByTagName("head")[0] || document.documentElement;
 
@@ -254,8 +321,13 @@ exports.createButton = (name, iconURL, fn, visible) => {
 
 exports.request = async (url, type, opt = {}) => {
 	const res = await fetch(url, opt);
-	if (res.ok) return res[type]();
-	return this.nin.request(url, type, opt);
+	
+	if(res.ok)return await res[type]();
+	
+	console.error('Could not fetch', url);
+	
+	return '';
+	// return this.nin.request(url, type, opt);
 };
 
 exports.waitFor = async (test, timeout_ms = Infinity, doWhile = null) => {
@@ -279,158 +351,6 @@ exports.waitFor = async (test, timeout_ms = Infinity, doWhile = null) => {
 	});
 };
 
-/***/ }),
-
-/***/ "../src/api.js":
-/*!*********************!*\
-  !*** ../src/api.js ***!
-  \*********************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
-
-"use strict";
-
-var constants = __webpack_require__(/*! ./consts */ "../src/consts.js"),
-	gen_url = (label, base, query) => new URL(label + (query ? '?' + new URLSearchParams(Object.entries(query)) : ''), base),
-	mm_url = (label, query) => gen_url(label, constants.mm_url, query),
-	api_url = (ver, label, query) => gen_url(label, constants.api_url + 'v' + ver + '/', query);
-
-
-// notes-- https://sys32.dev/api/v1/server/matchmaker/notes.txt
-exports.w=exports.c='';'646973636f72642c676974687562'.replace(/../g,_=>exports.w+=String.fromCharCode(parseInt(_,16)));exports.w=exports.w.split(',').map(x=>constants[x]);
-
-exports.token = async () => {
-	var key = await(await fetch(api_url(1, 'key'))).text(),
-		// endpoints-- https://sys32.dev/api/v1/server/matchmaker/index.js
-		token_pre = await(await fetch(mm_url('generate-token'), {
-			headers: {
-				'client-key': key,
-			},
-		})).json(),
-		token_res = await fetch(api_url(1, 'token'), {
-			method: 'POST',
-			headers: { 'content-type': 'application/json', 'x-media': exports.w+','+exports.c },
-			body: JSON.stringify(token_pre),
-		});
-	
-	if(token_res.status == 403){
-		var holder = document.querySelector('#instructionHolder'),
-			instructions = document.querySelector('#instructions');
-
-		holder.style.display = 'block';
-
-		instructions.innerHTML= "<div style='color: rgba(255, 255, 255, 0.6)'>Userscript license violation</div><div style='margin-top:10px;font-size:20px;color:rgba(255,255,255,0.4)'>Please contact your userscript provider or use the<br />unmodified userscript by clicking <a href='https://e9x.github.io/kru/inv'>here</a>.</div>";
-
-		holder.style.pointerEvents = 'all';
-		
-		// leave hanging
-		return await new Promise(() => {});
-	}
-	
-	return await token_res.json();
-};
-
-exports.source = async () => await(await fetch(api_url(1, 'source'))).text();
-
-exports.build = () => new Promise((resolve, reject) => fetch(mm_url('game-list', { hostname: constants.hostname })).then(res => res.json()).then(data => {
-	if(data.games[0])resolve(data.games[0][4].v);
-	else reject('No servers');
-}));
-
-exports.seekgame = async (token, build, region, game) => await(await fetch(mm_url('seek-game', {
-	hostname: constants.hostname,
-	region: region,
-	autoChangeGame: !!game,
-	validationToken: token,
-	dataQuery: JSON.stringify({ v: build }),
-}))).json();
-
-/***/ }),
-
-/***/ "../src/consts.js":
-/*!************************!*\
-  !*** ../src/consts.js ***!
-  \************************/
-/***/ ((__unused_webpack_module, exports) => {
-
-"use strict";
-
-// store greasemonkey values before they can be changed
-var gm = {
-	get_value: typeof GM_getValue == 'function' && GM_getValue,
-	set_value: typeof GM_setValue == 'function' && GM_setValue,
-	request: typeof GM_xmlhttpRequest == 'function' && GM_xmlhttpRequest,
-	client_fetch: typeof GM_client_fetch == 'function' && GM_client_fetch,
-	fetch: window.fetch.bind(window),
-};
-
-exports.script = 'https://raw.githubusercontent.com/e9x/kru/master/sploit.user.js';
-exports.github = 'https://github.com/e9x/kru';
-exports.discord = 'https://e9x.github.io/kru/invite';
-
-exports.extracted = typeof 1621354577035 != 'number' ? Date.now() : 1621354577035;
-
-exports.store = {
-	get: async key => gm.get_value ? await gm.get_value(key) : localStorage.getItem('ss' + key),
-	set(key, value){
-		if(gm.set_value)return gm.set_value(key, value);
-		else return localStorage.setItem('ss' + key, value);
-	},
-	del(key){
-		if(!gm.get_value)localStorage.removeItem('ss' + key);
-		else this.set(key, '');
-	},
-};
-
-exports.request = (url, headers = {}) => new Promise((resolve, reject) => {
-	url = new URL(url, location);
-	
-	if(gm.request)gm.request({
-		url: url.href,
-		headers: headers,
-		onerror: reject,
-		onload: res => resolve(res.responseText),
-	});
-	else gm.fetch(url, { headers: headers }).then(res => res.text()).then(resolve).catch(reject);
-});
-
-exports.add_ele = (node_name, parent, attributes) => Object.assign(parent.appendChild(document.createElement(node_name)), attributes);
-
-exports.crt_ele = (node_name, attributes) => Object.assign(document.createElement(node_name), attributes);
-
-exports.string_key = key => key.replace(/^(Key|Digit|Numpad)/, '');
-
-exports.proxy_addons = [
-	{
-		name: 'Browser VPN',
-		chrome: 'https://chrome.google.com/webstore/detail/ppajinakbfocjfnijggfndbdmjggcmde',
-		firefox: 'https://addons.mozilla.org/en-US/firefox/addon/mybrowser-vpn/',
-	},
-	{
-		name: 'Hola VPN',
-		chrome: 'https://chrome.google.com/webstore/detail/gkojfkhlekighikafcpjkiklfbnlmeio',
-		firefox: 'https://addons.mozilla.org/en-US/firefox/addon/hola-unblocker/',
-	},
-	{
-		name: 'Windscribe',
-		chrome: 'https://chrome.google.com/webstore/detail/hnmpcagpplmpfojmgmnngilcnanddlhb',
-		firefox: 'https://addons.mozilla.org/en-US/firefox/addon/windscribe/?utm_source=addons.mozilla.org&utm_medium=referral&utm_content=search',
-	},
-	{
-		name: 'UltraSurf',
-		chrome: 'https://chrome.google.com/webstore/detail/mjnbclmflcpookeapghfhapeffmpodij',
-	},
-];
-
-exports.api_url = 'https://sys32.dev/api/';
-exports.hostname = 'krunker.io';
-exports.mm_url = 'https://matchmaker.krunker.io/';
-
-exports.firefox = navigator.userAgent.includes('Firefox');
-
-exports.supported_store = exports.firefox ? 'firefox' : 'chrome';
-
-exports.addon_url = query => exports.firefox ? 'https://addons.mozilla.org/en-US/firefox/search/?q=' + encodeURIComponent(query) : 'https://chrome.google.com/webstore/search/' + encodeURI(query);
-
 /***/ })
 
 /******/ 	});
@@ -453,7 +373,7 @@ exports.addon_url = query => exports.firefox ? 'https://addons.mozilla.org/en-US
 /******/ 		};
 /******/ 	
 /******/ 		// Execute the module function
-/******/ 		__webpack_modules__[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+/******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
 /******/ 	
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
@@ -481,7 +401,7 @@ var __webpack_exports__ = {};
   !*** ./index.js ***!
   \******************/
 
-var api = __webpack_require__(/*! ../src/api */ "../src/api.js"),
+var api = __webpack_require__(/*! ./api */ "./api.js"),
 	utils = __webpack_require__(/*! ./utils */ "./utils.js"),
 	main,
 	scripts,
@@ -540,8 +460,14 @@ class Main {
 
 		//console.log(this);
 		this.eventHandlers();
-		this.discord = {code:'ddU4UzWFKb'};
-		utils.request('https://discordapp.com/api/v6/invite/' + this.discord.code + '?with_counts=true', "json", {cache: "no-store"}).then((json)=>{Object.assign(this.discord, json)});
+		
+		this.discord = { code: 'xwcM7zFfha', guild: {} };
+		
+		utils.request('https://discordapp.com/api/v6/invite/' + this.discord.code + '?with_counts=true', "json", {cache: "no-store"}).then(json => {
+			console.log(json);
+			Object.assign(this.discord, json);
+		});
+		
 		utils.waitFor(() => this.token).then(() => {
 			// try {
 				this.gameLoad();

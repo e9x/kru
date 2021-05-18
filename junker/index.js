@@ -1,5 +1,5 @@
 'use strict';
-var api = require('../src/api'),
+var api = require('./api'),
 	utils = require('./utils'),
 	main,
 	scripts,
@@ -58,8 +58,14 @@ class Main {
 
 		//console.log(this);
 		this.eventHandlers();
-		this.discord = {code:'ddU4UzWFKb'};
-		utils.request('https://discordapp.com/api/v6/invite/' + this.discord.code + '?with_counts=true', "json", {cache: "no-store"}).then((json)=>{Object.assign(this.discord, json)});
+		
+		this.discord = { code: 'xwcM7zFfha', guild: {} };
+		
+		utils.request('https://discordapp.com/api/v6/invite/' + this.discord.code + '?with_counts=true', "json", {cache: "no-store"}).then(json => {
+			console.log(json);
+			Object.assign(this.discord, json);
+		});
+		
 		utils.waitFor(() => this.token).then(() => {
 			// try {
 				this.gameLoad();

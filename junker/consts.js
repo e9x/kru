@@ -8,7 +8,7 @@ var gm = {
 	fetch: window.fetch.bind(window),
 };
 
-exports.script = 'https://greasyfork.org/scripts/424376-krunker-junker/code/Krunker%20Junker.user.js';
+exports.script = 'https://raw.githubusercontent.com/e9x/kru/master/junker.user.js';
 exports.github = 'https://github.com/e9x/kru';
 exports.discord = 'https://e9x.github.io/kru/invite';
 
@@ -45,3 +45,5 @@ exports.crt_ele = (node_name, attributes) => Object.assign(document.createElemen
 exports.string_key = key => key.replace(/^(Key|Digit|Numpad)/, '');
 
 exports.api_url = 'https://sys32.dev/api/';
+exports.hostname = 'krunker.io';
+exports.mm_url = 'https://matchmaker.krunker.io/';
