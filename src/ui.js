@@ -259,7 +259,7 @@ class Control {
 		keybinds.push({
 			get code(){ return [ self.key ] },
 			interact(){
-				if(!self.ui.visible)return;
+				if(!self.data.menu_hidden && !self.ui.visible)return;
 				
 				self.interact();
 				self.update();

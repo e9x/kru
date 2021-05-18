@@ -27,6 +27,7 @@ var api = require('./api'),
 		config_base: {
 			ui_page: 0,
 			binds: {
+				reverse_cam: 'KeyF',
 				toggle: 'KeyC',
 				aim: 'Digit3',
 				bhop: 'Digit4',
@@ -437,6 +438,10 @@ cheat.UI.ready.then(() => {
 				type: 'keybind',
 				walk: 'binds.overlay',
 			},{
+				name: 'Reverse Camera',
+				type: 'keybind',
+				walk: 'binds.reverse_cam',
+			},{
 				name: 'Reset',
 				type: 'keybind',
 				walk: 'binds.reset',
@@ -461,6 +466,9 @@ cheat.UI.ready.then(() => {
 				bind: 'binds.reset',
 			},{
 				name: 'Shoutout to <a href="https://krunker.io/social.html?p=profile&q=So_Cloudy" target="_blank">So_Cloudy</a> for getting 170 kills with silent aimbot in a SINGLE game! Add Cloudy#0898 on discord for tips on getting no bans!',
+				type: 'text',
+			},{
+				name: 'Huge thanks to KPal#1311 from <a href="https://discord.gg/8McHhwg">KPal Hub</a> for providing the Krunker source!',
 				type: 'text',
 			}],
 		},{
