@@ -2,7 +2,7 @@
 
 |||||
 | --- | --- | --- | --- |
-| [Userscript](#userscript) | [Discord](invite) | [Build quickstart](#building) | [IDKR script](sploit.idkr.js) |
+| [Userscript](#userscript) | [Discord](https://e9x.github.io/kru/invite) | [Build quickstart](#building) | [IDKR script](sploit.idkr.js) |
 
 # Resources:
 
