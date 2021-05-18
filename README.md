@@ -8,10 +8,6 @@
 
 ## [Root folder](https://mega.nz/folder/PAcjzaYb#ITVrn9P7-0kRurX3MU969w)
 
-Latest versions stored on sys32.dev are ran through terser for size reasons and are not beautified.
-
-[Latest versions](https://api.sys32.dev/data/)
-
 [Archived versions](https://mega.nz/folder/eE9ghBzS#nw_TzAoWnK9Cz5Sry-lECw)
 
 ## Leaked source:
