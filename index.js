@@ -72,7 +72,7 @@ ${source}`));
 create_script({
 	package(){
 		return {
-			name: 'Junker',
+			name: 'Krunker Junker',
 			author: 'SkidLamer',
 			version: '1.0',
 			description: 'Junk in Your Krunk Guaranteed',

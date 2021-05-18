@@ -1,5 +1,5 @@
 // ==UserScript==
-// @name           Junker
+// @name           Krunker Junker
 // @author         SkidLamer
 // @source         https://github.com/e9x/kru
 // @description    Junk in Your Krunk Guaranteed
