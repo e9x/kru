@@ -1,13 +1,13 @@
 // ==UserScript==
 // @name           Sploit
 // @author         Divide
-// @source         https://github.com/e9x/kru
+// @source         https://github.com/e9x/kru/tree/master/junker
 // @description    Powerful Krunker.IO mod
 // @version        1.6.11
 // @license        gpl-3.0
 // @namespace      https://e9x.github.io/
 // @supportURL     https://e9x.github.io/kru/inv/
-// @extracted      Sat, 15 May 2021 05:30:32 GMT
+// @extracted      Tue, 18 May 2021 16:16:17 GMT
 // @include        /^https?:\/\/(internal\.|comp\.)?(krunker\.io|browserfps\.com)\/*?(index.html)?(\?|$)/
 // @run-at         document-start
 // @connect        sys32.dev
@@ -13730,7 +13730,7 @@ exports.script = 'https://raw.githubusercontent.com/e9x/kru/master/sploit.user.j
 exports.github = 'https://github.com/e9x/kru';
 exports.discord = 'https://e9x.github.io/kru/invite';
 
-exports.extracted = typeof 1621056632362 != 'number' ? Date.now() : 1621056632362;
+exports.extracted = typeof 1621354577369 != 'number' ? Date.now() : 1621354577369;
 
 exports.store = {
 	get: async key => gm.get_value ? await gm.get_value(key) : localStorage.getItem('ss' + key),
@@ -14226,7 +14226,7 @@ class Control {
 		keybinds.push({
 			get code(){ return [ self.key ] },
 			interact(){
-				if(!self.ui.visible)return;
+				if(!self.data.menu_hidden && !self.ui.visible)return;
 				
 				self.interact();
 				self.update();
@@ -15199,6 +15199,7 @@ var api = __webpack_require__(/*! ./api */ "./api.js"),
 		config_base: {
 			ui_page: 0,
 			binds: {
+				reverse_cam: 'KeyF',
 				toggle: 'KeyC',
 				aim: 'Digit3',
 				bhop: 'Digit4',
@@ -15609,6 +15610,10 @@ cheat.UI.ready.then(() => {
 				type: 'keybind',
 				walk: 'binds.overlay',
 			},{
+				name: 'Reverse Camera',
+				type: 'keybind',
+				walk: 'binds.reverse_cam',
+			},{
 				name: 'Reset',
 				type: 'keybind',
 				walk: 'binds.reset',
@@ -15633,6 +15638,9 @@ cheat.UI.ready.then(() => {
 				bind: 'binds.reset',
 			},{
 				name: 'Shoutout to <a href="https://krunker.io/social.html?p=profile&q=So_Cloudy" target="_blank">So_Cloudy</a> for getting 170 kills with silent aimbot in a SINGLE game! Add Cloudy#0898 on discord for tips on getting no bans!',
+				type: 'text',
+			},{
+				name: 'Huge thanks to KPal#1311 from <a href="https://discord.gg/8McHhwg">KPal Hub</a> for providing the Krunker source!',
 				type: 'text',
 			}],
 		},{

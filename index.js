@@ -30,7 +30,7 @@ var os = require('os'),
 						rmeta = Object.assign({
 							name: spackage.name,
 							author: spackage.author,
-							source: 'https://github.com/e9x/kru',
+							source: script.source,
 							description: spackage.description,
 							version: spackage.version,
 							license: spackage.license,
@@ -79,12 +79,12 @@ create_script({
 			bugs: { url: 'https://e9x.github.io/kru/inv/' },
 			homepage: 'https://skidlamer.github.io/',
 			license: 'gpl-3.0',
-			repository: { type: 'git', url: 'git+https://github.com/e9x/kru.git' },
 		};
 	},
 	meta: {
 		icon: 'https://i.imgur.com/pA5e8hy.png',
 		grant: 'none',
+		namespace: 'https://greasyfork.org/users/704479',
 	},
 	after: [
 		`// For license information, please see https://raw.githubusercontent.com/e9x/kru/master/junker.user.js.LICENSE.txt`,
@@ -101,6 +101,7 @@ create_script({
 	// window is another context when grants are given, never noticed this in sploit
 	entry: path.join(__dirname, 'junker', 'index.js'),
 	output: path.join(__dirname, 'junker.user.js'),
+	source: 'https://github.com/e9x/kru',
 });
 
 create_script({
@@ -118,4 +119,5 @@ create_script({
 	minify: false,
 	entry: path.join(__dirname, 'src', 'index.js'),
 	output: path.join(__dirname, 'sploit.user.js'),
+	source: 'https://github.com/e9x/kru/tree/master/junker',
 });

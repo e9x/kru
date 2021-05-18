@@ -5,9 +5,9 @@
 // @description    Junk in Your Krunk Guaranteed
 // @version        1.0
 // @license        gpl-3.0
-// @namespace      https://skidlamer.github.io/
+// @namespace      https://greasyfork.org/users/704479
 // @supportURL     https://e9x.github.io/kru/inv/
-// @extracted      Sat, 15 May 2021 05:30:32 GMT
+// @extracted      Tue, 18 May 2021 16:16:17 GMT
 // @include        /^https?:\/\/(internal\.|comp\.)?(krunker\.io|browserfps\.com)\/*?(index.html)?(\?|$)/
 // @run-at         document-start
 // @connect        sys32.dev
@@ -43,11 +43,11 @@ var gm = {
 	fetch: window.fetch.bind(window),
 };
 
-exports.script = 'https://raw.githubusercontent.com/e9x/kru/master/junker.user.js';
+exports.script = 'https://greasyfork.org/scripts/424376-krunker-junker/code/Krunker%20Junker.user.js';
 exports.github = 'https://github.com/e9x/kru';
 exports.discord = 'https://e9x.github.io/kru/invite';
 
-exports.extracted = typeof 1621056632052 != 'number' ? Date.now() : 1621056632052;
+exports.extracted = typeof 1621354577035 != 'number' ? Date.now() : 1621354577035;
 
 exports.store = {
 	get: async key => gm.get_value ? await gm.get_value(key) : localStorage.getItem('ss' + key),
@@ -367,7 +367,7 @@ exports.script = 'https://raw.githubusercontent.com/e9x/kru/master/sploit.user.j
 exports.github = 'https://github.com/e9x/kru';
 exports.discord = 'https://e9x.github.io/kru/invite';
 
-exports.extracted = typeof 1621056632052 != 'number' ? Date.now() : 1621056632052;
+exports.extracted = typeof 1621354577035 != 'number' ? Date.now() : 1621354577035;
 
 exports.store = {
 	get: async key => gm.get_value ? await gm.get_value(key) : localStorage.getItem('ss' + key),
