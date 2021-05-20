@@ -42,7 +42,7 @@ class Updater {
 		return will_update;
 	}
 	watch(callback, interval = 60e3 * 3){
-		interval = 10e3;
+		// interval = 10e3;
 		
 		var run = async () => {
 			if(await this.check())callback();

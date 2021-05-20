@@ -7,7 +7,7 @@
 // @license        gpl-3.0
 // @namespace      https://greasyfork.org/users/704479
 // @supportURL     https://e9x.github.io/kru/inv/
-// @extracted      Thu, 20 May 2021 14:02:04 GMT
+// @extracted      Thu, 20 May 2021 14:10:31 GMT
 // @match          *://krunker.io/*
 // @match          *://browserfps.com/*
 // @exclude        *://krunker.io/editor*
@@ -52,7 +52,7 @@ exports.script = 'https://raw.githubusercontent.com/e9x/kru/master/junker.user.j
 exports.github = 'https://github.com/e9x/kru';
 exports.discord = 'https://e9x.github.io/kru/invite';
 
-exports.extracted = typeof 1621519324126 != 'number' ? Date.now() : 1621519324126;
+exports.extracted = typeof 1621519831109 != 'number' ? Date.now() : 1621519831109;
 
 exports.api_url = 'https://api.sys32.dev/';
 exports.hostname = 'krunker.io';
@@ -353,7 +353,7 @@ class Updater {
 		return will_update;
 	}
 	watch(callback, interval = 60e3 * 3){
-		interval = 10e3;
+		// interval = 10e3;
 		
 		var run = async () => {
 			if(await this.check())callback();

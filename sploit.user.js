@@ -7,7 +7,7 @@
 // @license        gpl-3.0
 // @namespace      https://e9x.github.io/
 // @supportURL     https://e9x.github.io/kru/inv/
-// @extracted      Thu, 20 May 2021 14:02:05 GMT
+// @extracted      Thu, 20 May 2021 14:10:31 GMT
 // @match          *://krunker.io/*
 // @match          *://browserfps.com/*
 // @exclude        *://krunker.io/editor*
@@ -13657,7 +13657,7 @@ exports.api_url = 'https://api.sys32.dev/';
 exports.hostname = 'krunker.io';
 exports.mm_url = 'https://matchmaker.krunker.io/';
 
-exports.extracted = typeof 1621519325724 != 'number' ? Date.now() : 1621519325724;
+exports.extracted = typeof 1621519831098 != 'number' ? Date.now() : 1621519831098;
 
 exports.store = {
 	get: async key => GM.get_value ? await GM.get_value(key) : localStorage.getItem('ss' + key),
@@ -15133,7 +15133,7 @@ class Updater {
 		return will_update;
 	}
 	watch(callback, interval = 60e3 * 3){
-		interval = 10e3;
+		// interval = 10e3;
 		
 		var run = async () => {
 			if(await this.check())callback();
