@@ -4,6 +4,7 @@ var os = require('os'),
 	path = require('path'),
 	https = require('https'),
 	webpack = require('webpack'),
+	krunker_hosts = [ 'krunker.io', 'browserfps.com' ],
 	create_script = script => {
 		var minimize = script.minify != null ? script.minify : true,
 			compiler;
@@ -16,12 +17,11 @@ var os = require('os'),
 			},
 			context: path.dirname(script.entry),
 			module: { rules: [
-				{ test: /\.css$/, use: [ { loader: path.join(__dirname, 'src', 'css.js') } ] },
-				{ test: /\.json$/, use: [ { loader: path.join(__dirname, 'json.js') } ], type: 'javascript/auto' },
+				{ test: /\.css$/, use: [ { loader: path.join(__dirname, 'src', 'libs', 'css.js') } ] },
+				{ test: /\.json$/, use: [ { loader: path.join(__dirname, 'src', 'libs', 'json.js') } ], type: 'javascript/auto' },
 			] },
 			mode: minimize ? 'production' : 'development',
 			devtool: false,
-			// optimization: { minimize: minimize },
 			plugins: [
 				{ apply: compiler => compiler.hooks.thisCompilation.tap('Replace', compilation => compilation.hooks.processAssets.tap({ name: 'Replace', stage: webpack.Compilation.PROCESS_ASSETS_STAGE_REPORT }, () => {
 					var file = compilation.getAsset(compiler.options.output.filename),
@@ -37,11 +37,12 @@ var os = require('os'),
 							namespace: spackage.homepage,
 							supportURL: spackage.bugs.url,
 							extracted: extracted.toGMTString(),
-							include: /^https?:\/\/(internal\.|comp\.)?(krunker\.io|browserfps\.com)\/*?(index.html)?(\?|$)/,
+							match: krunker_hosts.map(host => '*://' + host + '/*'),
+							exclude: krunker_hosts.map(host => [ '*://' + host + '/editor*', '*://' + host + '/social*' ]),
 							'run-at': 'document-start',
 							connect: [ 'sys32.dev', 'githubusercontent.com' ],
 						}, script.meta),
-						meta = Object.entries(rmeta).flatMap(([ key, val ]) => Array.isArray(val) ? val.map(val => [ key, val ]) : [ [ key, val ] ]),
+						meta = Object.entries(rmeta).flatMap(([ key, val ]) => [ val ].flat(Infinity).map(val => [ key, val ])),
 						whitespace = meta.map(meta => meta[0]).sort((a, b) => b.toString().length - a.toString().length)[0].length + 8,
 						source = file.source.source().replace(/build_extracted/g, extracted.getTime());
 					
@@ -68,6 +69,16 @@ ${source}`));
 			});
 		});
 	};
+
+/*
+remove regex sites
+
+// @match         *://krunker.io/*
+// @exclude       *://krunker.io/editor*
+// @exclude       *://krunker.io/social*
+
+browserfps.com
+*/
 
 create_script({
 	package(){

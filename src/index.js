@@ -1,22 +1,16 @@
-'use strict';
-var api = require('./api'),
-	utils = require('./utils'),
+	'use strict';
+var Utils = require('./libs/utils'),
+	Updater = require('./libs/updater.js'),
+	API = require('./libs/api'),
+	constants = require('./consts'),
 	input = require('./input'),
 	visual = require('./visual'),
-	constants = require('./consts'),
-	spackage = require('../package.json'),
+	entries = require('./entries.js'),
 	msgpack = require('msgpack-lite'),
-	clone_obj = obj => JSON.parse(JSON.stringify(obj)),
-	assign_deep = (target, ...objects) => {
-		for(var ind in objects)for(var key in objects[ind]){
-			if(typeof objects[ind][key] == 'object' && objects[ind][key] != null && key in target)assign_deep(target[key], objects[ind][key]);
-			else Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(objects[ind], key))
-		}
-		
-		return target;
-	},
+	updater = new Updater(constants.script, constants.extracted),
+	api = new API(constants.mm_url, constants.api_url),
 	cheat = {
-		UI: require('./ui'),
+		UI: require('./libs/ui'),
 		add: ent => Object.setPrototypeOf({ entity: typeof ent == 'object' && ent != null ? ent : {} }, cheat.player_wrap),
 		syms: {
 			procInputs: Symbol(),
@@ -24,47 +18,7 @@ var api = require('./api'),
 			isAI: Symbol(),
 		},
 		config: {},
-		config_base: {
-			ui_page: 0,
-			binds: {
-				reverse_cam: 'KeyF',
-				toggle: 'KeyC',
-				aim: 'Digit3',
-				bhop: 'Digit4',
-				esp: 'Digit5',
-				tracers: 'Digit6',
-				nametags: 'Digit7',
-				overlay: 'Digit8',
-			},
-			aim: {
-				status: 'off',
-				offset: 'random',
-				target_sorting: 'dist2d',
-				smooth: {
-					status: true,
-					value: 10,
-				},
-				hitchance: 100,
-				// percentage of screen
-				fov_box: false,
-				fov: 70,
-			},
-			esp: {
-				status: 'off',
-				walls: {
-					status: false,
-					value: 1,
-				},
-				tracers: false,
-			},
-			game: {
-				css: [],
-				bhop: 'off',
-				wireframe: false,
-				auto_respawn: false,
-				adblock: true,
-			},
-		},
+		config_base: entries.base_config,
 		vars: {},
 		find_vars: {
 			isYou: [/this\.accid=0,this\.(\w+)=\w+,this\.isPlayer/, 1],
@@ -81,6 +35,7 @@ var api = require('./api'),
 			recoilAnimY: [/\.\w+=0,this\.(\w+)=0,this\.\w+=0,this\.\w+=1,this\.slide/, 1],
 			procInputs: [/this\.(\w+)=function\(\w+,\w+,\w+,\w+\){this\.recon/, 1],
 			objInstances: [/lowerBody\),\w+\|\|\w+\.(\w+)\./, 1],
+			getWorldPosition: [/var \w+=\w+\.camera\.(\w+)\(\);/, 1],
 		},
 		patches: [
 			[/(&&(\w+)\.\w+&&)(\2\.cnBSeen)(\){if\(\(\w+=\2\.objInstances\.pos)/, '$1ssv.n($3)$4'],
@@ -153,9 +108,10 @@ var api = require('./api'),
 			get aim_press(){ return cheat.controls[cheat.vars.mouseDownR] || cheat.controls.keys[cheat.controls.binds.aim.val] },
 			get crouch(){ return this.entity[cheat.vars.crouchVal] },
 			rect(){
-				var src_pos = utils.pos2d(cheat, this),
-					src_pos_crouch = utils.pos2d(cheat, this, this.entity.height - this.crouch * 3),
-					width = ~~((src_pos.y - utils.pos2d(cheat, this, this.entity.height).y) * 0.7),
+				// todo: accurate width
+				var src_pos = constants.utils.pos2d(this),
+					src_pos_crouch = constants.utils.pos2d(this, this.height),
+					width = ~~((src_pos.y - constants.utils.pos2d(this, this.entity.height).y) * 0.7),
 					height = src_pos.y - src_pos_crouch.y,
 					center = {
 						x: src_pos.x,
@@ -173,11 +129,14 @@ var api = require('./api'),
 					height: height,
 				};
 			},
+			distance_camera(){
+				return cheat.world.camera[cheat.vars.getWorldPosition]().distanceTo(this);
+			},
 			get obj(){ return this.entity[cheat.vars.objInstances] },
 			get recoil_y(){ return this.entity[cheat.vars.recoilAnimY] },
 			get has_ammo(){ return this.weapon.melee || this.ammo },
 			get ammo(){ return this.entity[cheat.vars.ammos][this.entity[cheat.vars.weaponIndex]] },
-			get height(){ return this.entity.height },
+			get height(){ return (this.entity.height || 0) - this.entity[cheat.vars.crouchVal] * 3 },
 			get health(){ return this.entity.health || 0 },
 			get max_health(){ return this.entity[cheat.vars.maxHealth] || 100 },
 			get active(){ return this.entity.active && this.entity.x != null && this.health > 0 && this.obj != null },
@@ -201,7 +160,7 @@ var api = require('./api'),
 					
 					if(player.is_you)cheat.player = player;
 					
-					if(cheat.player)player.entity.can_see = player.active && utils.obstructing(cheat, cheat.player, player) == null ? true : false;
+					if(cheat.player)player.entity.can_see = player.active && constants.utils.obstructing(cheat.player, player, cheat.player.weapon && cheat.player.weapon.pierce && cheat.config.aim.wallbangs) == null ? true : false;
 					
 					/*if(!player.entity[cheat.syms.hooked]){
 						player.entity[cheat.syms.hooked] = true;
@@ -235,12 +194,19 @@ var api = require('./api'),
 		},
 		socket_id: 0,
 		input: require('./input.js'),
-		has_instruct: (str, inst) => (inst = document.querySelector('#instructionHolder'), inst && inst.textContent.trim().toLowerCase().includes(str)),
+		has_instruct: (str, inst) => cheat.instruction_holder && cheat.instruction_holder.textContent.trim().toLowerCase().includes(str),
 	},
 	resolve_page_load,
 	page_load = new Promise(resolve => resolve_page_load = resolve);
 
 new MutationObserver((muts, observer) => muts.forEach(mut => [...mut.addedNodes].forEach(node => {
+	/*if(node.tagName == 'DIV' && node.id == 'instructionHolder'){
+		cheat.instruction_holder = node;
+		
+		node.style.display = 'block';
+		node.querySelector('#instructions').innerHTML = `<img src="https://i.imgur.com/yzb2ZmS.gif" width="25%"></div><a href='https://skidlamer.github.io/wp/' target='_blank.'><div class="imageButton discordSocial"></a>`;
+	}*/
+	
 	if(node.tagName != 'SCRIPT' || !node.textContent.includes('Yendis Entertainment'))return;
 	
 	observer.disconnect();
@@ -250,234 +216,10 @@ new MutationObserver((muts, observer) => muts.forEach(mut => [...mut.addedNodes]
 }))).observe(document, { childList: true, subtree: true });
 
 cheat.UI.ready.then(() => {
-	cheat.ui = new cheat.UI.Config({
-		version: spackage.version,
-		title: 'Sploit',
-		store: constants.store,
-		config: {
-			save: () => constants.store.set('config', JSON.stringify(cheat.config)),
-			load: () => constants.store.get('config').then(config => {
-				var parsed = {};
-				try{ parsed = JSON.parse(config || '{}') }catch(err){ console.error(err, config) }
-				
-				return assign_deep(cheat.config, clone_obj(cheat.config_base), parsed);
-			}),
-			value: cheat.config,
-		},
-		value: [{
-			name: 'Main',
-			type: 'section',
-			value: [{
-				name: 'Auto aim',
-				type: 'rotate',
-				walk: 'aim.status',
-				vals: [
-					[ 'off', 'Off' ],
-					[ 'trigger', 'Triggerbot' ],
-					[ 'correction', 'Correction' ],
-					[ 'assist', 'Assist' ],
-					[ 'auto', 'Automatic' ],
-				],
-				key: 'binds.aim',
-			},{
-				name: 'Auto bhop',
-				type: 'rotate',
-				walk: 'game.bhop',
-				vals: [
-					[ 'off', 'Off' ],
-					[ 'keyjump', 'Key jump' ],
-					[ 'keyslide', 'Key slide' ],
-					[ 'autoslide', 'Auto slide' ],
-					[ 'autojump', 'Auto jump' ],
-				],
-				key: 'binds.bhop',
-			},{
-				name: 'ESP mode',
-				type: 'rotate',
-				walk: 'esp.status',
-				vals: [
-					[ 'off', 'Off' ],
-					[ 'box', 'Box' ],
-					[ 'chams', 'Chams' ],
-					[ 'box_chams', 'Box & chams' ],
-					[ 'full', 'Full' ],
-				],
-				key: 'binds.esp',
-			},{
-				name: 'Tracers',
-				type: 'boolean',
-				walk: 'esp.tracers',
-				key: 'binds.tracers',
-			},{
-				name: 'Nametags',
-				type: 'boolean',
-				walk: 'esp.nametags',
-				key: 'binds.nametags',
-			},{
-				name: 'Overlay',
-				type: 'boolean',
-				walk: 'game.overlay',
-				key: 'binds.overlay',
-			}],
-		},{
-			name: 'Game',
-			value: [{
-				name: 'Custom CSS',
-				type: 'function',
-				value: () => cheat.css_editor.show(),
-			},{
-				name: 'Skins',
-				type: 'boolean',
-				walk: 'game.skins',
-			},{
-				name: 'Wireframe',
-				type: 'boolean',
-				walk: 'game.wireframe',
-			},{
-				name: 'Auto respawn',
-				type: 'boolean',
-				walk: 'game.auto_respawn',
-			}],
-		},{
-			name: 'Aim',
-			type: 'section',
-			value: [{
-				name: 'Smoothness',
-				type: 'slider',
-				walk: 'aim.smooth.value',
-				unit: 'U',
-				range: [ 0, 50, 2 ],
-			},{
-				name: 'Target FOV',
-				type: 'slider',
-				walk: 'aim.fov',
-				range: [ 10, 110, 10 ],
-				labels: { 110: 'Ignore FOV' },
-			},{
-				name: 'Hitchance',
-				type: 'slider',
-				walk: 'aim.hitchance',
-				range: [ 10, 100, 5 ],
-			},{
-				name: 'Target sort',
-				type: 'rotate',
-				walk: 'aim.target_sorting',
-				vals: [
-					[ 'dist2d', 'Distance 2D' ],
-					[ 'dist3d', 'Distance 3D' ],
-					[ 'hp', 'Health' ],
-				],
-			},{
-				name: 'Offset',
-				type: 'rotate',
-				walk: 'aim.offset',
-				vals: [
-					[ 'head', 'Head' ],
-					[ 'chest', 'Chest' ],
-					[ 'feet', 'Feet' ],
-					[ 'random', 'Random' ],
-				],
-			},{
-				name: 'Draw FOV box',
-				type: 'boolean',
-				walk: 'aim.fov_box',
-			},{
-				name: 'Smooth',
-				type: 'boolean',
-				walk: 'aim.smooth.status',
-			},{
-				name: 'Auto reload',
-				type: 'boolean',
-				walk: 'aim.auto_reload',
-			},{
-				name: 'Wallbangs',
-				type: 'boolean',
-				walk: 'aim.wallbangs',
-			}],
-		},{
-			name: 'Esp',
-			type: 'section',
-			value: [{
-				name: 'Walls',
-				type: 'boolean',
-				walk: 'esp.walls.status',
-			},{
-				name: 'Wall opacity',
-				type: 'slider',
-				walk: 'esp.walls.value',
-				range: [ 0.1, 1 ],
-			}]
-		},{
-			name: 'Binds',
-			value: [{
-				name: 'Toggle',
-				type: 'keybind',
-				walk: 'binds.toggle',
-			},{
-				name: 'Auto aim',
-				type: 'keybind',
-				walk: 'binds.aim',
-			},{
-				name: 'Auto bhop',
-				type: 'keybind',
-				walk: 'binds.bhop',
-			},{
-				name: 'ESP mode',
-				type: 'keybind',
-				walk: 'binds.esp',
-			},{
-				name: 'Tracers',
-				type: 'keybind',
-				walk: 'binds.tracers',
-			},{
-				name: 'Nametags',
-				type: 'keybind',
-				walk: 'binds.nametags',
-			},{
-				name: 'Overlay',
-				type: 'keybind',
-				walk: 'binds.overlay',
-			},{
-				name: 'Reverse Camera',
-				type: 'keybind',
-				walk: 'binds.reverse_cam',
-			},{
-				name: 'Reset',
-				type: 'keybind',
-				walk: 'binds.reset',
-			}],
-		},{
-			name: 'Settings',
-			type: 'section',
-			value: [{
-				name: 'GitHub',
-				type: 'function',
-				value: () => window.open(constants.github),
-			},{
-				name: 'Reset Settings',
-				type: 'function',
-				async value(){
-					for(var ind in cheat.css_editor.tabs.length)await cheat.css_editor.tabs[ind].remove();
-					
-					// reset everything but sliders
-					await constants.store.set('config', JSON.stringify(assign_deep(cheat.config, clone_obj(cheat.config_base)), (prop, value) => typeof value == 'number' ? void'' : value));
-					cheat.ui.update();
-				},
-				bind: 'binds.reset',
-			},{
-				name: 'Shoutout to <a href="https://krunker.io/social.html?p=profile&q=So_Cloudy" target="_blank">So_Cloudy</a> for getting 170 kills with silent aimbot in a SINGLE game! Add Cloudy#0898 on discord for tips on getting no bans!',
-				type: 'text',
-			},{
-				name: 'Huge thanks to KPal#1311 from <a href="https://discord.gg/8McHhwg">KPal Hub</a> for providing the Krunker source!',
-				type: 'text',
-			}],
-		},{
-			name: 'Discord',
-			type: 'function',
-			value: () => window.open(constants.discord),
-		}],
-	});
-
+	constants.utils.canvas = cheat.UI.canvas;
+	
+	cheat.ui = new cheat.UI.Config(entries.ui(cheat));
+	
 	cheat.ui.update(true).then(() => cheat.css_editor = new cheat.UI.Editor({
 		tabs: cheat.config.game.css,
 		store: constants.store,
@@ -532,13 +274,12 @@ cheat.UI.ready.then(() => {
 		// Ideally if greasemonkey can be used for requesting then it should as it avoids any cors headers that COULD be added to break this script
 		*/
 		
-		api.c+=cheat.ui.sections.some(s=>'Discord'==s.data.name)?'':0;
+		api.media('sploit',cheat,constants);
 		
-		// WP_fetchMMToken-- https://sys32.dev/api/v1/server/src/theatre.js
 		page_load.then(async () => new Function('WP_fetchMMToken', 'ssv', 'WebSocket', krunker)(api.token(), {
-			t(three_mod){ cheat.three = three_mod.exports },
-			g(game){ cheat.game = game },
-			w(world){ cheat.world = world },
+			t(three_mod){ cheat.three = constants.utils.three = three_mod.exports },
+			g(game){ cheat.game = constants.utils.game = game },
+			w(world){ cheat.world = constants.utils.world = world },
 			n: inview => cheat.config.esp.status == 'full' ? false : (cheat.config.esp.nametags || inview),
 			p: ent => cheat.config.game.skins && typeof ent == 'object' && ent != null && ent.stats ? cheat.skins : ent.skins,
 		}, class extends WebSocket {
@@ -596,6 +337,10 @@ document.addEventListener('pointerlockchange', () => {
 	cheat.focused = document.pointerLockElement != null;
 });
 
-require('./update.js');
+updater.poll();
 
-// window.cheat = cheat;
+window.addEventListener('load', () => {
+	updater.watch(() => {
+		if(confirm('A new Sploit version is available, do you wish to update?'))updater.update();
+	}, 60e3 * 3);	
+});

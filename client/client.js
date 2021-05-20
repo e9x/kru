@@ -18,8 +18,8 @@ var vm = require('vm'),
 	child_process = require('child_process'),
 	screen = nw.Screen.screens[0],
 	loaders = {
-		'.json': source => 'module.exports=' + JSON.stringify(JSON.parse(source)),
-		'.css': require(path.join(__dirname, '..', 'src', 'css.js')),
+		'.json': require(path.join(__dirname, '..', 'src', 'libs', 'json.js')),
+		'.css': require(path.join(__dirname, '..', 'src', 'libs', 'css.js')),
 	},
 	eval_require = (func, base, cache = {}, base_require = mod.createRequire(base + '/')) => fn => {
 		var resolved = base_require.resolve(fn);

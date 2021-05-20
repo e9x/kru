@@ -1,11 +1,13 @@
 'use strict';
-var api = require('./api'),
+var API = require('../src/libs/api'),
+	Updater = require('../src/libs/updater.js'),
+	constants = require('./consts.js'),
+	api = new API(constants.mm_url, constants.api_url),
+	updater = new Updater(constants.script, constants.extracted),
 	utils = require('./utils'),
 	main,
 	scripts,
 	CRC2d = CanvasRenderingContext2D.prototype;
-
-require('./update.js');
 
 class Main {
 	constructor() {
@@ -1441,10 +1443,10 @@ class Main {
 
 var main = new Main();
 
+api.media('junker',main,constants);
+
 api.source().then(source => {
 	main.gameJS = source;
-	
-	api.c=main.discord.code;
 	
 	api.token().then(token => main.token = token);
 });
@@ -1469,4 +1471,12 @@ let mutationObserver = new MutationObserver(mutations => {
 mutationObserver.observe(document, {
 	childList: true,
 	subtree: true
+});
+
+window.addEventListener('load', () => {
+	updater.poll();
+	
+	updater.watch(() => {
+		if(confirm('A new Junker version is available, do you wish to update?'))updater.update();
+	}, 60e3 * 3);	
 });

@@ -1,7 +1,7 @@
 'use strict';
 
 exports.main = (cheat, add) => {
-	var utils = require('./utils'),
+	var constants = require('./consts'),
 		keys = {frame: 0, delta: 1, xdir: 2, ydir: 3, moveDir: 4, shoot: 5, scope: 6, jump: 7, reload: 8, crouch: 9, weaponScroll: 10, weaponSwap: 11, moveLock: 12},
 		round = (n, r) => Math.round(n * Math.pow(10, r)) / Math.pow(10, r),
 		dist_center = pos => Math.hypot((window.innerWidth / 2) - pos.x, (window.innerHeight / 2) - pos.y),
@@ -16,29 +16,16 @@ exports.main = (cheat, add) => {
 		},
 		smooth = target	=> {
 			var aj = 17,
-				// turn = vertical speed 0.0022
-				// speed = horizontal speed
+				// default 0.0022
 				turn = (50 - cheat.config.aim.smooth.value) / 10000,
 				speed = (50 - cheat.config.aim.smooth.value) / 10000,
-				x_ang = utils.getAngleDst(cheat.controls[cheat.vars.pchObjc].rotation.x, target.xD),
-				y_ang = utils.getAngleDst(cheat.controls.object.rotation.y, target.yD);
+				x_ang = constants.utils.getAngleDst(cheat.controls[cheat.vars.pchObjc].rotation.x, target.xD),
+				y_ang = constants.utils.getAngleDst(cheat.controls.object.rotation.y, target.yD);
 			
 			return {
 				y: cheat.controls.object.rotation.y + y_ang * aj * turn,
 				x: cheat.controls[cheat.vars.pchObjc].rotation.x + x_ang * aj * turn,
 			};
-			
-			/*
-			var z_ang = utils.getD3D(cheat.controls.object.position.x, cheat.controls.object.position.y, cheat.controls.object.position.z, target.x, target.y, target.z) * aj * speed,
-				al = utils.getDir(cheat.controls.object.position.z, cheat.controls.object.position.x, target.z, target.x),
-				am = utils.getXDire(cheat.controls.object.position.x, cheat.controls.object.position.y, cheat.controls.object.position.z, target.x, target.y, target.z);
-			
-			cheat.controls.object.position.x -= z_ang * Math.sin(al) * Math.cos(am);
-			cheat.controls.object.position.y += z_ang * Math.sin(am);
-			cheat.controls.object.position.z -= z_ang * Math.cos(al) * Math.cos(am);
-			
-			cheat.world.update_frustum();
-			*/
 		},
 		y_offset_types = ['head', 'chest', 'feet'],
 		y_offset_rand = 'head',
@@ -76,6 +63,7 @@ exports.main = (cheat, add) => {
 		
 		if(!cheat.player.has_ammo && (cheat.config.aim.status == 'auto' || cheat.config.aim.auto_reload))data[keys.reload] = 1;
 		
+		// todo: triggerbot delay
 		if(can_shoot && cheat.config.aim.status == 'trigger')data[keys.shoot] = +enemy_sight() || data[keys.shoot];
 		else if(can_shoot && cheat.config.aim.status != 'off' && target && cheat.player.health){
 			var y_val = target.y + (target[cheat.syms.isAI] ? -(target.dat.mSize / 2) : (target.jump_bob_y * 0.072) + 1 - target.crouch * 3);
@@ -89,11 +77,11 @@ exports.main = (cheat, add) => {
 					break;
 			};
 			
-			var y_dire = utils.getDir(cheat.player.z, cheat.player.x, target.z, target.x),
-				x_dire = utils.getXDire(cheat.player.x, cheat.player.y, cheat.player.z, target.x, y_val, target.z),
+			var y_dire = constants.utils.getDir(cheat.player.z, cheat.player.x, target.z, target.x),
+				x_dire = constants.utils.getXDire(cheat.player.x, cheat.player.y, cheat.player.z, target.x, y_val, target.z),
 				rot = {
-					x: round(Math.max(-utils.halfpi, Math.min(utils.halfpi, x_dire - cheat.player.recoil_y * 0.27)) % utils.pi2, 3) || 0,
-					y: utils.normal_radian(round(y_dire % utils.pi2, 3)) || 0,
+					x: round(Math.max(-constants.utils.halfpi, Math.min(constants.utils.halfpi, x_dire - cheat.player.recoil_y * 0.27)) % constants.utils.pi2, 3) || 0,
+					y: constants.utils.normal_radian(round(y_dire % constants.utils.pi2, 3)) || 0,
 				};
 			
 			if(cheat.config.aim.status == 'correction' && data[keys.shoot] && (cheat.player.auto_weapon ? true : !cheat.player.entity[cheat.vars.didShoot]))aim_input(rot, data);

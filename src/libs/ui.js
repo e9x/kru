@@ -1,7 +1,8 @@
 'use strict';
 var svg = require('./svg.json'),
-	constants = require('./consts'),
-	codemirror = require('codemirror'),
+	Utils = require('./utils'),
+	utils = new Utils(),
+	Codemirror = require('codemirror'),
 	gen_uuid = () => {
 		var lut = [...Array(256)].map((x, ind) => ind.toString(16).padStart(2, 0)),
 			d0 = Math.random()*0xffffffff|0,
@@ -14,7 +15,7 @@ var svg = require('./svg.json'),
 		lut[d2&0x3f|0x80]+lut[d2>>8&0xff]+'-'+lut[d2>>16&0xff]+lut[d2>>24&0xff]+
 		lut[d3&0xff]+lut[d3>>8&0xff]+lut[d3>>16&0xff]+lut[d3>>24&0xff];
 	},
-	frame = constants.crt_ele('iframe', { style: 'top:0;left:0;z-index:9000000;border:none;position:absolute;background:#0000;width:100vw;height:100vh;pointer-events:none' }),
+	frame = utils.crt_ele('iframe', { style: 'top:0;left:0;z-index:9000000;border:none;position:absolute;background:#0000;width:100vw;height:100vh;pointer-events:none' }),
 	keybinds = [],
 	inputs = {},
 	panels = [],
@@ -44,7 +45,7 @@ var svg = require('./svg.json'),
 exports.ready = new Promise(resolve => frame.addEventListener('load', () => resolve()));
 
 exports.ready.then(() => {
-	canvas = exports.canvas = constants.add_ele('canvas', frame.contentWindow.document.documentElement);
+	canvas = exports.canvas = utils.add_ele('canvas', frame.contentWindow.document.documentElement);
 	
 	var ctx = exports.ctx = canvas.getContext('2d', { alpha: true });
 	
@@ -73,7 +74,7 @@ exports.ready.then(() => {
 	window.addEventListener('blur', () => inputs = exports.inputs = {});
 	window.addEventListener('resize', resize_canvas);
 
-	constants.add_ele('style', frame.contentWindow.document.documentElement, { textContent: [
+	utils.add_ele('style', frame.contentWindow.document.documentElement, { textContent: [
 		require('./ui.css'),
 		require('codemirror/theme/solarized.css'),
 		require('codemirror/lib/codemirror.css'),
@@ -90,7 +91,7 @@ class Panel {
 		this.type = type;
 		this.visible = true;
 		this.hover = true;
-		this.node = constants.add_ele('main', frame.contentWindow.document.documentElement, { className: type });
+		this.node = utils.add_ele('main', frame.contentWindow.document.documentElement, { className: type });
 		
 		panels.push(this);
 		
@@ -234,8 +235,8 @@ class TextElement {
 	constructor(data, section, ui){
 		this.data = data;
 		this.ui = ui;
-		this.container = constants.add_ele('div', section.node, { className: 'control' });
-		this.node = constants.add_ele('div', this.container, { className: 'text' });
+		this.container = utils.add_ele('div', section.node, { className: 'control' });
+		this.node = utils.add_ele('div', this.container, { className: 'text' });
 	}
 	update(){
 		// toodo: add bold, italics, and size properties
@@ -251,9 +252,9 @@ class Control {
 		this.data = data;
 		this.name = this.data.name;
 		this.ui = ui;
-		this.container = constants.add_ele('div', section.node, { className: 'control' });
-		this.button = constants.add_ele('div', this.container, { className: 'toggle' });
-		this.label = constants.add_ele('div', this.container, { className: 'label' });
+		this.container = utils.add_ele('div', section.node, { className: 'control' });
+		this.button = utils.add_ele('div', this.container, { className: 'toggle' });
+		this.label = utils.add_ele('div', this.container, { className: 'label' });
 		this.button.addEventListener('click', () => (this.interact(), this.update()));
 		
 		keybinds.push({
@@ -301,7 +302,7 @@ class Control {
 		console.warn('No defined interaction for', this);
 	}
 	update(){
-		this.button.textContent = '[' + (this.key ? constants.string_key(this.key) : '-') + ']';
+		this.button.textContent = '[' + (this.key ? utils.string_key(this.key) : '-') + ']';
 		this.label.textContent = this.name;
 	}
 }
@@ -346,7 +347,7 @@ class KeybindControl extends Control {
 	constructor(...args){
 		super(...args);
 		
-		this.input = constants.add_ele('input', this.container, { className: 'keybind', placeholder: 'Press a key' });
+		this.input = utils.add_ele('input', this.container, { className: 'keybind', placeholder: 'Press a key' });
 		
 		this.input.addEventListener('focus', () => {
 			this.input.value = '';
@@ -367,7 +368,7 @@ class KeybindControl extends Control {
 		super.update();
 		this.button.style.display = 'none';
 		this.label.textContent = this.name + ':';
-		this.input.value = this.value ? constants.string_key(this.value) : 'Unset';
+		this.input.value = this.value ? utils.string_key(this.value) : 'Unset';
 	}
 }
 
@@ -403,8 +404,8 @@ class SliderControl extends Control {
 				this.update();
 			};
 		
-		this.slider = constants.add_ele('div', this.container, { className: 'slider' });
-		this.background = constants.add_ele('div', this.slider, { className: 'background' });
+		this.slider = utils.add_ele('div', this.container, { className: 'slider' });
+		this.background = utils.add_ele('div', this.slider, { className: 'background' });
 		
 		this.slider.addEventListener('mousedown', event=>{
 			movement = { held: true, x: event.layerX, y: event.layerY }
@@ -430,12 +431,12 @@ class Config extends PanelDraggable {
 		
 		this.config = this.data.config;
 		
-		this.title = this.listen_dragging(constants.add_ele('div', this.node, { textContent: data.title, className: 'title' }));
+		this.title = this.listen_dragging(utils.add_ele('div', this.node, { textContent: data.title, className: 'title' }));
 		
-		constants.add_ele('div', this.title, { className: 'version', textContent: 'v' + data.version });
+		utils.add_ele('div', this.title, { className: 'version', textContent: 'v' + data.version });
 		
-		this.sections_con = constants.add_ele('div', this.node, { className: 'sections' });
-		this.sidebar_con = constants.add_ele('div', this.sections_con, { className: 'sidebar' });
+		this.sections_con = utils.add_ele('div', this.node, { className: 'sections' });
+		this.sidebar_con = utils.add_ele('div', this.sections_con, { className: 'sidebar' });
 		
 		keybinds.push(this.toggle_bind = {
 			code: [ 'F1' ],
@@ -450,7 +451,7 @@ class Config extends PanelDraggable {
 		this.sections = data.value.map((data, index) => {
 			var section = {
 				data: data,
-				node: constants.add_ele('section', this.sections_con),
+				node: utils.add_ele('section', this.sections_con),
 				show: () => {
 					section.node.classList.remove('hidden');
 					this.config.value.ui_page = index;
@@ -479,7 +480,7 @@ class Config extends PanelDraggable {
 				return new construct(data, section, this);
 			});
 			
-			constants.add_ele('div', this.sidebar_con, { className: 'open-section', textContent: section.data.name }).addEventListener('click', () => {
+			utils.add_ele('div', this.sidebar_con, { className: 'open-section', textContent: section.data.name }).addEventListener('click', () => {
 				if(section.data.type == 'function')section.data.value();
 				else this.sections.forEach(section => section.hide()), section.show();
 			});
@@ -493,7 +494,7 @@ class Config extends PanelDraggable {
 			this.load_ui_data();
 		});
 		
-		this.footer = constants.add_ele('footer', this.node);
+		this.footer = utils.add_ele('footer', this.node);
 	}
 	async update(load){
 		if(load)await this.config.load();
@@ -505,7 +506,7 @@ class Config extends PanelDraggable {
 		
 		this.toggle_bind.code = [ 'F1', this.config.value.binds.toggle ];
 		
-		this.footer.textContent = `Press ${this.toggle_bind.code.map(constants.string_key).map(x => '[' + x + ']').join(' or ')} to toggle`;
+		this.footer.textContent = `Press ${this.toggle_bind.code.map(utils.string_key).map(x => '[' + x + ']').join(' or ')} to toggle`;
 		
 		this.sections.forEach(section => section.controls.forEach(control => control.update()));
 	}
@@ -521,9 +522,9 @@ class Tab {
 		
 		this.focused = false;
 		
-		this.node = constants.add_ele('div', ui.tab_con, { className: 'tab' });
+		this.node = utils.add_ele('div', ui.tab_con, { className: 'tab' });
 		
-		this.namen = constants.add_ele('div', this.node, { className: 'name' });
+		this.namen = utils.add_ele('div', this.node, { className: 'name' });
 		
 		this.node.insertAdjacentHTML('beforeend', svg.rename);
 		
@@ -534,7 +535,7 @@ class Tab {
 			this.rename_input.focus();
 		});
 		
-		this.activen = constants.add_ele('div', this.node, { className: 'active' });
+		this.activen = utils.add_ele('div', this.node, { className: 'active' });
 		
 		this.activen.addEventListener('click', async () => {
 			this.active = !this.active;
@@ -559,7 +560,7 @@ class Tab {
 			this.remove();
 		});
 		
-		this.rename_input = constants.add_ele('span', this.node, { className: 'rename-input' });
+		this.rename_input = utils.add_ele('span', this.node, { className: 'rename-input' });
 		
 		this.rename_input.setAttribute('contenteditable', '');
 		
@@ -644,17 +645,17 @@ class Editor extends PanelDraggable {
 	constructor(data){
 		super(data, 'editor');
 		
-		this.sheet = constants.add_ele('style', document.documentElement);
+		this.sheet = utils.add_ele('style', document.documentElement);
 		
-		this.title = constants.add_ele('div', this.node, { textContent: data.title, className: 'title' });
+		this.title = utils.add_ele('div', this.node, { textContent: data.title, className: 'title' });
 		
-		this.actions = this.listen_dragging(constants.add_ele('div', this.title, { className: 'actions' }));
+		this.actions = this.listen_dragging(utils.add_ele('div', this.title, { className: 'actions' }));
 		
 		this.actions.insertAdjacentHTML('beforeend', svg.add_file);
 		this.actions.lastElementChild.addEventListener('click', async () => new Tab(await this.write_data(gen_uuid(), { name: 'new.css', active: true, value: '' }), this).focus());
 		
 		this.actions.insertAdjacentHTML('beforeend', svg.web);
-		this.actions.lastElementChild.addEventListener('click', () => exports.prompt('Enter a CSS link').then(input => constants.request(input).then(async style => {
+		this.actions.lastElementChild.addEventListener('click', () => exports.prompt('Enter a CSS link').then(input => utils.request(input).then(async style => {
 			var name = input.split('/').slice(-1)[0];
 			
 			new Tab(await this.write_data(gen_uuid(), { name: name, active: true, value: style }), this).focus();
@@ -668,7 +669,7 @@ class Editor extends PanelDraggable {
 		this.actions.insertAdjacentHTML('beforeend', svg.reload);
 		this.actions.lastElementChild.addEventListener('click', () => this.load());
 		
-		constants.add_ele('div', this.actions, { textContent: '?', className: 'help button' }).addEventListener('click', event => exports.alert([
+		utils.add_ele('div', this.actions, { textContent: '?', className: 'help button' }).addEventListener('click', event => exports.alert([
 			`<h3>Glossary:</h3><ul>`,
 				`<li>Menu bar - set of buttons found in the top left of the panel.</li>`,
 			`</ul>`,
@@ -689,18 +690,18 @@ class Editor extends PanelDraggable {
 			`<p>Pressing the ${svg.rename} icon in your CSS's tab will change the tab to renaming mode. Type in the new name then press enter to save changes.<p>`,
 			'<h3>How do I remove my CSS?</h3>',
 			`<p>Pressing the ${svg.close} icon in your CSS's tab will remove your CSS.<p>`,
-			`<p>For further help, ask our support team in the Discord server by <a target="_blank" href="${constants.discord}">clicking here</a><p>`,
+			`<p>For further help, ask our support team in the Discord server by <a target="_blank" href="${utils.discord}">clicking here</a><p>`,
 		].join('')));
 		
-		constants.add_ele('div', this.actions, { className: 'hide button' }).addEventListener('click', event => this.hide());
+		utils.add_ele('div', this.actions, { className: 'hide button' }).addEventListener('click', event => this.hide());
 		
-		this.tab_con = constants.add_ele('div', this.title, { className: 'tabs' });
+		this.tab_con = utils.add_ele('div', this.title, { className: 'tabs' });
 		
 		this.tabs = [];
 		
 		data.tabs.forEach(uuid => new Tab(uuid, this));
 		
-		this.mirror = codemirror(this.node, {
+		this.mirror = new Codemirror(this.node, {
 			mode: 'css',
 			lineWrapping: true,
 			indentWithTabs: true,
@@ -715,7 +716,7 @@ class Editor extends PanelDraggable {
 		
 		this.editor = this.node.lastElementChild;
 		
-		this.footer = constants.add_ele('footer', this.node, { className: 'left' });
+		this.footer = utils.add_ele('footer', this.node, { className: 'left' });
 		
 		this.update();
 		this.focus_first();
@@ -778,11 +779,11 @@ exports.alert = desc => {
 	
 	panel.fix_center();
 	
-	constants.add_ele('div', panel.node, { innerHTML: desc, className: 'description' });
+	utils.add_ele('div', panel.node, { innerHTML: desc, className: 'description' });
 	
-	var form = constants.add_ele('form', panel.node);
+	var form = utils.add_ele('form', panel.node);
 	
-	constants.add_ele('button', form, { textContent: 'OK', className: 'submit single' });
+	utils.add_ele('button', form, { textContent: 'OK', className: 'submit single' });
 	
 	panel.focus();
 	
@@ -794,14 +795,14 @@ exports.prompt = desc => {
 	
 	panel.fix_center();
 	
-	constants.add_ele('div', panel.node, { textContent: desc, className: 'description' });
+	utils.add_ele('div', panel.node, { textContent: desc, className: 'description' });
 	
-	var form = constants.add_ele('form', panel.node),
-		input = constants.add_ele('input', form, { className: 'input' });
+	var form = utils.add_ele('form', panel.node),
+		input = utils.add_ele('input', form, { className: 'input' });
 	
-	constants.add_ele('button', form, { textContent: 'OK', className: 'submit' });
+	utils.add_ele('button', form, { textContent: 'OK', className: 'submit' });
 	
-	var cancel = constants.add_ele('button', form, { textContent: 'Cancel', className: 'cancel' });
+	var cancel = utils.add_ele('button', form, { textContent: 'Cancel', className: 'cancel' });
 	
 	panel.focus();
 	
@@ -816,13 +817,13 @@ exports.prompt = desc => {
 
 exports.options = (title, options) => {
 	var panel = new Panel({}, 'options'),
-		title = constants.add_ele('div', panel.node, { textContent: title, className: 'title' });
+		title = utils.add_ele('div', panel.node, { textContent: title, className: 'title' });
 	
 	panel.fix_center();
 	
 	panel.focus();
 	
 	return new Promise(resolve => {
-		options.forEach((option, index) => constants.add_ele('div', panel.node, { className: 'control', textContent: option[0] }).addEventListener('click', () => (panel.hide(), resolve(option[1]))));
+		options.forEach((option, index) => utils.add_ele('div', panel.node, { className: 'control', textContent: option[0] }).addEventListener('click', () => (panel.hide(), resolve(option[1]))));
 	});
 };

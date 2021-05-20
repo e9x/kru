@@ -14,36 +14,6 @@ exports.discord = 'https://e9x.github.io/kru/invite';
 
 exports.extracted = typeof build_extracted != 'number' ? Date.now() : build_extracted;
 
-exports.store = {
-	get: async key => gm.get_value ? await gm.get_value(key) : localStorage.getItem('ss' + key),
-	set(key, value){
-		if(gm.set_value)return gm.set_value(key, value);
-		else return localStorage.setItem('ss' + key, value);
-	},
-	del(key){
-		if(!gm.get_value)localStorage.removeItem('ss' + key);
-		else this.set(key, '');
-	},
-};
-
-exports.request = (url, headers = {}) => new Promise((resolve, reject) => {
-	url = new URL(url, location);
-	
-	if(gm.request)gm.request({
-		url: url.href,
-		headers: headers,
-		onerror: reject,
-		onload: res => resolve(res.responseText),
-	});
-	else gm.fetch(url, { headers: headers }).then(res => res.text()).then(resolve).catch(reject);
-});
-
-exports.add_ele = (node_name, parent, attributes) => Object.assign(parent.appendChild(document.createElement(node_name)), attributes);
-
-exports.crt_ele = (node_name, attributes) => Object.assign(document.createElement(node_name), attributes);
-
-exports.string_key = key => key.replace(/^(Key|Digit|Numpad)/, '');
-
-exports.api_url = 'https://sys32.dev/api/';
+exports.api_url = 'https://api.sys32.dev/';
 exports.hostname = 'krunker.io';
 exports.mm_url = 'https://matchmaker.krunker.io/';

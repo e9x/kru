@@ -53,7 +53,7 @@ exports.main = cheat => {
 			ctx.globalAlpha = 1;
 		}
 		
-		if(!cheat.game || !cheat.world || !cheat.player)return;
+		if(!cheat.game || !cheat.world)return;
 		
 		cheat.world.scene.children.forEach(obj => {
 			if(obj.type != 'Mesh' || !obj.dSrc || obj.material[cheat.syms.hooked])return;
@@ -129,26 +129,32 @@ exports.main = cheat => {
 			
 			if(cheat.config.esp.status == 'full' || cheat.config.esp.health_bars){
 				var box_ps = [ rect.left - rect.width / 2, rect.top, rect.width / 4, rect.height ],
+					hp_grad;
+				
+				try{
 					hp_grad = ctx.createLinearGradient(0, box_ps[1], 0, box_ps[1] + box_ps[3]);
-				
-				hp_grad.addColorStop(0, '#F00');
-				hp_grad.addColorStop(0.5, '#FF0');
-				hp_grad.addColorStop(1, '#0F0');
-				
-				// border
-				ctx.strokeStyle = '#000';
-				ctx.lineWidth = 2;
-				ctx.fillStyle = '#666';
-				ctx.strokeRect(...box_ps);
-				
-				// inside of it
-				ctx.fillRect(...box_ps);
-				
-				box_ps[3] *= hp_perc / 100;
-				
-				// colored part
-				ctx.fillStyle = hp_grad;
-				ctx.fillRect(...box_ps);
+					
+					hp_grad.addColorStop(0, '#F00');
+					hp_grad.addColorStop(0.5, '#FF0');
+					hp_grad.addColorStop(1, '#0F0');
+					
+					// border
+					ctx.strokeStyle = '#000';
+					ctx.lineWidth = 2;
+					ctx.fillStyle = '#666';
+					ctx.strokeRect(...box_ps);
+					
+					// inside of it
+					ctx.fillRect(...box_ps);
+					
+					box_ps[3] *= hp_perc / 100;
+					
+					// colored part
+					ctx.fillStyle = hp_grad;
+					ctx.fillRect(...box_ps);
+				}catch(err){
+					console.log(box_ps);
+				}
 			}
 			
 			// full ESP
@@ -157,8 +163,7 @@ exports.main = cheat => {
 				var hp_red = hp_perc < 50 ? 255 : Math.round(510 - 5.10 * hp_perc),
 					hp_green = hp_perc < 50 ? Math.round(5.1 * hp_perc) : 255,
 					hp_color = '#' + ('000000' + (hp_red * 65536 + hp_green * 256 + 0 * 1).toString(16)).slice(-6),
-					player_dist = cheat.player.distanceTo(player),
-					font_size = ~~(11 - (player_dist * 0.005));
+					font_size = ~~(11 - (player.distance_camera() * 0.005));
 				
 				ctx.textAlign = 'middle';
 				ctx.font = 'Bold ' + font_size + 'px Tahoma';
@@ -174,7 +179,6 @@ exports.main = cheat => {
 						['#FFF', (player.weapon.ammo || 'N') + '/' + (player.weapon.ammo || 'A') ],
 						['#BBB', ']']],
 					[['#BBB', 'Risk: '], [(player.risk ? '#0F0' : '#F00'), player.risk ? 'Yes' : 'No']],
-					[['#BBB', '['], ['#FFF', ~~(player_dist / 10) + 'm'], ['#BBB', ']']],
 				]);
 			}
 			

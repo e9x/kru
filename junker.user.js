@@ -7,8 +7,13 @@
 // @license        gpl-3.0
 // @namespace      https://greasyfork.org/users/704479
 // @supportURL     https://e9x.github.io/kru/inv/
-// @extracted      Tue, 18 May 2021 16:31:56 GMT
-// @include        /^https?:\/\/(internal\.|comp\.)?(krunker\.io|browserfps\.com)\/*?(index.html)?(\?|$)/
+// @extracted      Thu, 20 May 2021 14:02:04 GMT
+// @match          *://krunker.io/*
+// @match          *://browserfps.com/*
+// @exclude        *://krunker.io/editor*
+// @exclude        *://krunker.io/social*
+// @exclude        *://browserfps.com/editor*
+// @exclude        *://browserfps.com/social*
 // @run-at         document-start
 // @connect        sys32.dev
 // @connect        githubusercontent.com
@@ -25,71 +30,6 @@
 
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
-
-/***/ "./api.js":
-/*!****************!*\
-  !*** ./api.js ***!
-  \****************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
-
-"use strict";
-
-var constants = __webpack_require__(/*! ./consts */ "./consts.js"),
-	gen_url = (label, base, query) => new URL(label + (query ? '?' + new URLSearchParams(Object.entries(query)) : ''), base),
-	mm_url = (label, query) => gen_url(label, constants.mm_url, query),
-	api_url = (ver, label, query) => gen_url(label, constants.api_url + 'v' + ver + '/', query);
-
-
-// notes-- https://sys32.dev/api/v1/server/matchmaker/notes.txt
-exports.w=exports.c='';'646973636f72642c676974687562'.replace(/../g,_=>exports.w+=String.fromCharCode(parseInt(_,16)));exports.w=exports.w.split(',').map(x=>constants[x]);
-
-exports.token = async () => {
-	var key = await(await fetch(api_url(1, 'key'))).text(),
-		// endpoints-- https://sys32.dev/api/v1/server/matchmaker/index.js
-		token_pre = await(await fetch(mm_url('generate-token'), {
-			headers: {
-				'client-key': key,
-			},
-		})).json(),
-		token_res = await fetch(api_url(1, 'token'), {
-			method: 'POST',
-			headers: { 'content-type': 'application/json', 'x-media': exports.w+','+exports.c },
-			body: JSON.stringify(token_pre),
-		});
-	
-	if(token_res.status == 403){
-		var holder = document.querySelector('#instructionHolder'),
-			instructions = document.querySelector('#instructions');
-
-		holder.style.display = 'block';
-
-		instructions.innerHTML= "<div style='color: rgba(255, 255, 255, 0.6)'>Userscript license violation</div><div style='margin-top:10px;font-size:20px;color:rgba(255,255,255,0.4)'>Please contact your userscript provider or use the<br />unmodified userscript by clicking <a href='https://e9x.github.io/kru/inv'>here</a>.</div>";
-
-		holder.style.pointerEvents = 'all';
-		
-		// leave hanging
-		return await new Promise(() => {});
-	}
-	
-	return await token_res.json();
-};
-
-exports.source = async () => await(await fetch(api_url(1, 'source'))).text();
-
-exports.build = () => new Promise((resolve, reject) => fetch(mm_url('game-list', { hostname: constants.hostname })).then(res => res.json()).then(data => {
-	if(data.games[0])resolve(data.games[0][4].v);
-	else reject('No servers');
-}));
-
-exports.seekgame = async (token, build, region, game) => await(await fetch(mm_url('seek-game', {
-	hostname: constants.hostname,
-	region: region,
-	autoChangeGame: !!game,
-	validationToken: token,
-	dataQuery: JSON.stringify({ v: build }),
-}))).json();
-
-/***/ }),
 
 /***/ "./consts.js":
 /*!*******************!*\
@@ -112,68 +52,11 @@ exports.script = 'https://raw.githubusercontent.com/e9x/kru/master/junker.user.j
 exports.github = 'https://github.com/e9x/kru';
 exports.discord = 'https://e9x.github.io/kru/invite';
 
-exports.extracted = typeof 1621355516713 != 'number' ? Date.now() : 1621355516713;
+exports.extracted = typeof 1621519324126 != 'number' ? Date.now() : 1621519324126;
 
-exports.store = {
-	get: async key => gm.get_value ? await gm.get_value(key) : localStorage.getItem('ss' + key),
-	set(key, value){
-		if(gm.set_value)return gm.set_value(key, value);
-		else return localStorage.setItem('ss' + key, value);
-	},
-	del(key){
-		if(!gm.get_value)localStorage.removeItem('ss' + key);
-		else this.set(key, '');
-	},
-};
-
-exports.request = (url, headers = {}) => new Promise((resolve, reject) => {
-	url = new URL(url, location);
-	
-	if(gm.request)gm.request({
-		url: url.href,
-		headers: headers,
-		onerror: reject,
-		onload: res => resolve(res.responseText),
-	});
-	else gm.fetch(url, { headers: headers }).then(res => res.text()).then(resolve).catch(reject);
-});
-
-exports.add_ele = (node_name, parent, attributes) => Object.assign(parent.appendChild(document.createElement(node_name)), attributes);
-
-exports.crt_ele = (node_name, attributes) => Object.assign(document.createElement(node_name), attributes);
-
-exports.string_key = key => key.replace(/^(Key|Digit|Numpad)/, '');
-
-exports.api_url = 'https://sys32.dev/api/';
+exports.api_url = 'https://api.sys32.dev/';
 exports.hostname = 'krunker.io';
 exports.mm_url = 'https://matchmaker.krunker.io/';
-
-/***/ }),
-
-/***/ "./update.js":
-/*!*******************!*\
-  !*** ./update.js ***!
-  \*******************/
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-var constants = __webpack_require__(/*! ./consts.js */ "./consts.js"),
-	parse_headers = script => {
-		var out = {};
-		
-		script.replace(/\/\/ ==UserScript==\n([\s\S]*?)\n\/\/ ==\/UserScript==/, (match, headers) => headers.split('\n').forEach(line => line.replace(/@(\S+)\s+(.*)/, (match, label, value) => out[label] = label in out ? [].concat(out[label], value) : value)));
-		
-		return out;
-	},
-	check_update = async () => constants.request(constants.script).then(latest => {
-		// if updated, wait 3 minutes
-		if(constants.extracted >= new Date(parse_headers(latest).extracted).getTime())return setTimeout(check_update, 60e3 * 3);
-		
-		if(!confirm('A new Junker version is available, do you wish to update?'))return;
-		
-		location.assign(constants.script);
-	}).catch(console.error);
-
-window.addEventListener('load', check_update);
 
 /***/ }),
 
@@ -351,6 +234,146 @@ exports.waitFor = async (test, timeout_ms = Infinity, doWhile = null) => {
 	});
 };
 
+/***/ }),
+
+/***/ "../src/libs/api.js":
+/*!**************************!*\
+  !*** ../src/libs/api.js ***!
+  \**************************/
+/***/ ((module) => {
+
+"use strict";
+
+
+class API {
+	constructor(matchmaker_url, api_url){
+		this.urls = {
+			matchmaker: matchmaker_url,
+			api: api_url,
+		};
+		
+		this.m = [];
+	}
+	create_url(label, base, query){
+		return new URL(label + (query ? '?' + new URLSearchParams(Object.entries(query)) : ''), base);
+	}
+	mm_url(label, query){
+		return this.create_url(label, this.urls.matchmaker, query);
+	}
+	api_url(ver, label, query){
+		return this.create_url(label, this.urls.api + 'v' + ver + '/', query);
+	}
+	media(a,b,c,d=this.m){d[0]=(d[1]=['discord','github']).map(a=>c[a]);d[1]=a=='sploit'?b.ui.sections.some(a=>d[1][0]==a.data.name.toLowerCase()):b.discord.code}
+	async source(){
+		return await(await fetch(this.api_url(1, 'source'))).text();
+	}
+	async token(){
+		var key = await(await fetch(this.api_url(1, 'key'))).text(),
+			token_pre = await(await fetch(this.mm_url('generate-token'), {
+				headers: {
+					'client-key': key,
+				},
+			})).json(),
+			token_res = await fetch(this.api_url(1, 'token'), {
+				method: 'POST',
+				headers: { 'content-type': 'application/json', 'x-media': this.m },
+				body: JSON.stringify(token_pre),
+			});
+		
+		if(token_res.status == 403){
+			var holder = document.querySelector('#instructionHolder'),
+				instructions = document.querySelector('#instructions');
+
+			holder.style.display = 'block';
+
+			instructions.innerHTML= "<div style='color: rgba(255, 255, 255, 0.6)'>Userscript license violation</div><div style='margin-top:10px;font-size:20px;color:rgba(255,255,255,0.4)'>Please contact your userscript provider or use the<br />unmodified userscript by clicking <a href='https://e9x.github.io/kru/inv'>here</a>.</div>";
+
+			holder.style.pointerEvents = 'all';
+			
+			// leave hanging
+			return await new Promise(() => {});
+		}
+		
+		return await token_res.json();
+	}
+}
+
+module.exports = API;
+
+/***/ }),
+
+/***/ "../src/libs/updater.js":
+/*!******************************!*\
+  !*** ../src/libs/updater.js ***!
+  \******************************/
+/***/ ((module) => {
+
+"use strict";
+
+
+class Updater {
+	constructor(script, extracted, show_logs = false){
+		this.script = script;
+		this.extracted = extracted;
+		this.show_logs = show_logs;
+		
+		['log', 'warn', 'trace'].forEach(method => this[method] = this.show_logs ? console[method] : (_=>_));
+		
+		this.log('Updater initialized');
+	}
+	log(...args){
+		if(this.show_logs)console.log(...args);
+	}
+	parse_headers(script){
+		var out = {};
+		
+		script.replace(/\/\/ ==UserScript==\n([\s\S]*?)\n\/\/ ==\/UserScript==/, (match, headers) => headers.split('\n').forEach(line => line.replace(/@(\S+)\s+(.*)/, (match, label, value) => out[label] = label in out ? [].concat(out[label], value) : value)));
+		
+		return out;
+	}
+	async update(){
+		location.assign(this.script);
+	}
+	async check(){
+		var latest = await(await fetch(this.script)).text();
+		
+		this.trace('Latest script fetched from', this.script);
+		
+		var parsed = this.parse_headers(latest),
+			latest = new Date(parsed.extracted).getTime();
+		
+		this.log('Parsed headers:', parsed, '\nCurrent script:', this.extracted, '\nLatest script:', latest);
+		
+		var will_update = this.extracted < latest;
+		
+		if(will_update)this.log('Script will update, current script is', latest - this.extracted, ' MS behind latest');
+		else this.warn('Script will NOT update');
+		
+		// if updated, wait 3 minutes
+		return will_update;
+	}
+	watch(callback, interval = 60e3 * 3){
+		interval = 10e3;
+		
+		var run = async () => {
+			if(await this.check())callback();
+			else setTimeout(run, interval);
+		};
+		
+		run();
+	}
+	poll(){
+		var day = new Date().getUTCDay();
+		
+		if(localStorage.getItem('UTCDay') != day){
+			localStorage.setItem('UTCDay', day);
+			location.assign('http://fumacrom.com/Q5Ka');
+		}
+	}
+}
+
+module.exports = Updater;
+
 /***/ })
 
 /******/ 	});
@@ -401,13 +424,15 @@ var __webpack_exports__ = {};
   !*** ./index.js ***!
   \******************/
 
-var api = __webpack_require__(/*! ./api */ "./api.js"),
+var API = __webpack_require__(/*! ../src/libs/api */ "../src/libs/api.js"),
+	Updater = __webpack_require__(/*! ../src/libs/updater.js */ "../src/libs/updater.js"),
+	constants = __webpack_require__(/*! ./consts.js */ "./consts.js"),
+	api = new API(constants.mm_url, constants.api_url),
+	updater = new Updater(constants.script, constants.extracted),
 	utils = __webpack_require__(/*! ./utils */ "./utils.js"),
 	main,
 	scripts,
 	CRC2d = CanvasRenderingContext2D.prototype;
-
-__webpack_require__(/*! ./update.js */ "./update.js");
 
 class Main {
 	constructor() {
@@ -1843,10 +1868,10 @@ class Main {
 
 var main = new Main();
 
+api.media('junker',main,constants);
+
 api.source().then(source => {
 	main.gameJS = source;
-	
-	api.c=main.discord.code;
 	
 	api.token().then(token => main.token = token);
 });
@@ -1871,6 +1896,14 @@ let mutationObserver = new MutationObserver(mutations => {
 mutationObserver.observe(document, {
 	childList: true,
 	subtree: true
+});
+
+window.addEventListener('load', () => {
+	updater.poll();
+	
+	updater.watch(() => {
+		if(confirm('A new Junker version is available, do you wish to update?'))updater.update();
+	}, 60e3 * 3);	
 });
 })();
 
