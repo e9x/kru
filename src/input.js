@@ -101,7 +101,9 @@ exports.main = (cheat, add) => {
 						aim_input(rot, data);
 					}
 				}
-			}else if(cheat.config.aim.status == 'assist' && cheat.player.aim_press){
+			}
+			
+			if(cheat.config.aim.status == 'assist' && cheat.player.aim_press){
 				if(cheat.config.aim.smooth.status)rot = smooth({ xD: rot.x, yD: rot.y });
 				
 				aim_camera(rot);

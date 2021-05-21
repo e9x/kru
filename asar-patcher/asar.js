@@ -27,7 +27,7 @@ class Asar {
 		
 		await iterate(folder, (this.header.files[alias] = { files: {} }).files);
 	}
-	async fileExists(file){
+	async exists(file){
 		var depth = this.header;
 		
 		file = this.resolve(file);

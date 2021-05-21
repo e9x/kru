@@ -411,7 +411,7 @@ document.addEventListener('pointerlockchange', () => {
 	cheat.focused = document.pointerLockElement != null;
 });
 
-updater.poll();
+// updater.poll();
 
 window.addEventListener('load', () => {
 	updater.watch(() => {

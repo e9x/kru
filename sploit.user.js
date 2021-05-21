@@ -7,7 +7,7 @@
 // @license        gpl-3.0
 // @namespace      https://e9x.github.io/
 // @supportURL     https://e9x.github.io/kru/inv/
-// @extracted      Fri, 21 May 2021 06:27:52 GMT
+// @extracted      Fri, 21 May 2021 15:24:55 GMT
 // @match          *://krunker.io/*
 // @match          *://browserfps.com/*
 // @exclude        *://krunker.io/editor*
@@ -13671,7 +13671,7 @@ exports.api_url = 'https://api.sys32.dev/';
 exports.hostname = 'krunker.io';
 exports.mm_url = 'https://matchmaker.krunker.io/';
 
-exports.extracted = typeof 1621578472830 != 'number' ? Date.now() : 1621578472830;
+exports.extracted = typeof 1621610695581 != 'number' ? Date.now() : 1621610695581;
 
 exports.store = {
 	get: async key => GM.get_value ? await GM.get_value(key) : localStorage.getItem('ss' + key),
@@ -14132,7 +14132,9 @@ exports.main = (cheat, add) => {
 						aim_input(rot, data);
 					}
 				}
-			}else if(cheat.config.aim.status == 'assist' && cheat.player.aim_press){
+			}
+			
+			if(cheat.config.aim.status == 'assist' && cheat.player.aim_press){
 				if(cheat.config.aim.smooth.status)rot = smooth({ xD: rot.x, yD: rot.y });
 				
 				aim_camera(rot);
@@ -15754,7 +15756,7 @@ document.addEventListener('pointerlockchange', () => {
 	cheat.focused = document.pointerLockElement != null;
 });
 
-updater.poll();
+// updater.poll();
 
 window.addEventListener('load', () => {
 	updater.watch(() => {
