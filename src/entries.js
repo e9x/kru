@@ -49,6 +49,7 @@ exports.base_config = {
 		wireframe: false,
 		auto_respawn: false,
 		adblock: true,
+		custom_loading: true,
 	},
 };
 
@@ -130,7 +131,7 @@ exports.ui = cheat => ({
 		},{
 			name: 'Custom loading screen',
 			type: 'boolean',
-			walk: 'game.loading',
+			walk: 'game.custom_loading',
 		},{
 			name: 'Skins',
 			type: 'boolean',

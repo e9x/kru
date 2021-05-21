@@ -15,7 +15,8 @@ var svg = require('./svg.json'),
 		lut[d2&0x3f|0x80]+lut[d2>>8&0xff]+'-'+lut[d2>>16&0xff]+lut[d2>>24&0xff]+
 		lut[d3&0xff]+lut[d3>>8&0xff]+lut[d3>>16&0xff]+lut[d3>>24&0xff];
 	},
-	frame = utils.crt_ele('iframe', { style: 'top:0;left:0;z-index:9000000;border:none;position:absolute;background:#0000;width:100vw;height:100vh;pointer-events:none' }),
+	// pointer-events:none
+	frame = utils.crt_ele('iframe', { style: 'top:0;left:0;z-index:9999999999;border:none;position:absolute;background:#0000;width:100vw;height:100vh' }),
 	keybinds = [],
 	inputs = {},
 	panels = [],
@@ -45,6 +46,8 @@ var svg = require('./svg.json'),
 exports.ready = new Promise(resolve => frame.addEventListener('load', () => resolve()));
 
 exports.ready.then(() => {
+	exports.doc = frame.contentWindow.document.documentElement;
+	
 	canvas = exports.canvas = utils.add_ele('canvas', frame.contentWindow.document.documentElement);
 	
 	var ctx = exports.ctx = canvas.getContext('2d', { alpha: true });
@@ -768,11 +771,13 @@ class Editor extends PanelDraggable {
 	}
 };
 
+exports.frame = frame;
 exports.Config = Config;
 exports.Tab = Tab;
 exports.Editor = Editor;
 exports.keybinds = keybinds;
 exports.inputs = inputs;
+exports.panels = panels;
 
 exports.alert = desc => {
 	var panel = new Panel({}, 'prompt');

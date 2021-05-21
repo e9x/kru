@@ -1,11 +1,12 @@
 'use strict';
 
 exports.main = cheat => {
-	var constants = require('./consts'),
+	var UI = require('./libs/ui'),
+		constants = require('./consts'),
 		v3 = ['x', 'y', 'z'],
 		esp_mats = {},
-		canvas = cheat.UI.canvas,
-		ctx = cheat.UI.ctx,
+		canvas = UI.canvas,
+		ctx = UI.ctx,
 		draw_text = (text_x, text_y, font_size, lines) => {
 			for(var text_index = 0; text_index < lines.length; text_index++){
 				var line = lines[text_index], xoffset = 0;
@@ -80,8 +81,6 @@ exports.main = cheat => {
 			
 			if(!player.active || !player.frustum || player.is_you)continue;
 			
-			let rect = player.rect();
-			
 			if(player.obj){
 				if(!player.obj[cheat.syms.hooked]){
 					player.obj[cheat.syms.hooked] = true;
@@ -116,6 +115,8 @@ exports.main = cheat => {
 					});
 				});
 			}
+			
+			let rect = player.rect();
 			
 			// box ESP
 			if(cheat.draw_box){

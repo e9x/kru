@@ -1,7 +1,8 @@
 'use strict';
 
 exports.main = (cheat, add) => {
-	var constants = require('./consts'),
+	var UI = require('./libs/ui'),
+		constants = require('./consts'),
 		keys = {frame: 0, delta: 1, xdir: 2, ydir: 3, moveDir: 4, shoot: 5, scope: 6, jump: 7, reload: 8, crouch: 9, weaponScroll: 10, weaponSwap: 11, moveLock: 12},
 		round = (n, r) => Math.round(n * Math.pow(10, r)) / Math.pow(10, r),
 		dist_center = pos => Math.hypot((window.innerWidth / 2) - pos.x, (window.innerHeight / 2) - pos.y),
@@ -54,11 +55,11 @@ exports.main = (cheat, add) => {
 			can_shoot = !data[keys.reloading] && cheat.player.has_ammo;
 		
 		// bhop
-		if(cheat.focused && cheat.config.game.bhop != 'off' && (cheat.UI.inputs.Space || cheat.config.game.bhop == 'autojump' || cheat.config.game.bhop == 'autoslide')){
+		if(cheat.focused && cheat.config.game.bhop != 'off' && (UI.inputs.Space || cheat.config.game.bhop == 'autojump' || cheat.config.game.bhop == 'autoslide')){
 			cheat.controls.keys[cheat.controls.binds.jump.val] ^= 1;
 			if(cheat.controls.keys[cheat.controls.binds.jump.val])cheat.controls.didPressed[cheat.controls.binds.jump.val] = 1;
 			
-			if((cheat.config.game.bhop == 'keyslide' && cheat.UI.inputs.Space || cheat.config.game.bhop == 'autoslide') && cheat.player.y_vel < -0.02 && cheat.player.can_slide)setTimeout(() => cheat.controls.keys[cheat.controls.binds.crouch.val] = 0, 325), cheat.controls.keys[cheat.controls.binds.crouch.val] = 1;
+			if((cheat.config.game.bhop == 'keyslide' && UI.inputs.Space || cheat.config.game.bhop == 'autoslide') && cheat.player.y_vel < -0.02 && cheat.player.can_slide)setTimeout(() => cheat.controls.keys[cheat.controls.binds.crouch.val] = 0, 325), cheat.controls.keys[cheat.controls.binds.crouch.val] = 1;
 		}
 		
 		if(!cheat.player.has_ammo && (cheat.config.aim.status == 'auto' || cheat.config.aim.auto_reload))data[keys.reload] = 1;
@@ -82,20 +83,23 @@ exports.main = (cheat, add) => {
 				rot = {
 					x: round(Math.max(-constants.utils.halfpi, Math.min(constants.utils.halfpi, x_dire - cheat.player.recoil_y * 0.27)) % constants.utils.pi2, 3) || 0,
 					y: constants.utils.normal_radian(round(y_dire % constants.utils.pi2, 3)) || 0,
-				};
+				},
+				can_hit = (Math.random() * 100) < cheat.config.aim.hitchance;
 			
-			if(cheat.config.aim.status == 'correction' && data[keys.shoot] && (cheat.player.auto_weapon ? true : !cheat.player.entity[cheat.vars.didShoot]))aim_input(rot, data);
-			if(cheat.config.aim.status == 'auto'){
-				data[keys.scope] = 1;
-				
-				if(cheat.config.aim.smooth.status){
-					rot = smooth({ xD: rot.x, yD: rot.y });
-					data[keys.shoot] = +enemy_sight();
-					aim_camera(rot);
-					aim_input(rot, data);
-				}else{
-					if(cheat.player.aim)data[keys.shoot] = cheat.player.shot ? 0 : 1;
-					aim_input(rot, data);
+			if(can_hit){
+				if(cheat.config.aim.status == 'correction' && data[keys.shoot] && (cheat.player.auto_weapon ? true : !cheat.player.entity[cheat.vars.didShoot]))aim_input(rot, data);
+				else if(cheat.config.aim.status == 'auto'){
+					data[keys.scope] = 1;
+					
+					if(cheat.config.aim.smooth.status){
+						rot = smooth({ xD: rot.x, yD: rot.y });
+						data[keys.shoot] = +enemy_sight();
+						aim_camera(rot);
+						aim_input(rot, data);
+					}else{
+						if(cheat.player.aim)data[keys.shoot] = cheat.player.shot ? 0 : 1;
+						aim_input(rot, data);
+					}
 				}
 			}else if(cheat.config.aim.status == 'assist' && cheat.player.aim_press){
 				if(cheat.config.aim.smooth.status)rot = smooth({ xD: rot.x, yD: rot.y });
@@ -103,7 +107,8 @@ exports.main = (cheat, add) => {
 				aim_camera(rot);
 				aim_input(rot, data);
 				
-				if(!cheat.player.shot && (Math.random() * 100) > cheat.config.aim.hitchance)data[keys.ydir] += 75;
+				// offset aim rather than revert to any previous camera rotation
+				if(!cheat.player.shot && !can_hit)data[keys.ydir] += 75;
 			}
 		}
 	}

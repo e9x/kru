@@ -15,6 +15,10 @@ exports.script = 'https://raw.githubusercontent.com/e9x/kru/master/sploit.user.j
 exports.github = 'https://github.com/e9x/kru';
 exports.discord = 'https://e9x.github.io/kru/invite';
 
+var is_host = (host, url) => url.hostname == host || url.hostname.endsWith('.' + host);
+
+exports.krunker = (is_host('krunker.io', location) || is_host('browserfps.com', location)) && location.pathname == '/';
+
 exports.api_url = 'https://api.sys32.dev/';
 exports.hostname = 'krunker.io';
 exports.mm_url = 'https://matchmaker.krunker.io/';

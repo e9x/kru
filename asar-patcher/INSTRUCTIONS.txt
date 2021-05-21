@@ -1,0 +1,25 @@
+Asar patcher
+
+To use this you will need:
+
+- a Krunker client
+
+- NodeJS 13 <
+
+Steps:
+
+1. Locate your krunker client folder, contains an EXE and a resources folder
+
+2. In the resources folder, create a copy of app.asar and rename it to input.asar
+
+3. Move input.asar to the asar-patcher folder
+
+4. Run patch.bat
+
+(You will know the patching was finished when "Saved" is written to your console)
+
+5. A new file will be created named app.asar, replace the app.asar in the resources folder with the newly created one
+
+6. If the patching was succsesful, Sploit will be in your client
+
+For further information, contact kpal@sys32.dev
