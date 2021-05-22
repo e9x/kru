@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset='utf8' />
+		<title>Krunker Patcher</title>
+		<link rel='stylesheet' href='./index.css' />
+	</head>
+	<body>
+		<div class='bar'>
+			<div class='drag'>
+				<span class='title'>Krunker Patcher</span>
+			</div>
+			<div class='actions'>
+				<svg class='close' width="12" height="12" viewBox="0 0 12 12"><polygon fill="currentColor" fill-rule="evenodd" points="11 1.576 6.583 6 11 10.424 10.424 11 6 6.583 1.576 11 1 10.424 5.417 6 1 1.576 1.576 1 6 5.417 10.424 1"></polygon></svg>
+			</div>
+			<div class='toolbar'>
+				<div class='reset'>Reset</div>
+				<div class='github'>GitHub</div>
+			</div>
+		</div>
+		<div class='app'>
+			<div class='clients'>
+				<div class='card' data-dtooltip='Cannnot locate files' style='display:none'>
+					<div class='image' style='background-image:url("icons/krunker.png")' draggable='false' alt=''></div>
+					<span class='label'>Official</span>
+				</div>
+				<div class='card'><div class='add'></div></div>
+			</div>
+			<div class='overlay'></div>
+			<div class='panel'>
+				<svg class='close' width="12" height="12" viewBox="0 0 12 12"><polygon fill="currentColor" fill-rule="evenodd" points="11 1.576 6.583 6 11 10.424 10.424 11 6 6.583 1.576 11 1 10.424 5.417 6 1 1.576 1.576 1 6 5.417 10.424 1"></polygon></svg>
+				<div class='info'>
+					<span><span>Name: </span><input class='block name' value='Krunker'></input></span>
+					<span><span>Path: </span><span class='block path'>C:/Path/To/Krunker</span></span>
+					<span><span>Icon: </span><span class='block icon'>C:/Path/To/Krunker.PNG</span></span>
+					<span><span>Patched: </span><span class='patched true'>Yes</span></span>
+					<span><span>Running: </span><span class='running true'>Yes</span></span>
+				</div>
+				<div class='actions'>
+					<button class='play' data-dtooltip='Game already running'>Play</button>
+					<button class='stop' data-dtooltip='Game not running'>Stop</button>
+					<button class='patch' data-dtooltip='Game running'>Patch</button>
+					<button class='browse'>Browse</button>
+					<button class='remove'>Remove</button>
+				</div>
+			</div>
+		</div>
+		<script src='./index.js'></script>
+	</body>
+</html>

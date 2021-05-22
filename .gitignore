@@ -3,5 +3,6 @@ package-lock.json
 client/node_modules
 client/package-lock.json
 server
-;; still working on below
-asar-patcher
+patcher/node_modules
+patcher/package-lock.json
+patcher/dist

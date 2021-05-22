@@ -1,6 +1,6 @@
 'use strict';
 
-var fs = require('fs'),
+var fs = require(typeof window == 'object' ? 'original-fs' : 'fs'),
 	path = require('path');
 
 class Asar {
@@ -10,7 +10,7 @@ class Asar {
 	resolve(file, keep_slash = false){
 		return path.posix.resolve('/', file).replace(/\\/g, '/').slice(keep_slash ? 0 : 1);
 	}
-	async insertFolder(folder, alias){
+	async insert_folder(folder, alias){
 		var iterate = async (folder, parent) => {
 			for(var file of await fs.promises.readdir(folder)){
 				var location = path.join(folder, file),
@@ -27,6 +27,16 @@ class Asar {
 		
 		await iterate(folder, (this.header.files[alias] = { files: {} }).files);
 	}
+	async delete(file){
+		var last_depth,
+			depth = this.header;
+		
+		file = this.resolve(file);
+		
+		for(var file of file.split('/'))if(!(depth = (last_depth = depth.files)[file]))throw new Error('File ' + file + ' not found');
+		
+		return delete last_depth[file];
+	}
 	async exists(file){
 		var depth = this.header;
 		
@@ -36,39 +46,32 @@ class Asar {
 		
 		return true;
 	}
-	async createFolder(file){
+	async create_folder(input_file){
 		var depth = this.header;
 		
-		file = this.resolve(file);
-		
-		for(var file of file.split('/'))depth = depth.files[file] || (depth.files[file] = { files: {} });
+		for(var file of this.resolve(input_file).split('/'))depth = depth.files[file] || (depth.files[file] = { files: {} });
 	}
-	async writeFile(file, data){
+	async write_file(input_file, data){
 		var depth = this.header;
 		
-		file = this.resolve(file);
-		
-		for(var file of file.split('/'))depth = depth.files[file] || (depth.files[file] = {});
+		for(var file of this.resolve(input_file).split('/'))depth = depth.files[file] || (depth.files[file] = {});
 		
 		depth.data = Buffer.from(data);
 	}
-	async readFolder(dir){
+	async read_folder(input_file){
 		var depth = this.header;
 		
-		file = this.resolve(file);
-		
-		for(var file of file.split('/'))if(!(depth = depth.files[file]))throw new Error('File ' + file + ' not found');
+		for(var file of this.resolve(input_file).split('/'))if(!file)continue;
+		else if(!(depth = depth.files[file]))throw new Error('File ' + input_file + ' not found');
 		
 		if(!depth.files)throw new TypeError('Attempting to read a file as a folder');
 		
 		return Object.keys(depth.files);
 	}
-	async readFile(file){
+	async read_file(input_file){
 		var depth = this.header;
 		
-		file = this.resolve(file);
-		
-		for(var file of file.split('/'))if(!(depth = depth.files[file]))throw new Error('File ' + file + ' not found');
+		for(var file of this.resolve(input_file).split('/'))if(!(depth = depth.files[file]))throw new Error('File ' + input_file + ' not found');
 		
 		if(depth.files)throw new TypeError('Attempting to read a folder as a file');
 		
@@ -133,13 +136,14 @@ class Asar {
 							write = Buffer.concat([ write, file.data ]);
 							
 							delete file.data;
-						}else write = Buffer.concat([ write, await this.readFile(location) ]);
+						}else write = Buffer.concat([ write, await this.read_file(location) ]);
 					}
 				}
 				
 				return { files: files };
 			},
-			header = Buffer.from(JSON.stringify(await iterate(this.header, []))),
+			iterated = await iterate(this.header, []),
+			header = Buffer.from(JSON.stringify(iterated)),
 			header_size_buf = Buffer.alloc(16);
 		
 		header_size_buf.writeUInt32LE(0x4, 0)
@@ -150,7 +154,7 @@ class Asar {
 		await fs.promises.writeFile(save || this.file, Buffer.concat([ header_size_buf, header, write ]));
 		
 		this.header.size = header.byteLength;
-		this.header = header;
+		this.header = iterated;
 	}
 };
 
