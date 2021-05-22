@@ -1,6 +1,6 @@
 # Sploit
 
-|||||
+|||||||
 | --- | --- | --- | --- | --- | --- |
 | [Client Patcher](#patcher) | [Junker](#junker) | [Userscript](#userscript) | [Discord](https://e9x.github.io/kru/invite) | [Build quickstart](#building) | [IDKR script](sploit.idkr.js) |
 
