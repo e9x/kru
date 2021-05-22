@@ -2,7 +2,7 @@
 
 |||||
 | --- | --- | --- | --- |
-| [Userscript](#userscript) | [Discord](https://e9x.github.io/kru/invite) | [Build quickstart](#building) | [IDKR script](sploit.idkr.js) |
+| [Client Patcher](#patcher) | [Userscript](#userscript) | [Discord](https://e9x.github.io/kru/invite) | [Build quickstart](#building) | [IDKR script](sploit.idkr.js) |
 
 # Resources:
 
@@ -46,4 +46,27 @@ Install [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dh
 
 # Junker
 
-[Greasyfork](https://greasyfork.org/en/scripts/426394-junker)
+[Greasyfork](https://greasyfork.org/en/scripts/424376-krunker-junker)
+
+# Patcher
+
+Pre-built binary found [here](https://e9x.github.io/kru/patcher/Patcher.exe).
+
+## Building the patcher:
+
+1. Clone this repository
+`git clone https://github.com/e9x/kru.git
+
+2. Enter the packer folder
+`cd e9x/packer`
+
+3. Install dependencies
+`./!INSTALL_MODULES.cmd`
+
+4. Test the app
+`./!TEST_CLIENT.cmd`
+
+5. Build the binaries
+`./!BUILD_EXE.cmd`
+
+Output in the `dist/` folder
