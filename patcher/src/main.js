@@ -3,6 +3,8 @@ var fs = require('fs'),
 	path = require('path'),
 	electron = require('electron');
 
+if(!electron.app.requestSingleInstanceLock())electron.app.quit();
+
 electron.app.on('ready', () => {
 	var screen = electron.screen.getPrimaryDisplay().workAreaSize,
 		window = new electron.BrowserWindow({
