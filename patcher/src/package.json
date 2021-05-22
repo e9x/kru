@@ -1,0 +1,30 @@
+{
+	"name": "krunker-patcher",
+	"description": "Krunker Client Patcher",
+	"author": "e9x <x@sys32.dev>",
+	"version": "1.0.0",
+	"main": "main.js",
+	"scripts": {
+		"start": "electron .",
+		"build": "electron-builder"
+	},
+	"build": {
+		"productName": "Krunker Patcher",
+		"appId": "com.krunker-patcher.app",
+		"win": {
+			"target": [
+				"portable"
+			]
+		},
+		"mac": {
+			"category": "public.app-category.games"
+		},
+		"portable": {
+			"artifactName": "Patcher.exe"
+		}
+	},
+	"devDependencies": {
+		"electron": "^12.0.9",
+		"electron-builder": "^22.10.5"
+	}
+}

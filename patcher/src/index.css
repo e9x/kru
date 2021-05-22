@@ -1,0 +1,311 @@
+@font-face {
+	font-family: 'inconsolata';
+	src: url('inconsolata.woff2') format('truetype');
+	font-weight: 400;
+}
+
+html {
+	display: flex;
+	width: 100%;
+	height: 100%;
+}
+
+body {
+	--primary: #eee;
+	--secondary: #445;
+	--background: #112;
+	--background-split: 17, 17, 34;
+	--true: #2A0;
+	--false: #A00;
+	--control-height: 36px;
+	--blue: #29F;
+	display: flex;
+	flex-direction: column;
+	border: 2px solid var(--primary);
+	background: var(--background);
+	color: var(--primary);
+	margin: 0px;
+	width: 100%;
+	height: 100%;
+	user-select: none;
+	font-family: inconsolata;
+	box-sizing: border-box;
+	overflow: hidden;
+}
+
+* {
+	outline: none;
+}
+
+.clients {
+	height: 100%;
+	margin: 15px;
+	display: flex;
+	flex-wrap: wrap;
+	flex-direction: row;
+	gap: 10px;
+	position: relative;
+	overflow-y: auto;
+	align-content: baseline;
+}
+
+
+.overlay {
+	content: '';
+	position: absolute;
+	left: 0px;
+	top: 0px;
+	width: 100%;
+	height: 100%;
+	background: #0006;
+	display: none;
+}
+
+.overlay.visible {
+	display: block;
+}
+
+.card {
+	font: inherit;
+	border: none;
+	display: flex;
+	width: 100px;
+	height: 125px;
+	transform: scale(0.9);
+	transition: 0.1s ease;
+	display: flex;
+	position: relative;
+	flex-direction: column;
+	background: var(--primary);
+	justify-content: space-evenly;
+	align-items: center;
+	cursor: pointer;
+	color: #000;
+}
+
+.card .add::before, .card .add::after {
+	content: '';
+	background: #444;
+	width: 5px;
+	height: 40px;
+	position: absolute;
+	margin: auto;
+	left: 0px;
+	right: 0px;
+	top: 0px;
+	bottom: 0px;
+}
+
+.card .add::after {
+	transform: rotate(90deg);
+}
+
+.card[data-disabled='true'] {
+	cursor: not-allowed;
+	filter: opacity(0.4);
+}
+
+.card:not([data-disabled='true']):hover {
+	transform: scale(1);
+}
+
+.card > .image {
+	width: 75px;
+	height: 75px;
+	background-size: contain;
+	background-repeat: no-repeat;
+	image-rendering: pixelated;
+}
+
+.card > .label {
+	height: 25px;
+	line-height: 25px;
+	text-align: center;
+	text-overflow: ellipsis;
+	width: 85%;
+	overflow: hidden;
+	white-space: nowrap;
+	font-size: 15px;
+}
+
+.panel {
+	display: none;
+	position: absolute;
+	right: 0px;
+	top: 0px;
+	width: 380px;
+	height: 100%;
+	flex-direction: column;
+	background: var(--secondary);
+	font-size: 14px;
+}
+
+.panel.focused {
+	display: flex;
+}
+
+.panel.focused::before {
+	display: block;
+}
+
+.panel > .close {
+	margin-left: auto;
+	cursor: pointer;
+	padding: 5px 8px;
+}
+
+.panel > .info, .panel > .actions {
+	padding: 10px;
+	display: flex;
+}
+
+.panel > .info {
+	line-break: anywhere;
+	flex-direction: column;
+	gap: 6px;
+}
+
+.panel > .actions {
+	margin-top: auto;
+	flex-direction: row;
+	gap: 6px;
+}
+
+.panel > .close:hover {
+	background: var(--primary);
+	color: var(--secondary);
+}
+
+.panel .block {
+	font-size: 13px;
+	padding: 3px;
+	margin-top: 2px;
+	background: var(--background);
+	border: none;
+	font: inherit;
+	color: inherit;
+	width: 100%;
+	display: block;
+	cursor: text;
+}
+
+.panel > .actions > button {
+	cursor: pointer;
+	width: 100%;
+	height: 30px;
+	color: var(--primary);
+	border: 2px solid var(--primary);
+	background: transparent;
+	font: inherit;
+	transition: 0.1s ease;
+	position: relative;
+}
+
+.panel > .actions > button[disabled] {
+	cursor: not-allowed;
+	opacity: 0.6;
+}
+
+.panel > .actions > button[disabled]::after, .card::after {
+	content: attr(data-dtooltip);
+	height: 25px;
+	line-height: 25px;
+	padding: 0px 7px;
+	background: #0008;
+	position: absolute;
+	bottom: calc(100% + 7px);
+	width: max-content;
+	left: 50%;
+	transform: translateX(-50%);
+	opacity: 0;
+	transition: 0.1s ease;
+	color: var(--primary);
+}
+
+.card::after {
+	bottom: unset;
+	top: calc(100% + 7px);
+}
+
+.card[data-disabled='true']:hover::after, .panel > .actions > button[disabled]:hover::after {
+	opacity: 1;
+}
+
+.panel > .actions > button:not([disabled]):hover {
+	background: var(--primary);
+	color: var(--secondary);
+}
+
+.panel .true, .panel .false {
+	font-weight: bold;
+}
+
+.panel .true {
+	color: var(--true);
+}
+
+.panel .false {
+	color: var(--false);
+}
+
+.client.focused {
+	width: 100%;
+}
+
+.app {
+	position: relative;
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	overflow: hidden;
+}
+
+body > .bar {
+	display: flex;
+	flex-direction: row;
+	line-height: 22px;
+	font-size: 13px;
+	flex-wrap: wrap;
+}
+
+body > .bar > div {
+	display: flex;
+	flex-direction: row;
+	height: 22px;
+}
+
+body > .bar > .toolbar {
+	width: 100%;
+}
+
+body > .bar > .toolbar > div {
+	height: 22px;
+	padding: 0px 5px;
+}
+
+body > .bar > .toolbar > div:hover {
+	background: var(--primary);
+	color: var(--background);
+}
+
+.bar > .actions {
+	margin-left: auto;
+}
+
+.bar > .actions > svg {
+	cursor: pointer;
+	padding: 5px 8px;
+}
+
+.bar > .actions > svg:hover {
+	background: var(--false);
+}
+
+.bar > .drag {
+	width: calc(100% - 28px);
+	-webkit-app-region: drag;
+}
+
+.bar > .drag > .title {
+	margin-left: 6px;
+}

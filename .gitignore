@@ -3,6 +3,6 @@ package-lock.json
 client/node_modules
 client/package-lock.json
 server
-patcher/node_modules
-patcher/package-lock.json
-patcher/dist
+patcher/src/node_modules
+patcher/src/package-lock.json
+patcher/src/dist
