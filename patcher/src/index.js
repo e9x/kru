@@ -19,16 +19,20 @@ var fs = require('original-fs'),
 				icon: 'clients/kpal.png',
 			},
 			{
+				name: 'Steam',
+				path: 'C:/Program Files (x86)/Steam/steamapps/common/Krunker',
+				icon: 'clients/steam.png',
+			},
+			{
 				name: 'MTZ',
-				icon: 'clients/mtz.png',
 				path: 'C:/Program Files/MTZ',
+				icon: 'clients/mtz.png',
 			},
 			{
 				name: 'idkr',
 				path: 'C:/Program Files/idkr',
 				icon: 'clients/idkr.png',
 			},
-			
 		],
 		async save(){
 			await fs.promises.writeFile(this.file, JSON.stringify(this.data));
@@ -88,6 +92,7 @@ var fs = require('original-fs'),
 			reset: '$ > .toolbar > .reset',
 			github: '$ > .toolbar > .github',
 			devtools: '$ > .toolbar > .devtools',
+			version: '$ .version',
 		},
 	});
 
@@ -418,3 +423,5 @@ config.load().then(() => {
 });
 
 nodes.bar.close.addEventListener('click', () => window.close());
+
+nodes.bar.version.textContent = require('./package.json').version;

@@ -48,7 +48,7 @@ Tool for injecting Sploit into Krunker clients
 `./!INSTALL_MODULES.cmd`
 
 4. Test the app
-`./!TEST_CLIENT.cmd`
+`./!TEST_PATCHER.cmd`
 
 5. Build the binaries
 `./!BUILD_EXE.cmd`

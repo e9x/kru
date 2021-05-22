@@ -2,7 +2,7 @@
 	"name": "krunker-patcher",
 	"description": "Krunker Client Patcher",
 	"author": "e9x <x@sys32.dev>",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"main": "main.js",
 	"scripts": {
 		"start": "electron .",
