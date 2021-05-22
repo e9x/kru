@@ -1,6 +1,6 @@
 ||||||
 | --- | --- | --- | --- | --- |
-| [Discord](#discord) | [Junker](#junker) | [Sploit](#sploit) | [Patcher](#patcher) | [Resources](#resources) | 
+| [Discord](#discord) | [Junker](#junker) | [Sploit](#sploit) | [Client Patcher](#patcher) | [Resources](#resources) | 
 
 # [Discord](https://e9x.github.io/kru/invite)
 
@@ -31,6 +31,7 @@ node index.js -once
 ```
 
 # Patcher
+Tool for injecting Sploit into Krunker clients
 
 [Source](patcher)
 [Pre-built binary}(https://e9x.github.io/kru/patcher/Patcher.exe).
