@@ -87,6 +87,7 @@ var fs = require('original-fs'),
 			close: '$ > .actions > .close',
 			reset: '$ > .toolbar > .reset',
 			github: '$ > .toolbar > .github',
+			devtools: '$ > .toolbar > .devtools',
 		},
 	});
 
@@ -213,6 +214,14 @@ class Client {
 		this.panel.actions.play.addEventListener('click', async () => {
 			if(!(await utils.process_running(path.basename(await this.get_binary_path()))))electron.shell.openPath(await this.get_binary_path());
 		});
+		
+		this.patch_message = this.panel.actions.patch.dataset.dtooltip;
+		this.fs_types = {
+			file: fs.F_OK,
+			read: fs.R_OK,
+			write: fs.W_OK,
+			execute: fs.X_OK,
+		};
 	}
 	get asar_path(){
 		return path.join(this.path, 'resources', 'app.asar');
@@ -323,12 +332,27 @@ class Client {
 		try{
 			await asar.save();
 		}catch(err){
-			alert(`Could not save modified asar, try relaunching Asar Patcher with administrator privileges. The error code was ${err.code} and the syscall was ${err.syscall}.`);
+			alert(`Could not gain access, try relaunching the patcher with administrator privileges.\n\n${util.format(err)}`);
 		}
 		
 		this.patching = false;
 		this.panel.actions.patch.disabled = false;
 		this.panel.actions.patch.dataset.dtooltip = patch_message;
+	}
+	stop_patch(){
+		this.patching = false;
+		this.panel.actions.patch.disabled = false;
+		this.panel.actions.patch.dataset.dtooltip = this.patch_message;
+	}
+	access_asar(...types){
+		var code = 0;
+		
+		for(var type of types)code |= this.fs_types[type];
+		
+		return new Promise(resolve => fs.access(this.asar_path, code, err => {
+			if(err)resolve(false);
+			else resolve(true);
+		}));
 	}
 	async patch(){
 		var patch_message = this.panel.actions.patch.dataset.dtooltip;
@@ -336,6 +360,8 @@ class Client {
 		this.patching = true;
 		this.panel.actions.patch.disabled = true;
 		this.panel.actions.patch.dataset.dtooltip = 'Patching...';
+		
+		// if(!(await this.access_asar('file', 'read', 'write')))return this.stop_patch(), alert(`Could not gain access, try relaunching the patcher with administrator privileges.`);
 		
 		var asar = new Asar();
 		
@@ -357,12 +383,10 @@ class Client {
 		try{
 			await asar.save();
 		}catch(err){
-			alert(`Could not save modified asar, try relaunching Asar Patcher with administrator privileges. The error code was ${err.code} and the syscall was ${err.syscall}.`);
+			alert(`Could not gain access, try relaunching the patcher with administrator privileges.\n\n${util.format(err)}`);
 		}
 		
-		this.patching = false;
-		this.panel.actions.patch.disabled = false;
-		this.panel.actions.patch.dataset.dtooltip = patch_message;
+		this.stop_patch();
 	}
 	toJSON(){
 		return {
@@ -389,6 +413,8 @@ config.load().then(() => {
 	});
 	
 	nodes.bar.github.addEventListener('click', () => electron.shell.openExternal('https://github.com/e9x/kru/tree/master/patcher'));
+	
+	nodes.bar.devtools.addEventListener('click', () => electron.ipcRenderer.send('devtools'));
 });
 
 nodes.bar.close.addEventListener('click', () => window.close());

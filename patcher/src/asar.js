@@ -1,6 +1,7 @@
 'use strict';
 
 var fs = require(typeof window == 'object' ? 'original-fs' : 'fs'),
+	asar_fs = require('fs'),
 	path = require('path');
 
 class Asar {
@@ -12,16 +13,16 @@ class Asar {
 	}
 	async insert_folder(folder, alias){
 		var iterate = async (folder, parent) => {
-			for(var file of await fs.promises.readdir(folder)){
+			for(var file of await asar_fs.promises.readdir(folder)){
 				var location = path.join(folder, file),
-					stat = await fs.promises.stat(location);
+					stat = await asar_fs.promises.stat(location);
 				
 				parent[file] = {};
 				
 				if(stat.isDirectory()){
 					parent[file].files = {};
 					await iterate(location, parent[file].files);
-				}else parent[file].data = await fs.promises.readFile(location);
+				}else parent[file].data = await asar_fs.promises.readFile(location);
 			}
 		};
 		

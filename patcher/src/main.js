@@ -1,6 +1,5 @@
 'use strict';
-var fs = require('fs'),
-	path = require('path'),
+var path = require('path'),
 	electron = require('electron');
 
 if(!electron.app.requestSingleInstanceLock())electron.app.quit();
@@ -23,6 +22,7 @@ electron.app.on('ready', () => {
 	}));
 	
 	electron.ipcMain.handle('user-data', () => electron.app.getPath('userData'));
+	electron.ipcMain.on('devtools', () => window.toggleDevTools());
 	
 	window.removeMenu();
 	window.loadFile(path.join(__dirname, 'index.html'));
