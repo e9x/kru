@@ -1,6 +1,6 @@
 'use strict';
-var API = require('../src/libs/api'),
-	Updater = require('../src/libs/updater.js'),
+var API = require('../sploit/libs/api'),
+	Updater = require('../sploit/libs/updater.js'),
 	constants = require('./consts.js'),
 	api = new API(constants.mm_url, constants.api_url),
 	updater = new Updater(constants.script, constants.extracted),

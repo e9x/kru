@@ -17,8 +17,8 @@ var os = require('os'),
 			},
 			context: path.dirname(script.entry),
 			module: { rules: [
-				{ test: /\.css$/, use: [ { loader: path.join(__dirname, 'src', 'libs', 'css.js') } ] },
-				{ test: /\.json$/, use: [ { loader: path.join(__dirname, 'src', 'libs', 'json.js') } ], type: 'javascript/auto' },
+				{ test: /\.css$/, use: [ { loader: path.join(__dirname, 'sploit', 'libs', 'css.js') } ] },
+				{ test: /\.json$/, use: [ { loader: path.join(__dirname, 'sploit', 'libs', 'json.js') } ], type: 'javascript/auto' },
 			] },
 			mode: minimize ? 'production' : 'development',
 			devtool: false,
@@ -128,7 +128,7 @@ create_script({
 	},
 	// greasyfork
 	minify: false,
-	entry: path.join(__dirname, 'src', 'index.js'),
+	entry: path.join(__dirname, 'sploit', 'index.js'),
 	output: path.join(__dirname, 'sploit.user.js'),
 	source: 'https://github.com/e9x/kru/tree/master/junker',
 });
