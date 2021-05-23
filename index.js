@@ -5,80 +5,65 @@ var os = require('os'),
 	https = require('https'),
 	webpack = require('webpack'),
 	krunker_hosts = [ 'krunker.io', 'browserfps.com' ],
-	create_script = script => {
-		var minimize = script.minify != null ? script.minify : true,
-			compiler;
-		
-		return compiler = webpack({
-			entry: script.entry,
-			output: {
-				path: path.dirname(script.output),
-				filename: path.basename(script.output),
-			},
-			context: path.dirname(script.entry),
-			module: { rules: [
-				{ test: /\.css$/, use: [ { loader: path.join(__dirname, 'sploit', 'libs', 'css.js') } ] },
-				{ test: /\.json$/, use: [ { loader: path.join(__dirname, 'sploit', 'libs', 'json.js') } ], type: 'javascript/auto' },
-			] },
-			mode: minimize ? 'production' : 'development',
-			devtool: false,
-			plugins: [
-				{ apply: compiler => compiler.hooks.thisCompilation.tap('Replace', compilation => compilation.hooks.processAssets.tap({ name: 'Replace', stage: webpack.Compilation.PROCESS_ASSETS_STAGE_REPORT }, () => {
-					var file = compilation.getAsset(compiler.options.output.filename),
-						spackage = script.package(),
-						extracted = new Date(),
-						rmeta = Object.assign({
-							name: spackage.name,
-							author: spackage.author,
-							source: script.source,
-							description: spackage.description,
-							version: spackage.version,
-							license: spackage.license,
-							namespace: spackage.homepage,
-							supportURL: spackage.bugs.url,
-							extracted: extracted.toGMTString(),
-							match: krunker_hosts.map(host => '*://' + host + '/*'),
-							exclude: krunker_hosts.map(host => [ '*://' + host + '/editor*', '*://' + host + '/social*' ]),
-							'run-at': 'document-start',
-							connect: [ 'sys32.dev', 'githubusercontent.com' ],
-						}, script.meta),
-						meta = Object.entries(rmeta).flatMap(([ key, val ]) => [ val ].flat(Infinity).map(val => [ key, val ])),
-						whitespace = meta.map(meta => meta[0]).sort((a, b) => b.toString().length - a.toString().length)[0].length + 8,
-						source = file.source.source().replace(/build_extracted/g, extracted.getTime());
-					
-					if(minimize && source.split('\n')[0].startsWith('/*'))source = source.split('\n').slice(1).join('\n');
-					
-					compilation.updateAsset(file.name, new webpack.sources.RawSource(`// ==UserScript==
+	create_script = (script, compiler = webpack({
+		entry: script.entry,
+		output: {
+			path: path.dirname(script.output),
+			filename: path.basename(script.output),
+		},
+		context: path.dirname(script.entry),
+		module: { rules: [
+			{ test: /\.css$/, use: [ { loader: path.join(__dirname, 'sploit', 'libs', 'css.js') } ] },
+			{ test: /\.json$/, use: [ { loader: path.join(__dirname, 'sploit', 'libs', 'json.js') } ], type: 'javascript/auto' },
+		] },
+		mode: 'development', // minimize ? 'production' : 'development',
+		devtool: false,
+		plugins: [
+			{ apply: compiler => compiler.hooks.thisCompilation.tap('Replace', compilation => compilation.hooks.processAssets.tap({ name: 'Replace', stage: webpack.Compilation.PROCESS_ASSETS_STAGE_REPORT }, () => {
+				var file = compilation.getAsset(compiler.options.output.filename),
+					spackage = script.package(),
+					extracted = new Date(),
+					rmeta = Object.assign({
+						name: spackage.name,
+						author: spackage.author,
+						source: script.source,
+						description: spackage.description,
+						version: spackage.version,
+						license: spackage.license,
+						namespace: spackage.homepage,
+						supportURL: spackage.bugs.url,
+						extracted: extracted.toGMTString(),
+						match: krunker_hosts.map(host => '*://' + host + '/*'),
+						exclude: krunker_hosts.map(host => [ '*://' + host + '/editor*', '*://' + host + '/social*' ]),
+						'run-at': 'document-start',
+						connect: [ 'sys32.dev', 'githubusercontent.com' ],
+					}, script.meta),
+					meta = Object.entries(rmeta).flatMap(([ key, val ]) => [ val ].flat(Infinity).map(val => [ key, val ])),
+					whitespace = meta.map(meta => meta[0]).sort((a, b) => b.toString().length - a.toString().length)[0].length + 8,
+					source = file.source.source().replace(/build_extracted/g, extracted.getTime());
+				
+				// if(minimize && source.split('\n')[0].startsWith('/*'))source = source.split('\n').slice(1).join('\n');
+				
+				compilation.updateAsset(file.name, new webpack.sources.RawSource(`// ==UserScript==
 ${meta.map(([ key, val ]) => ('// @' + key).padEnd(whitespace, ' ') + val.toString()).join('\n')}
 // ==/UserScript==
 ${(script.after || []).join('\n')}
 ${source}`));
-				})) },
-			],
-		}, (err, stats) => {
-			if(err)return console.error(err);
+			})) },
+		],
+	}, (err, stats) => {
+		if(err)return console.error(err);
+		
+		compiler[process.argv.includes('-once') ? 'run' : 'watch']({}, (err, stats) => {
+			var error = !!(err || stats.compilation.errors.length);
 			
-			compiler[process.argv.includes('-once') ? 'run' : 'watch']({}, (err, stats) => {
-				var error = !!(err || stats.compilation.errors.length);
-				
-				for(var ind = 0; ind < stats.compilation.errors.length; ind++)error = true, console.error(stats.compilation.errors[ind]);
-				if(err)console.error(err);
-				
-				if(error)return console.error('Build of', script.output, 'fail');
-				else console.log('Build of', script.output, 'success');
-			});
+			for(var ind = 0; ind < stats.compilation.errors.length; ind++)error = true, console.error(stats.compilation.errors[ind]);
+			if(err)console.error(err);
+			
+			if(error)return console.error('Build of', script.output, 'fail');
+			else console.log('Build of', script.output, 'success');
 		});
-	};
-
-/*
-remove regex sites
-
-// @match         *://krunker.io/*
-// @exclude       *://krunker.io/editor*
-// @exclude       *://krunker.io/social*
-
-browserfps.com
-*/
+	})) => null;
 
 create_script({
 	package(){
@@ -107,8 +92,6 @@ create_script({
 		`// Amazon Giftcard - skidlamer@mail.com`,
 		``,
 	],
-	// greasyfork
-	minify: false,
 	// window is another context when grants are given, never noticed this in sploit
 	entry: path.join(__dirname, 'junker', 'index.js'),
 	output: path.join(__dirname, 'junker.user.js'),
@@ -126,8 +109,6 @@ create_script({
 	meta: {
 		grant: [ 'GM_setValue', 'GM_getValue', 'GM_xmlhttpRequest' ],
 	},
-	// greasyfork
-	minify: false,
 	entry: path.join(__dirname, 'sploit', 'index.js'),
 	output: path.join(__dirname, 'sploit.user.js'),
 	source: 'https://github.com/e9x/kru/tree/master/junker',

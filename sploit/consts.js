@@ -7,17 +7,16 @@ var GM = {
 		client_fetch: typeof GM_client_fetch == 'function' && GM_client_fetch,
 		fetch: window.fetch.bind(window),
 	},
-	Utils = require('./libs/utils');
+	Utils = require('./libs/utils'),
+	utils = new Utils();
 
-exports.utils = new Utils();
+exports.utils = utils;
 
 exports.script = 'https://raw.githubusercontent.com/e9x/kru/master/sploit.user.js';
 exports.github = 'https://github.com/e9x/kru';
 exports.discord = 'https://e9x.github.io/kru/invite';
 
-var is_host = (host, url) => url.hostname == host || url.hostname.endsWith('.' + host);
-
-exports.krunker = (is_host('krunker.io', location) || is_host('browserfps.com', location)) && location.pathname == '/';
+exports.krunker = (utils.is_host('krunker.io', location) || utils.is_host('browserfps.com', location)) && location.pathname == '/';
 
 exports.api_url = 'https://api.sys32.dev/';
 exports.hostname = 'krunker.io';

@@ -13,6 +13,9 @@ class Utils {
 		// planned mobile client
 		this.mobile = [ 'android', 'webos', 'iphone', 'ipad', 'ipod', 'blackberry', 'iemobile', 'opera mini' ].some(ua => navigator.userAgent.includes(ua));
 	}
+	is_host(host, url){
+		return url.hostname == host || url.hostname.endsWith('.' + host);
+	}
 	normal_radian(radian){
 		radian = radian % this.pi2;
 		

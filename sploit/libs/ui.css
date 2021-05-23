@@ -19,12 +19,13 @@ html {
     top: 0px;
 	background: #000;
 	z-index: 1;
+	transition: 0.75s ease;
 }
 
 .loading > div {
 	width: 178px;
 	height: 178px;
-	background: url('https://i.imgur.com/yzb2ZmS.gif');
+	background: url('https://e9x.github.io/kru/sploit/libs/gg.gif');
 	background-size: contain;
 }
 
@@ -67,8 +68,6 @@ main {
 	font: 13px inconsolata, monospace;
 	padding: 2px 0px 2px 0px;
 	opacity: var(--opacity);
-	width: min-content;
-	height: min-content;
 	z-index: 2;
 }
 

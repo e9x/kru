@@ -6,12 +6,22 @@
 
 # Sploit
 
+[Tampermonkey (Chrome)](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo)
+
+[Tampermonkey (Firefox)](https://addons.mozilla.org/en-US/firefox/addon/tampermonkey/)
+
 [Source](sploit)
+
 [Userscript](https://raw.githubusercontent.com/e9x/kru/master/sploit.user.js)
 
 # Junker
 
+[Tampermonkey (Chrome)](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo)
+
+[Tampermonkey (Firefox)](https://addons.mozilla.org/en-US/firefox/addon/tampermonkey/)
+
 [Source](junker)
+
 [Userscript](https://raw.githubusercontent.com/e9x/kru/master/junker.user.js)
 
 # Building
@@ -34,7 +44,8 @@ node index.js -once
 Tool for injecting Sploit into Krunker clients
 
 [Source](patcher)
-[Pre-built binary}(https://e9x.github.io/kru/patcher/Patcher.exe).
+
+[Pre-built binary](https://e9x.github.io/kru/patcher/Patcher.exe).
 
 ## Building the patcher:
 

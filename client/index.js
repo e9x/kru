@@ -20,8 +20,8 @@ if(typeof nw == 'undefined')child_process.execFile(require('nw/lib/findpath')(),
 	
 	var screen = nw.Screen.screens[0],
 		loaders = {
-			'.json': require(path.join(__dirname, '..', 'src', 'libs', 'json.js')),
-			'.css': require(path.join(__dirname, '..', 'src', 'libs', 'css.js')),
+			'.json': require(path.join(__dirname, '..', 'sploit', 'libs', 'json.js')),
+			'.css': require(path.join(__dirname, '..', 'sploit', 'libs', 'css.js')),
 		},
 		eval_require = (func, base, cache = {}, base_require = mod.createRequire(base + '/')) => fn => {
 			var resolved = base_require.resolve(fn);
@@ -71,7 +71,7 @@ if(typeof nw == 'undefined')child_process.execFile(require('nw/lib/findpath')(),
 			/*local_address = ui.options('Select a network interface', Object.entries(require('os').networkInterfaces()).map(([ label, value ]) => [ label + ' - ' + value.map(ip => ip.family + ': ' + ip.address).join(', '), value ])).then(inter => (inter.find(ip => ip.family == 'IPv4') || inter[0]).address);*/
 			
 			// create node require in context
-			eval_require(window.Function, path.join(__dirname, '..', 'src'))('.');
+			eval_require(window.Function, path.join(__dirname, '..', 'sploit'))('.');
 		});
 	});
 

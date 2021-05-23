@@ -2,7 +2,7 @@ var clone_obj = obj => JSON.parse(JSON.stringify(obj)),
 	assign_deep = (target, ...objects) => {
 		for(var ind in objects)for(var key in objects[ind]){
 			if(typeof objects[ind][key] == 'object' && objects[ind][key] != null && key in target)assign_deep(target[key], objects[ind][key]);
-			else Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(objects[ind], key))
+			else if(typeof target == 'object' && target != null)Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(objects[ind], key))
 		}
 		
 		return target;
@@ -26,21 +26,15 @@ exports.base_config = {
 		status: 'off',
 		offset: 'random',
 		target_sorting: 'dist2d',
-		smooth: {
-			status: true,
-			value: 10,
-		},
+		smooth: 22,
 		hitchance: 100,
 		// percentage of screen
 		fov_box: false,
-		fov: 70,
+		fov: 60,
 	},
 	esp: {
 		status: 'off',
-		walls: {
-			status: false,
-			value: 1,
-		},
+		walls: 1,
 		tracers: false,
 	},
 	game: {
@@ -63,7 +57,7 @@ exports.ui = cheat => ({
 			var parsed = {};
 			try{ parsed = JSON.parse(config || '{}') }catch(err){ console.error(err, config) }
 			
-			return assign_deep(cheat.config, clone_obj(cheat.config_base), parsed);
+			return assign_deep(cheat.config, clone_obj(exports.base_config), parsed);
 		}),
 		value: cheat.config,
 	},
@@ -151,9 +145,10 @@ exports.ui = cheat => ({
 		value: [{
 			name: 'Smoothness',
 			type: 'slider',
-			walk: 'aim.smooth.value',
+			walk: 'aim.smooth',
 			unit: 'U',
 			range: [ 0, 50, 2 ],
+			labels: { 0: 'Off' },
 		},{
 			name: 'Target FOV',
 			type: 'slider',
@@ -189,10 +184,6 @@ exports.ui = cheat => ({
 			type: 'boolean',
 			walk: 'aim.fov_box',
 		},{
-			name: 'Smooth',
-			type: 'boolean',
-			walk: 'aim.smooth.status',
-		},{
 			name: 'Auto reload',
 			type: 'boolean',
 			walk: 'aim.auto_reload',
@@ -205,14 +196,10 @@ exports.ui = cheat => ({
 		name: 'Esp',
 		type: 'section',
 		value: [{
-			name: 'Walls',
-			type: 'boolean',
-			walk: 'esp.walls.status',
-		},{
 			name: 'Wall opacity',
 			type: 'slider',
-			walk: 'esp.walls.value',
-			range: [ 0.1, 1 ],
+			walk: 'esp.walls',
+			range: [ 0, 100, 5 ],
 		}]
 	},{
 		name: 'Binds',
@@ -267,7 +254,7 @@ exports.ui = cheat => ({
 				for(var ind in cheat.css_editor.tabs.length)await cheat.css_editor.tabs[ind].remove();
 				
 				// reset everything but sliders
-				await constants.store.set('config', JSON.stringify(assign_deep(cheat.config, clone_obj(cheat.config_base)), (prop, value) => typeof value == 'number' ? void'' : value));
+				await constants.store.set('config', JSON.stringify(assign_deep(cheat.config, clone_obj(exports.base_config)), (prop, value) => typeof value == 'number' ? void'' : value));
 				cheat.ui.update();
 			},
 			bind: 'binds.reset',

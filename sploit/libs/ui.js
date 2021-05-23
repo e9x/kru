@@ -18,7 +18,6 @@ var svg = require('./svg.json'),
 	// pointer-events:none
 	frame = utils.crt_ele('iframe', { style: 'top:0;left:0;z-index:9999999999;border:none;position:absolute;background:#0000;width:100vw;height:100vh' }),
 	keybinds = [],
-	inputs = {},
 	panels = [],
 	doc_input_active = doc => doc.activeElement && ['TEXTAREA', 'INPUT'].includes(doc.activeElement.tagName),
 	update_pe = event => {
@@ -64,19 +63,14 @@ exports.ready.then(() => {
 	global_listen('keydown', event => {
 		if(event.repeat || doc_input_active(document) || doc_input_active(frame.contentWindow.document))return;
 		
-		inputs[event.code] = true;
-		
 		// some(keycode => typeof keycode == 'string' && [ keycode, keycode.replace('Digit', 'Numpad') ]
 		keybinds.forEach(keybind => keybind.code.includes(event.code) && event.preventDefault() + keybind.interact());
 	});
-
-	global_listen('keyup', event => inputs[event.code] = false);
-
+	
 	frame.contentWindow.addEventListener('contextmenu', event => !(event.target != null && event.target instanceof frame.contentWindow.HTMLTextAreaElement) && event.preventDefault());
-
-	window.addEventListener('blur', () => inputs = exports.inputs = {});
+	
 	window.addEventListener('resize', resize_canvas);
-
+	
 	utils.add_ele('style', frame.contentWindow.document.documentElement, { textContent: [
 		require('./ui.css'),
 		require('codemirror/theme/solarized.css'),
@@ -776,7 +770,6 @@ exports.Config = Config;
 exports.Tab = Tab;
 exports.Editor = Editor;
 exports.keybinds = keybinds;
-exports.inputs = inputs;
 exports.panels = panels;
 
 exports.alert = desc => {

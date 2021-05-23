@@ -7,7 +7,7 @@
 // @license        gpl-3.0
 // @namespace      https://greasyfork.org/users/704479
 // @supportURL     https://e9x.github.io/kru/inv/
-// @extracted      Thu, 20 May 2021 14:10:31 GMT
+// @extracted      Sat, 22 May 2021 23:42:28 GMT
 // @match          *://krunker.io/*
 // @match          *://browserfps.com/*
 // @exclude        *://krunker.io/editor*
@@ -52,7 +52,7 @@ exports.script = 'https://raw.githubusercontent.com/e9x/kru/master/junker.user.j
 exports.github = 'https://github.com/e9x/kru';
 exports.discord = 'https://e9x.github.io/kru/invite';
 
-exports.extracted = typeof 1621519831109 != 'number' ? Date.now() : 1621519831109;
+exports.extracted = typeof 1621726948542 != 'number' ? Date.now() : 1621726948542;
 
 exports.api_url = 'https://api.sys32.dev/';
 exports.hostname = 'krunker.io';
@@ -236,10 +236,10 @@ exports.waitFor = async (test, timeout_ms = Infinity, doWhile = null) => {
 
 /***/ }),
 
-/***/ "../src/libs/api.js":
-/*!**************************!*\
-  !*** ../src/libs/api.js ***!
-  \**************************/
+/***/ "../sploit/libs/api.js":
+/*!*****************************!*\
+  !*** ../sploit/libs/api.js ***!
+  \*****************************/
 /***/ ((module) => {
 
 "use strict";
@@ -302,10 +302,10 @@ module.exports = API;
 
 /***/ }),
 
-/***/ "../src/libs/updater.js":
-/*!******************************!*\
-  !*** ../src/libs/updater.js ***!
-  \******************************/
+/***/ "../sploit/libs/updater.js":
+/*!*********************************!*\
+  !*** ../sploit/libs/updater.js ***!
+  \*********************************/
 /***/ ((module) => {
 
 "use strict";
@@ -424,8 +424,8 @@ var __webpack_exports__ = {};
   !*** ./index.js ***!
   \******************/
 
-var API = __webpack_require__(/*! ../src/libs/api */ "../src/libs/api.js"),
-	Updater = __webpack_require__(/*! ../src/libs/updater.js */ "../src/libs/updater.js"),
+var API = __webpack_require__(/*! ../sploit/libs/api */ "../sploit/libs/api.js"),
+	Updater = __webpack_require__(/*! ../sploit/libs/updater.js */ "../sploit/libs/updater.js"),
 	constants = __webpack_require__(/*! ./consts.js */ "./consts.js"),
 	api = new API(constants.mm_url, constants.api_url),
 	updater = new Updater(constants.script, constants.extracted),
