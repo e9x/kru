@@ -7,7 +7,7 @@
 // @license        gpl-3.0
 // @namespace      https://e9x.github.io/
 // @supportURL     https://e9x.github.io/kru/inv/
-// @extracted      Sun, 23 May 2021 03:44:17 GMT
+// @extracted      Sun, 23 May 2021 03:46:40 GMT
 // @match          *://krunker.io/*
 // @match          *://browserfps.com/*
 // @exclude        *://krunker.io/editor*
@@ -13830,7 +13830,7 @@ exports.api_url = 'https://api.sys32.dev/';
 exports.hostname = 'krunker.io';
 exports.mm_url = 'https://matchmaker.krunker.io/';
 
-exports.extracted = typeof 1621741457011 != 'number' ? Date.now() : 1621741457011;
+exports.extracted = typeof 1621741600692 != 'number' ? Date.now() : 1621741600692;
 
 exports.store = {
 	get: async key => GM.get_value ? await GM.get_value(key) : localStorage.getItem('ss' + key),
@@ -13928,7 +13928,7 @@ exports.base_config = {
 	},
 	esp: {
 		status: 'off',
-		walls: 1,
+		walls: 100,
 		tracers: false,
 	},
 	game: {

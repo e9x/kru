@@ -34,7 +34,7 @@ exports.base_config = {
 	},
 	esp: {
 		status: 'off',
-		walls: 1,
+		walls: 100,
 		tracers: false,
 	},
 	game: {
