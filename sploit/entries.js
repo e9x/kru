@@ -26,7 +26,7 @@ exports.base_config = {
 		status: 'off',
 		offset: 'random',
 		target_sorting: 'dist2d',
-		smooth: 22,
+		smooth: 15,
 		hitchance: 100,
 		// percentage of screen
 		fov_box: false,

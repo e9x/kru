@@ -103,8 +103,13 @@ module.exports = array => {
 	// auto reload
 	if(!cheat.player.has_ammo && (cheat.config.aim.status == 'auto' || cheat.config.aim.auto_reload))data.reload = 1;
 	
+	// TODO: target once on aim
 	// aimbot
-	var target = cheat.target = cheat.target && cheat.target.can_target ? cheat.target : cheat.game.players.list.map(cheat.add).filter(player => player.can_target).sort((ent_1, ent_2) => sorts[cheat.config.aim.target_sorting || 'dist2d'](ent_1, ent_2) * (ent_1.frustum ? 1 : 0.5))[0],
+	var target = cheat.target = !data.scope && !data.shoot
+		? null
+		: cheat.target && cheat.target.can_target
+			? cheat.target
+			: cheat.game.players.list.map(cheat.add).filter(player => player.can_target).sort((ent_1, ent_2) => sorts[cheat.config.aim.target_sorting || 'dist2d'](ent_1, ent_2) * (ent_1.frustum ? 1 : 0.5))[0],
 		can_shoot = !data.reloading && cheat.player.has_ammo;
 	
 	// todo: triggerbot delay
@@ -144,7 +149,7 @@ module.exports = array => {
 			aim_input(rot, data);
 			
 			// offset aim rather than revert to any previous camera rotation
-			if(!cheat.player.shot && !can_hit)data.ydir += 75;
+			if(data.shoot && !cheat.player.shot && !can_hit)data.ydir += 75;
 		}
 	}
 	
