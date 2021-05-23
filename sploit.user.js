@@ -7,7 +7,7 @@
 // @license        gpl-3.0
 // @namespace      https://e9x.github.io/
 // @supportURL     https://e9x.github.io/kru/inv/
-// @extracted      Sun, 23 May 2021 03:46:40 GMT
+// @extracted      Sun, 23 May 2021 03:52:42 GMT
 // @match          *://krunker.io/*
 // @match          *://browserfps.com/*
 // @exclude        *://krunker.io/editor*
@@ -13830,7 +13830,7 @@ exports.api_url = 'https://api.sys32.dev/';
 exports.hostname = 'krunker.io';
 exports.mm_url = 'https://matchmaker.krunker.io/';
 
-exports.extracted = typeof 1621741600692 != 'number' ? Date.now() : 1621741600692;
+exports.extracted = typeof 1621741962289 != 'number' ? Date.now() : 1621741962289;
 
 exports.store = {
 	get: async key => GM.get_value ? await GM.get_value(key) : localStorage.getItem('ss' + key),
@@ -14212,7 +14212,7 @@ var cheat = __webpack_require__(/*! ./cheat */ "./cheat.js"),
 	smooth = target	=> {
 		var aj = 17,
 			// default 0.0022
-			div = 8000, // 10000
+			div = 10000,
 			turn = (50 - cheat.config.aim.smooth) / div,
 			speed = (50 - cheat.config.aim.smooth) / div,
 			x_ang = utils.getAngleDst(cheat.controls[vars.pchObjc].rotation.x, target.xD),

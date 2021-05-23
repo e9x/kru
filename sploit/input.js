@@ -35,7 +35,7 @@ var cheat = require('./cheat'),
 	smooth = target	=> {
 		var aj = 17,
 			// default 0.0022
-			div = 8000, // 10000
+			div = 10000,
 			turn = (50 - cheat.config.aim.smooth) / div,
 			speed = (50 - cheat.config.aim.smooth) / div,
 			x_ang = utils.getAngleDst(cheat.controls[vars.pchObjc].rotation.x, target.xD),
