@@ -61,13 +61,14 @@ main {
 	--control-height: 36px;
 	--blue: #29F;
 	--opacity: 0.75;
-	position: absolute;
 	background: var(--background);
-	user-select: none;
 	color: var(--primary);
 	font: 13px inconsolata, monospace;
+	height: min-content;
+	position: absolute;
 	padding: 2px 0px 2px 0px;
 	opacity: var(--opacity);
+	user-select: none;
 	z-index: 2;
 }
 

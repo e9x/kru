@@ -136,7 +136,6 @@ exports.process = () => {
 				
 				exports.controls[vars.tmpInpts].push = function(data){
 					if(exports.player && exports.player.weapon)inputs(data);
-					
 					return push.call(this, data);
 				}
 			}

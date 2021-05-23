@@ -22,9 +22,12 @@ integrate.listen_load(() => {
 			`<li>Use a <a target="_blank" href=${JSON.stringify(constants.addon_url('Proxy VPN'))}>Proxy/VPN</a></li>`,
 		`</ul>`,
 	].join(''));
+	/*
+	// ez join new server
 	else if(integrate.has_instruct('banned'))localStorage.removeItem('krunker_token'), UI.alert(
 		`<p>You were banned, Sploit has signed you out.\nCreate a new account to bypass this ban.</p>`,
 	);
+	*/
 	
 	if(cheat.config.game.auto_respawn){
 		if(integrate.has_instruct('connection error', 'game is full', 'kicked by vote', 'disconnected'))location.assign('https://krunker.io');

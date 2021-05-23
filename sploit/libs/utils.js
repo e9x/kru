@@ -13,6 +13,12 @@ class Utils {
 		// planned mobile client
 		this.mobile = [ 'android', 'webos', 'iphone', 'ipad', 'ipod', 'blackberry', 'iemobile', 'opera mini' ].some(ua => navigator.userAgent.includes(ua));
 	}
+	dist_center(pos){
+		return Math.hypot((window.innerWidth / 2) - pos.x, (window.innerHeight / 2) - pos.y);
+	}
+	round(n, r){
+		return Math.round(n * Math.pow(10, r)) / Math.pow(10, r);
+	}
 	is_host(host, url){
 		return url.hostname == host || url.hostname.endsWith('.' + host);
 	}
