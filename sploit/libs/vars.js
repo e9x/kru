@@ -57,12 +57,6 @@ add_patch(/\(\w+,(\w+),\w+\){(?=[a-z ';\.\(\),]+ACESFilmic)/, (match, three) => 
 // Skins
 add_patch(/((?:[a-zA-Z]+(?:\.|(?=\.skins)))+)\.skins(?!=)/g, (match, player) => key + '.skins(' + player + ')');
 
-exports.vars = source => {
-	
-	
-	return found;
-};
-
 exports.patch = source => {
 	var found = {},
 		missing = {};

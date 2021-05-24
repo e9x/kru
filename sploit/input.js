@@ -3,35 +3,6 @@ var cheat = require('./cheat'),
 	vars = require('./libs/vars'),
 	integrate = require('./libs/integrate'),
 	{ utils } = require('./consts'),
-	/*
-	[
-		controls.getISN(),
-		Math.round(delta * game.config.deltaMlt),
-		Math.round(1000 * controls.yDr.round(3)),
-		Math.round(1000 * xDr.round(3)),
-		game.moveLock ? -1 : config.movDirs.indexOf(controls.moveDir),
-		controls.mouseDownL || controls.keys[controls.binds.shoot.val] ? 1 : 0,
-		controls.mouseDownR || controls.keys[controls.binds.aim.val] ? 1 : 0,
-		!Q.moveLock && controls.keys[controls.binds.jump.val] ? 1 : 0,
-		controls.keys[controls.binds.reload.val] ? 1 : 0,
-		controls.keys[controls.binds.crouch.val] ? 1 : 0,
-		controls.scrollToSwap ? controls.scrollDelta * ue.tmp.scrollDir : 0,
-		controls.wSwap,
-		1 - controls.speedLmt.round(1),
-		controls.keys[controls.binds.reset.val] ? 1 : 0,
-		controls.keys[controls.binds.interact.val] ? 1 : 0
-	];
-	*/
-	keys = { frame: 0, delta: 1, xdir: 2, ydir: 3, moveDir: 4, shoot: 5, scope: 6, jump: 7, reload: 8, crouch: 9, weaponScroll: 10, weaponSwap: 11, moveLock: 12 },
-	sorts = {
-		dist3d: (ent_1, ent_2) => ent_1.distanceTo(ent_2),
-		dist2d: (ent_1, ent_2) => {
-			if(!ent_1.rect)console.log(ent_1);
-			
-			return utils.dist_center(ent_1.rect()) - utils.dist_center(ent_2.rect());
-		},
-		hp: (ent_1, ent_2) => ent_1.health - ent_2.health,
-	},
 	smooth = target	=> {
 		var aj = 17,
 			// default 0.0022
@@ -46,7 +17,7 @@ var cheat = require('./cheat'),
 			x: cheat.controls[vars.pchObjc].rotation.x + x_ang * aj * turn,
 		};
 	},
-	y_offset_types = ['head', 'chest', 'feet'],
+	y_offset_types = ['head', 'chest', 'legs'],
 	y_offset_rand = 'head',
 	enemy_sight = () => {
 		if(cheat.player.shot)return;
@@ -69,7 +40,27 @@ var cheat = require('./cheat'),
 		if(data.shoot)data.shoot = !cheat.player.shot;
 		
 		if(data.shoot && !cheat.player.shot)aim_input(rot, data);
-	};
+	},
+	/*
+	[
+		controls.getISN(),
+		Math.round(delta * game.config.deltaMlt),
+		Math.round(1000 * controls.yDr.round(3)),
+		Math.round(1000 * xDr.round(3)),
+		game.moveLock ? -1 : config.movDirs.indexOf(controls.moveDir),
+		controls.mouseDownL || controls.keys[controls.binds.shoot.val] ? 1 : 0,
+		controls.mouseDownR || controls.keys[controls.binds.aim.val] ? 1 : 0,
+		!Q.moveLock && controls.keys[controls.binds.jump.val] ? 1 : 0,
+		controls.keys[controls.binds.reload.val] ? 1 : 0,
+		controls.keys[controls.binds.crouch.val] ? 1 : 0,
+		controls.scrollToSwap ? controls.scrollDelta * ue.tmp.scrollDir : 0,
+		controls.wSwap,
+		1 - controls.speedLmt.round(1),
+		controls.keys[controls.binds.reset.val] ? 1 : 0,
+		controls.keys[controls.binds.interact.val] ? 1 : 0
+	];
+	*/
+	keys = { frame: 0, delta: 1, xdir: 2, ydir: 3, moveDir: 4, shoot: 5, scope: 6, jump: 7, reload: 8, crouch: 9, weaponScroll: 10, weaponSwap: 11, moveLock: 12, speed_limit: 13, reset: 14, interact: 15 };
 
 class InputData {
 	constructor(array){
@@ -77,7 +68,6 @@ class InputData {
 	}
 }
 
-// keys = { frame: 0, delta: 1, xdir: 2, ydir: 3, moveDir: 4, shoot: 5, scope: 6, jump: 7, reload: 8, crouch: 9, weaponScroll: 10, weaponSwap: 11, moveLock: 12 },
 for(let key in keys)Object.defineProperty(InputData.prototype, key, {
 	get(){
 		return this.array[keys[key]];
@@ -104,18 +94,19 @@ module.exports = array => {
 	if(!cheat.player.has_ammo && (cheat.config.aim.status == 'auto' || cheat.config.aim.auto_reload))data.reload = 1;
 	
 	// TODO: target once on aim
+	
 	// aimbot
-	var target = cheat.target = !data.scope && !data.shoot
+	
+	var can_hit = (Math.random() * 100) < cheat.config.aim.hitchance,
+		can_shoot = !data.reloading && cheat.player.has_ammo,
+		target = cheat.target = cheat.config.aim.status != 'auto' && !data.scope && !data.shoot
 		? null
 		: cheat.target && cheat.target.can_target
 			? cheat.target
-			: cheat.game.players.list.map(cheat.add).filter(player => player.can_target).sort((ent_1, ent_2) => sorts[cheat.config.aim.target_sorting || 'dist2d'](ent_1, ent_2) * (ent_1.frustum ? 1 : 0.5))[0],
-		can_shoot = !data.reloading && cheat.player.has_ammo;
+			: cheat.pick_target();
 	
-	// todo: triggerbot delay
-	if(can_shoot && cheat.config.aim.status == 'trigger')data.shoot = enemy_sight() || data.shoot;
-	else if(can_shoot && cheat.config.aim.status != 'off' && target && cheat.player.health){
-		var y_val = target.y + (target[cheat.syms.isAI] ? -(target.dat.mSize / 2) : (target.jump_bob_y * 0.072) + 1 - target.crouch * 3);
+	/*
+	y_val = target.world_pos.y + (target.is_ai ? -(target.enity.dat.mSize / 2) : (target.jump_bob_y * 0.072) + 1 - target.crouch * 3);
 		
 		switch(cheat.config.aim.offset != 'random' ? cheat.config.aim.offset : y_offset_rand){
 			case'chest':
@@ -125,21 +116,28 @@ module.exports = array => {
 				y_val -= target.height - target.height / 2.5;
 				break;
 		};
-		
-		var y_dire = utils.getDir(cheat.player.z, cheat.player.x, target.z, target.x),
-			x_dire = utils.getXDire(cheat.player.x, cheat.player.y, cheat.player.z, target.x, y_val, target.z),
+	*/
+	
+	// todo: triggerbot delay
+	if(can_shoot && cheat.config.aim.status == 'trigger')data.shoot = enemy_sight() || data.shoot;
+	else if(can_shoot && cheat.config.aim.status != 'off' && target && cheat.player.health){
+		var camera_world = cheat.camera_world(),
+			target_pos = target.parts[cheat.config.aim.offset != 'random' ? cheat.config.aim.offset : y_offset_rand],
+			x_dire = utils.getXDire(camera_world.x, camera_world.y, camera_world.z, target_pos.x, target_pos.y - cheat.player.jump_bob_y, target_pos.z),
+			y_dire = utils.getDir(camera_world.z, camera_world.x, target_pos.z, target_pos.x),
 			rot = {
-				x: utils.round(Math.max(-utils.halfpi, Math.min(utils.halfpi, x_dire - cheat.player.recoil_y * 0.27)) % utils.pi2, 3) || 0,
+				x: utils.round(Math.max(-utils.halfpi, Math.min(utils.halfpi, x_dire - (cheat.player.entity.landBobY * 0.1) - cheat.player.recoil_y * 0.27)) % utils.pi2, 3) || 0,
 				y: utils.normal_radian(utils.round(y_dire % utils.pi2, 3)) || 0,
-			},
-			can_hit = (Math.random() * 100) < cheat.config.aim.hitchance;
+			};
 		
-		if(can_hit)if(cheat.config.aim.status == 'correction')correct_aim(rot, data);
-		else if(cheat.config.aim.status == 'auto'){
-			data.scope = 1;
-			
-			if(cheat.player.aim)data.shoot = cheat.player.shot ? 0 : 1;
-			correct_aim(rot, data);
+		if(can_hit){
+			if(cheat.config.aim.status == 'correction')correct_aim(rot, data);
+			else if(cheat.config.aim.status == 'auto'){
+				data.scope = 1;
+				
+				if(cheat.player.aim)data.shoot = cheat.player.shot ? 0 : 1;
+				correct_aim(rot, data);
+			}
 		}
 		
 		if(cheat.config.aim.status == 'assist' && cheat.player.aim_press){
@@ -153,8 +151,8 @@ module.exports = array => {
 		}
 	}
 	
-	if(data.shoot && cheat.player.auto_weapon && !cheat.player.entity[cheat.syms.shot]){
-		cheat.player.entity[cheat.syms.shot] = true;
-		setTimeout(() => cheat.player.entity[cheat.syms.shot] = false, cheat.player.weapon.rate + 15);
+	if(data.shoot && cheat.player.auto_weapon && !cheat.player.entity[cheat.shot]){
+		cheat.player.entity[cheat.shot] = true;
+		setTimeout(() => cheat.player.entity[cheat.shot] = false, cheat.player.weapon.rate + 15);
 	}
 };

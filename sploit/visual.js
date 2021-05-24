@@ -2,7 +2,7 @@
 
 var cheat = require('./cheat'),
 	UI = require('./libs/ui'),
-	constants = require('./consts'),
+	{ utils } = require('./consts'),
 	v3 = ['x', 'y', 'z'],
 	esp_mats = {},
 	draw_text = (text_x, text_y, font_size, lines) => {
@@ -59,9 +59,9 @@ module.exports = () => {
 	if(!cheat.game || !cheat.world)return;
 	
 	cheat.world.scene.children.forEach(obj => {
-		if(obj.type != 'Mesh' || !obj.dSrc || obj.material[cheat.syms.hooked])return;
+		if(obj.type != 'Mesh' || !obj.dSrc || obj.material[cheat.hooked])return;
 		
-		obj.material[cheat.syms.hooked] = true;
+		obj.material[cheat.hooked] = true;
 		
 		var otra = obj.material.transparent,
 			opac = obj.material.opacity;
@@ -84,8 +84,8 @@ module.exports = () => {
 		if(!player.active || !player.frustum || player.is_you)continue;
 		
 		if(player.obj){
-			if(!player.obj[cheat.syms.hooked]){
-				player.obj[cheat.syms.hooked] = true;
+			if(!player.obj[cheat.hooked]){
+				player.obj[cheat.hooked] = true;
 				
 				let visible = true;
 				
@@ -96,23 +96,25 @@ module.exports = () => {
 			}
 			
 			player.obj.traverse(obj => {
-				if(obj.type != 'Mesh')return;
+				if(obj.type != 'Mesh' || obj[cheat.hooked])return;
 				
-				obj.material.wireframe = !!cheat.config.game.wireframe;
-				
-				if(player.is_you || obj[cheat.syms.hooked])return;
-				
-				obj[cheat.syms.hooked] = true;
+				obj[cheat.hooked] = true;
 				
 				var orig_mat = obj.material;
 				
 				Object.defineProperty(obj, 'material', {
-					get: _ => cheat.draw_chams() ? (esp_mats[player.esp_color] || (esp_mats[player.esp_color] = new cheat.three.MeshBasicMaterial({
-						transparent: true,
-						fog: false,
-						depthTest: false,
-						color: player.esp_color,
-					}))) : orig_mat,
+					get(){
+						var material = cheat.draw_chams() ? (esp_mats[player.esp_color] || (esp_mats[player.esp_color] = new cheat.three.MeshBasicMaterial({
+							transparent: true,
+							fog: false,
+							depthTest: false,
+							color: player.esp_color,
+						}))) : orig_mat;
+						
+						material.wireframe = !!cheat.config.game.wireframe;
+						
+						return material;
+					},
 					set: _ => orig_mat = _,
 				});
 			});
@@ -124,18 +126,27 @@ module.exports = () => {
 		if(cheat.draw_box()){
 			ctx.strokeStyle = player.esp_color;
 			ctx.lineWidth = 1.5;
+			
+			/*let bounds = player.bounds();
+			ctx.beginPath();
+			ctx.moveTo(bounds.min.x, bounds.min.y);
+			ctx.lineTo(bounds.min.x, bounds.max.y);
+			ctx.lineTo(bounds.max.x, bounds.max.y);
+			ctx.lineTo(bounds.max.x, bounds.min.y);
+			ctx.lineTo(bounds.min.x, bounds.min.y);
+			ctx.stroke();*/
+			
 			ctx.strokeRect(rect.left, rect.top, rect.width, rect.height);
 		}
 		
-		// health bar, red - yellow - green gradient
-		var hp_perc = (player.health / player.max_health) * 100;
-		
-		if(cheat.config.esp.status == 'full' || cheat.config.esp.health_bars){
-			var box_ps = [ rect.left - rect.width / 2, rect.top, rect.width / 4, rect.height ],
-				hp_grad;
+		// full ESP
+		if(cheat.config.esp.status == 'full'){
+			// health bar
+			var box_ps = [ rect.left - rect.width / 2, rect.top, rect.width / 4, rect.height ];
 			
-			try{
-				hp_grad = ctx.createLinearGradient(0, box_ps[1], 0, box_ps[1] + box_ps[3]);
+			// broken ps looks like [NaN, NaN, 0, NaN]
+			if(box_ps.every(num => !isNaN(num))){
+				var hp_grad = ctx.createLinearGradient(0, box_ps[1], 0, box_ps[1] + box_ps[3]);
 				
 				hp_grad.addColorStop(0, '#F00');
 				hp_grad.addColorStop(0.5, '#FF0');
@@ -150,24 +161,15 @@ module.exports = () => {
 				// inside of it
 				ctx.fillRect(...box_ps);
 				
-				box_ps[3] *= hp_perc / 100;
+				box_ps[3] *= (player.health / player.max_health);
 				
 				// colored part
 				ctx.fillStyle = hp_grad;
 				ctx.fillRect(...box_ps);
-			}catch(err){
-				// [NaN, NaN, 0, NaN]
-				// console.log(box_ps);
 			}
-		}
-		
-		// full ESP
-		if(cheat.config.esp.status == 'full'){
+			
 			// text stuff
-			var hp_red = hp_perc < 50 ? 255 : Math.round(510 - 5.10 * hp_perc),
-				hp_green = hp_perc < 50 ? Math.round(5.1 * hp_perc) : 255,
-				hp_color = '#' + ('000000' + (hp_red * 65536 + hp_green * 256 + 0 * 1).toString(16)).slice(-6),
-				font_size = ~~(11 - (player.distance_camera() * 0.005));
+			var font_size = ~~(11 - (player.distance_camera() * 0.005));
 			
 			ctx.textAlign = 'middle';
 			ctx.font = 'Bold ' + font_size + 'px Tahoma';
@@ -175,14 +177,23 @@ module.exports = () => {
 			ctx.lineWidth = 2.5;
 			
 			draw_text(rect.right + (rect.width / 2), rect.top, font_size, [
-				[['#FB8', player.alias], ['#FFF', player.clan ? ' [' + player.clan + ']' : '']],
-					[[hp_color, player.health + '/' + player.max_health + ' HP']],
-				// player weapon & ammo
-				[['#FFF', player.weapon.name ],
-					['#BBB', '['],
-					['#FFF', (player.weapon.ammo || 'N') + '/' + (player.weapon.ammo || 'A') ],
-					['#BBB', ']']],
-				[['#BBB', 'Risk: '], [(player.risk ? '#0F0' : '#F00'), player.risk ? 'Yes' : 'No']],
+				[
+					[ '#FB8', player.alias ],
+					[ '#FFF', player.clan ? ' [' + player.clan + ']' : '' ],
+				],
+				[
+					[ player.hp_color, player.health + '/' + player.max_health + ' HP' ],
+				],
+				[
+					[ '#FFF', player.weapon.name ],
+					[ '#BBB', '[' ],
+					[ '#FFF', (player.weapon.ammo || 'N') + '/' + (player.weapon.ammo || 'A') ],
+					[ '#BBB', ']' ],
+				],
+				[
+					[ '#BBB', 'Risk: ' ],
+					[ player.risk ? '#0F0' : '#F00', player.risk ? 'Yes' : 'No' ],
+				],
 			]);
 		}
 		
@@ -196,8 +207,17 @@ module.exports = () => {
 			// bottom center
 			ctx.moveTo(canvas.width / 2, canvas.height);
 			// target center
-			ctx.lineTo(rect.x, rect.y);
+			ctx.lineTo(rect.x, rect.bottom);
 			ctx.stroke();
 		}
+		
+		// part labels
+		/*for(var part in player.parts){
+			var srcp = utils.pos2d(player.parts[part]);
+			ctx.fillStyle = '#FFF';
+			ctx.font = '13px monospace thin';
+			ctx.fillRect(srcp.x - 2, srcp.y - 2, 4, 4);
+			ctx.fillText(part, srcp.x, srcp.y - 6);
+		}*/
 	}
 };

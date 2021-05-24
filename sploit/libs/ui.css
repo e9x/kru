@@ -8,6 +8,10 @@ html {
 	overflow: hidden;
 }
 
+* {
+	outline: none;
+}
+
 .loading {
     display: flex;
     flex-direction: column;
@@ -168,9 +172,6 @@ main.prompt > form > button.submit.single {
 
 main.prompt > form > button:hover {
 	background: #333;
-}
-main * {
-	outline: none;
 }
 
 .CodeMirror {

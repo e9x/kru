@@ -176,7 +176,7 @@ exports.ui = cheat => ({
 			vals: [
 				[ 'head', 'Head' ],
 				[ 'chest', 'Chest' ],
-				[ 'feet', 'Feet' ],
+				[ 'legs', 'Legs' ],
 				[ 'random', 'Random' ],
 			],
 		},{

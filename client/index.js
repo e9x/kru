@@ -11,7 +11,7 @@ var os = require('os'),
 
 if(typeof nw == 'undefined')child_process.execFile(require('nw/lib/findpath')(), [
 	__dirname,
-	// '--remote-debugging-port=9222',
+	'--remote-debugging-port=9222',
 	// '--disable-frame-rate-limit',
 ], { stdio: 'inherit', stderr: 'inherit' }).on('close', () => {
 	process.nextTick(() => process.exit(0));
@@ -23,27 +23,31 @@ if(typeof nw == 'undefined')child_process.execFile(require('nw/lib/findpath')(),
 			'.json': require(path.join(__dirname, '..', 'sploit', 'libs', 'json.js')),
 			'.css': require(path.join(__dirname, '..', 'sploit', 'libs', 'css.js')),
 		},
-		eval_require = (func, base, cache = {}, base_require = mod.createRequire(base + '/')) => fn => {
-			var resolved = base_require.resolve(fn);
+		eval_require = (func, base, req) => req = Object.assign(fn => {
+			var resolved = req.resolve(fn);
 			
 			// internal module
 			if(!fs.existsSync(resolved))return require(resolved);
 			
-			if(cache[resolved])return cache[resolved].exports;
+			if(req.cache[resolved])return req.cache[resolved].exports;
 			
-			var mod = cache[resolved] = Object.setPrototypeOf({ _exports: {}, get exports(){ return this._exports }, set exports(v){ return this._exports = v }, filename: resolved, id: resolved, path: path.dirname(resolved), loaded: true, children: [] }, null),
+			var mod = req.cache[resolved] = Object.setPrototypeOf({ _exports: {}, get exports(){ return this._exports }, set exports(v){ return this._exports = v }, filename: resolved, id: resolved, path: path.dirname(resolved), loaded: true, children: [] }, null),
 				ext = path.extname(resolved),
 				script = loaders[ext] ? loaders[ext](fs.readFileSync(resolved)) : fs.readFileSync(resolved) + '\n//@ sourceURL=' + resolved;
 			
 			try{
 				new vm.Script(script, { filename : resolved });
-				new func('__dirname', '__filename', 'module', 'exports', 'require', script)(mod.path, resolved, mod, mod.exports, eval_require(func, mod.path + '/', cache));
+				new func('__dirname', '__filename', 'module', 'exports', 'require', script)(mod.path, resolved, mod, mod.exports, Object.assign(eval_require(func, mod.path + '/'), { cache: req.cache }));
 			}catch(err){
 				return alert(util.format(err));
 			}
 			
 			return mod.exports;
-		};
+		}, {
+			resolve: fn => req.base.resolve(fn),
+			base: mod.createRequire(base + '/'),
+			cache: {},
+		});
 
 	nw.Window.open('https://krunker.io/', {
 		position: 'center',

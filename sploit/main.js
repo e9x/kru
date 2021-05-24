@@ -14,7 +14,7 @@ var Utils = require('./libs/utils'),
 	cheat = require('./cheat');
 
 integrate.listen_load(() => {
-	if(integrate.has_instruct('connection banned'))localStorage.removeItem('krunker_token'), UI.alert([
+	if(integrate.has_instruct('connection banned 0x2'))localStorage.removeItem('krunker_token'), UI.alert([
 		`<p>You were IP banned, Sploit has signed you out.\nSpoof your IP to bypass this ban with one of the following:</p>`,
 		`<ul>`,
 			`<li>Using your mobile hotspot</li>`,
@@ -22,12 +22,10 @@ integrate.listen_load(() => {
 			`<li>Use a <a target="_blank" href=${JSON.stringify(constants.addon_url('Proxy VPN'))}>Proxy/VPN</a></li>`,
 		`</ul>`,
 	].join(''));
-	/*
-	// ez join new server
-	else if(integrate.has_instruct('banned'))localStorage.removeItem('krunker_token'), UI.alert(
+	else if(integrate.has_instruct('connection banned 0x1'))localStorage.removeItem('krunker_token'), UI.alert(
 		`<p>You were banned, Sploit has signed you out.\nCreate a new account to bypass this ban.</p>`,
 	);
-	*/
+	
 	
 	if(cheat.config.game.auto_respawn){
 		if(integrate.has_instruct('connection error', 'game is full', 'kicked by vote', 'disconnected'))location.assign('https://krunker.io');
@@ -98,9 +96,7 @@ UI.ready.then(() => {
 					Object.defineProperty(game, 'controls', {
 						configurable: true,
 						set(value){
-							console.log('Got controls');
-							
-							// delete define
+							// delete definition
 							delete game.controls;
 							
 							return cheat.controls = game.controls = value;
@@ -139,7 +135,6 @@ UI.ready.then(() => {
 							
 							// event.data is non-writable but configurable
 							// concat message signature ( 2 bytes )
-							
 							var encoded = msgpack.encode([ label, ...data ]),
 								final = new Uint8Array(encoded.byteLength + 2);
 							
@@ -162,12 +157,8 @@ UI.ready.then(() => {
 	});
 });
 
-// updater.poll();
-
 window.addEventListener('load', () => {
-	updater.watch(() => {
-		if(confirm('A new Sploit version is available, do you wish to update?'))updater.update();
-	}, 60e3 * 3);	
+	updater.watch(() => confirm('A new Sploit version is available, do you wish to update?') && updater.update(), 60e3 * 3);	
 });
 
 window.cheat = cheat;
