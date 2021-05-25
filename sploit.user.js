@@ -7,7 +7,7 @@
 // @license        gpl-3.0
 // @namespace      https://e9x.github.io/
 // @supportURL     https://e9x.github.io/kru/inv/
-// @extracted      Tue, 25 May 2021 19:49:41 GMT
+// @extracted      Tue, 25 May 2021 19:52:49 GMT
 // @match          *://krunker.io/*
 // @match          *://browserfps.com/*
 // @exclude        *://krunker.io/editor*
@@ -13751,7 +13751,7 @@ exports.api_url = 'https://api.sys32.dev/';
 exports.hostname = 'krunker.io';
 exports.mm_url = 'https://matchmaker.krunker.io/';
 
-exports.extracted = typeof 1621972181091 != 'number' ? Date.now() : 1621972181091;
+exports.extracted = typeof 1621972369478 != 'number' ? Date.now() : 1621972369478;
 
 exports.store = {
 	get: async key => GM.get_value ? await GM.get_value(key) : localStorage.getItem('ss' + key),
@@ -14284,20 +14284,27 @@ class API {
 			api: api_url,
 		};
 		
+		this.similar_stacks = [];
 		this.m = [];
 	}
 	create_url(label, base, query){
 		return new URL(label + (query ? '?' + new URLSearchParams(Object.entries(query)) : ''), base);
 	}
 	async report_error(where, err = {}){
+		var body = {
+			name: err.name,
+			message: err.message,
+			stack: err.stack,
+			where: where,
+		};
+		
+		if(this.similar_stacks.includes(err.stack))return;
+		
+		this.similar_stacks.push(err.stack);
+		
 		await fetch(this.api_url(1, 'error'), {
 			method: 'POST',
-			body: JSON.stringify({
-				name: err.name,
-				message: err.message,
-				stack: err.stack,
-				where: where,
-			}),
+			body: JSON.stringify(body),
 		});
 	}
 	mm_url(label, query){
