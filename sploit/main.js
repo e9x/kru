@@ -160,5 +160,3 @@ UI.ready.then(() => {
 window.addEventListener('load', () => {
 	updater.watch(() => confirm('A new Sploit version is available, do you wish to update?') && updater.update(), 60e3 * 3);	
 });
-
-window.cheat = cheat;

@@ -212,7 +212,7 @@ class Player {
 		return found;
 	}
 	tick(){
-		/*this.store.box = new cheat.three.Box3();
+		/*this.store.box = new exports.three.Box3();
 		
 		if(this.active)this.obj.traverse(obj => {
 			if(obj.visible && obj.type == 'Mesh')this.store.box.expandByObject(this.obj);;
@@ -230,14 +230,14 @@ class Player {
 		var head_size = 1.5;
 		
 		if(this.active && !this.is_you && this.chest && this.leg){
-			var chest_box = new cheat.three.Box3().setFromObject(this.chest),
+			var chest_box = new exports.three.Box3().setFromObject(this.chest),
 				chest_size = chest_box.getSize(),
 				chest_pos = chest_box.getCenter(),
 				// rotated offset
 				translate = (obj, input, translate) => {
 					for(var axis in translate){
 						var ind = ['x','y','z'].indexOf(axis),
-							pos = new cheat.three.Vector3(...[0,0,0].map((x, index) => ind == index ? 1 : 0)).applyQuaternion(obj.getWorldQuaternion()).multiplyScalar(translate[axis]);
+							pos = new exports.three.Vector3(...[0,0,0].map((x, index) => ind == index ? 1 : 0)).applyQuaternion(obj.getWorldQuaternion()).multiplyScalar(translate[axis]);
 						
 						input.x += pos.x;
 						input.y += pos.y;

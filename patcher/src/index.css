@@ -12,6 +12,7 @@ html {
 
 body {
 	--primary: #eee;
+	--primary-inactive: #AAAAB1;
 	--secondary: #445;
 	--background: #112;
 	--background-split: 17, 17, 34;
@@ -168,6 +169,7 @@ body {
 .panel > .actions {
 	margin-top: auto;
 	flex-direction: row;
+	flex-wrap: wrap;
 	gap: 6px;
 }
 
@@ -189,9 +191,39 @@ body {
 	cursor: text;
 }
 
+.panel > .actions > .toggle {
+	height: 30px;
+	width: 100%;
+	display: flex;
+	text-align: center;
+}
+
+.panel > .actions > .toggle > .label {
+	line-height: 30px;
+}
+
+.panel > .actions > .toggle > .button {
+	width: 26px;
+    height: 26px;
+	line-height: 26px;
+	border: 2px solid var(--primary);
+	color: var(--primary);
+    margin: 0px;
+    padding: 0px;
+	font-size: 12px;
+	margin-right: 5px;
+}
+
+.panel > .actions > .toggle > .button.true {
+	background: var(--true);
+}
+
+.panel > .actions > .toggle > .button.false {
+	background: var(--false);
+}
 .panel > .actions > button {
 	cursor: pointer;
-	width: 100%;
+	width: auto;
 	height: 30px;
 	color: var(--primary);
 	border: 2px solid var(--primary);
@@ -203,7 +235,8 @@ body {
 
 .panel > .actions > button[disabled] {
 	cursor: not-allowed;
-	opacity: 0.6;
+	color: var(--primary-inactive);
+	border-color: var(--primary-inactive);
 }
 
 .panel > .actions > button[disabled]::after, .card::after {
@@ -211,7 +244,7 @@ body {
 	height: 25px;
 	line-height: 25px;
 	padding: 0px 7px;
-	background: #0008;
+	background: #2E2E3A;
 	position: absolute;
 	bottom: calc(100% + 7px);
 	width: max-content;
@@ -220,6 +253,7 @@ body {
 	opacity: 0;
 	transition: 0.1s ease;
 	color: var(--primary);
+	pointer-events: none;
 }
 
 .card::after {

@@ -139,6 +139,7 @@ class Client {
 	constructor(data){
 		this.key = 'kpalstinks';
 		this.focused = false;
+		this.ignore_running = data.ignore_running || false;
 		this.name = data.name;
 		this.path = data.path;
 		this.icon = data.icon;
@@ -161,6 +162,7 @@ class Client {
 			},
 			actions: {
 				container: '^ .actions',
+				ignore_running: '$ .ignore-running > .button',
 				play: '$ .play',
 				stop: '$ .stop',
 				browse: '$ .browse',
@@ -168,6 +170,12 @@ class Client {
 				patch: '$ .patch',
 			},
 			close: '$ > .close',
+		});
+		
+		this.panel.actions.ignore_running.addEventListener('click', async () => {
+			this.ignore_running = !this.ignore_running;
+			await config.save();
+			this.update();
 		});
 		
 		this.panel.close.addEventListener('click', () => this.blur());
@@ -254,6 +262,8 @@ class Client {
 		await config.save();
 	}
 	async update(){
+		this.panel.actions.ignore_running.className = 'button ' + this.ignore_running;
+		
 		this.card.label.textContent = this.panel.info.name.value = this.name;
 		this.panel.info.path.textContent = this.path;
 		this.panel.info.icon.textContent = this.icon;
@@ -285,11 +295,15 @@ class Client {
 		
 		this.panel.info.running.className = running + '';
 		this.panel.info.running.textContent = running ? 'Yes' : 'No';
+		
+		this.panel.actions.stop.disabled = !running;
+		
+		// can used spoofed value
+		if(this.ignore_running)running = false;
+		
 		this.panel.actions.play.disabled = running;
 		
 		if(!this.patching)this.panel.actions.patch.disabled = running;
-		
-		this.panel.actions.stop.disabled = !running;
 	}
 	async focus(){
 		if(this.card.container.dataset.disabled)await this.get_binary_path();
@@ -398,6 +412,7 @@ class Client {
 			path: this.path,
 			icon: this.icon,
 			name: this.name,
+			ignore_running: this.ignore_running,
 		};
 	}
 };
