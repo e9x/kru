@@ -7,7 +7,7 @@
 // @license        gpl-3.0
 // @namespace      https://e9x.github.io/
 // @supportURL     https://e9x.github.io/kru/inv/
-// @extracted      Tue, 25 May 2021 18:20:27 GMT
+// @extracted      Tue, 25 May 2021 19:49:41 GMT
 // @match          *://krunker.io/*
 // @match          *://browserfps.com/*
 // @exclude        *://krunker.io/editor*
@@ -13643,7 +13643,7 @@ function write0(type) {
 /*!******************!*\
   !*** ./cheat.js ***!
   \******************/
-/***/ ((module, exports, __webpack_require__) => {
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 "use strict";
 
@@ -13651,70 +13651,12 @@ var API = __webpack_require__(/*! ./libs/api */ "./libs/api.js"),
 	{ mm_url, api_url, utils } = __webpack_require__(/*! ./consts */ "./consts.js"),
 	api = new API(mm_url, api_url),
 	vars = __webpack_require__(/*! ./libs/vars */ "./libs/vars.js"),
-	inputs = __webpack_require__(/*! ./input */ "./input.js"),
+	Player = __webpack_require__(/*! ./libs/player */ "./libs/player.js"),
 	visual = __webpack_require__(/*! ./visual */ "./visual.js");
-
-exports.add = entity => new Player(entity),
 
 exports.hooked = Symbol();
-exports.shot = Symbol();
-exports.store = Symbol();
-
 exports.config = {};
-
-exports.draw_box = () => exports.config.esp.status == 'box' || exports.config.esp.status == 'box_chams' || exports.config.esp.status == 'full';
-exports.draw_chams = () => exports.config.esp.status == 'chams' || exports.config.esp.status == 'box_chams' || exports.config.esp.status == 'full';
-
 exports.skins = [...Array(5000)].map((e, i) => ({ ind: i, cnt: 1 }));
-
-exports.update_frustum = () => {
-	exports.world.frustum.setFromProjectionMatrix(new exports.three.Matrix4().multiplyMatrices(exports.world.camera.projectionMatrix, exports.world.camera.matrixWorldInverse));
-};
-
-exports.reload = () => {
-	delete __webpack_require__.c[/*require.resolve*/(/*! ./input */ "./input.js")];
-	delete __webpack_require__.c[/*require.resolve*/(/*! ./visual */ "./visual.js")];
-	inputs = __webpack_require__(/*! ./input */ "./input.js");
-	visual = __webpack_require__(/*! ./visual */ "./visual.js");
-};
-
-exports.process = () => {
-	try{
-		if(exports.game && exports.world){
-			for(var ent of exports.game.players.list){
-				let player = exports.add(ent);
-				
-				if(!player.active)continue;
-				
-				if(player.is_you)exports.player = player;
-				
-				player.tick();
-				
-				if(exports.controls && exports.controls[vars.tmpInpts] && !exports.controls[vars.tmpInpts][exports.hooked]){
-					exports.controls[vars.tmpInpts][exports.hooked] = true;
-					
-					var push = exports.controls[vars.tmpInpts].push;
-					
-					exports.controls[vars.tmpInpts].push = function(data){
-						if(exports.player && exports.player.weapon)try{
-							inputs(data);
-						}catch(err){
-							api.report_error('inputs', err);
-						}
-						return push.call(this, data);
-					}
-				}
-			}
-		};
-		
-		visual();
-	}catch(err){
-		api.report_error('frame', err);
-	}
-	
-	requestAnimationFrame(exports.process);
-};
-
 exports.socket_id = 0;
 
 exports.sorts = {
@@ -13729,215 +13671,36 @@ exports.sorts = {
 	},
 };
 
+exports.add = entity => new Player(exports, utils, entity);
+
 exports.pick_target = () => exports.game.players.list.map(exports.add).filter(player => player.can_target).sort((ent_1, ent_2) => exports.sorts[exports.config.aim.target_sorting || 'dist2d'](ent_1, ent_2) * (ent_1.frustum ? 1 : 0.5))[0];
 
-class Player {
-	constructor(entity){
-		this.entity = typeof entity == 'object' && entity != null ? entity : {};
-	}
-	distance_to(point){
-		return Math.hypot(this.x - point.x, this.y - point.y, this.z - point.z)
-	}
-	get x(){ return this.entity.x || 0 }
-	get y(){ return this.entity.y || 0 }
-	get z(){ return this.entity.z || 0 }
-	get parts(){ return this.store.parts }
-	// cached cpu-heavy data such as world_pos or can_see
-	get store(){ return this.entity[exports.store] || (this.entity[exports.store] = {}) }
-	get can_see(){ return this.store.can_see }
-	get in_fov(){
-		if(!this.active)return false;
-		if(exports.config.aim.fov == 110)return true;
-		
-		var fov_bak = exports.world.camera.fov;
-		
-		// config fov is percentage of current fov
-		exports.world.camera.fov = exports.config.aim.fov / fov_bak * 100;
-		exports.world.camera.updateProjectionMatrix();
-		
-		exports.update_frustum();
-		var ret = this.frustum;
-		
-		exports.world.camera.fov = fov_bak;
-		exports.world.camera.updateProjectionMatrix();
-		
-		return ret;
-	}
-	get can_target(){
-		return this.active && this.enemy && this.can_see && this.in_fov;
-	}
-	get frustum(){
-		return this.active ? exports.contains_point(this) : false;
-	}
-	get hp_color(){
-		var hp_perc = (this.health / this.max_health) * 100,
-			hp_red = hp_perc < 50 ? 255 : Math.round(510 - 5.10 * hp_perc),
-			hp_green = hp_perc < 50 ? Math.round(5.1 * hp_perc) : 255;
-		
-		return '#' + ('000000' + (hp_red * 65536 + hp_green * 256 + 0 * 1).toString(16)).slice(-6);
-	}
-	get esp_color(){
-		// teammate = green, enemy = red, risk + enemy = orange
-		var hex = this.enemy ? this.risk ? [ 0xFF, 0x77, 0x00 ] : [ 0xFF, 0x00, 0x00 ] : [ 0x00, 0xFF, 0x00 ],
-			inc = this.can_see ? 0x00 : -0x77,
-			part_str = part => Math.max(Math.min(part + inc, 0xFF), 0).toString(16).padStart(2, 0);
-		
-		return '#' + hex.map(part_str).join('');
-	}
-	get ping(){ return this.entity.ping }
-	get jump_bob_y(){ return this.entity.jumpBobY }
-	get clan(){ return this.entity.clan }
-	get alias(){ return this.entity.alias }
-	get weapon(){ return this.entity.weapon }
-	get can_slide(){ return this.entity.canSlide }
-	// not to be confused with social player values 
-	get risk(){ return this.entity.account && (this.entity.account.featured || this.entity.account.premiumT) || this.entity.level >= 30 }
-	get is_you(){ return this.entity[vars.isYou] }
-	get aim_val(){ return this.entity[vars.aimVal] }
-	get y_vel(){ return this.entity[vars.yVel] }
-	get aim(){ return this.weapon.noAim || !this.aim_val || exports.target && exports.target.active && this.weapon.melee && this.distance_to(exports.target) <= 18 }
-	get aim_press(){ return exports.controls[vars.mouseDownR] || exports.controls.keys[exports.controls.binds.aim.val] }
-	get crouch(){ return this.entity[vars.crouchVal] }
-	// buggy
-	bounds(){
-		return {
-			min: utils.pos2d(this.store.box.min),
-			max: utils.pos2d(this.store.box.max),
-		};
-	}
-	rect(){
-		// hitbox rect, add a accurate player rect similar to junker
-		var src_pos = utils.pos2d(this),
-			src_pos_crouch = utils.pos2d(this, this.height),
-			width = ~~((src_pos.y - utils.pos2d(this, this.entity.height).y) * 0.7),
-			height = src_pos.y - src_pos_crouch.y,
-			center = {
-				x: src_pos.x,
-				y: src_pos.y - height / 2,
-			};
-		
-		return {
-			x: center.x,
-			y: center.y,
-			left: center.x - width / 2,
-			top: center.y - height / 2,
-			right: center.x + width / 2,
-			bottom: center.y + height / 2,
-			width: width,
-			height: height,
-		};
-	}
-	distance_camera(){
-		return exports.world.camera[vars.getWorldPosition]().distanceTo(this);
-	}
-	get world_pos(){
-		return this.store.world_pos;
-	}
-	get obj(){ return this.is_ai ? target.enity.dat : this.entity[vars.objInstances] }
-	get recoil_y(){ return this.entity[vars.recoilAnimY] }
-	get has_ammo(){ return this.weapon.melee || this.ammo }
-	get ammo(){ return this.entity[vars.ammos][this.entity[vars.weaponIndex]] }
-	get height(){ return (this.entity.height || 0) - this.entity[vars.crouchVal] * 3 }
-	get health(){ return this.entity.health || 0 }
-	get max_health(){ return this.entity[vars.maxHealth] || 100 }
-	//  && (this.is_you ? true : this.chest && this.leg)
-	get active(){ return this.entity.active && this.entity.x != null && this.health > 0 && this.obj }
-	get teammate(){ return this.is_you || exports.player && this.team && this.team == exports.player.team }
-	get enemy(){ return !this.teammate }
-	get team(){ return this.entity.team }
-	get auto_weapon(){ return !this.weapon.nAuto }
-	get shot(){ return this.auto_weapon ? this.entity[exports.shot] : this.entity[vars.didShoot] }
-	get chest(){
-		return this.obj && this.obj.children[0] && this.obj.children[0].children[4] && this.obj.children[0].children[4].children[0];
-		
-		var found;
-		// console.log(this.chest.parent.position, this.leg.scale);
-		if(this.obj)this.obj.traverse(obj => {
-			if(exports.test_vec(obj.parent.position, [ 0, 4.2, 0 ]) && exports.test_vec(obj.scale, [ 1, 1, 1 ]))found = obj;
-		});
-		
-		return found;
-	}
-	get leg(){
-		return this.obj && this.obj.children[0] && this.obj.children[0].children[0];
-		
-		var found;
-		
-		if(this.obj)this.obj.traverse(obj => {
-			if(exports.test_vec(obj.scale, [ 1.3, 4.2, 1.3 ]))found = obj;
-		});
-		
-		return found;
-	}
-	tick(){
-		/*this.store.box = new exports.three.Box3();
-		
-		if(this.active)this.obj.traverse(obj => {
-			if(obj.visible && obj.type == 'Mesh')this.store.box.expandByObject(this.obj);;
-		});*/
-		
-		this.store.can_see = exports.player && this.active && utils.obstructing(exports.player, this, exports.player.weapon && exports.player.weapon.pierce && exports.config.aim.wallbangs) == null ? true : false;
-		
-		this.store.parts = {
-			torso: { x: 0, y: 0, z: 0 },
-			head: { x: 0, y: 0, z: 0 },
-			legs: { x: 0, y: 0, z: 0 },
+exports.draw_box = () => exports.config.esp.status == 'box' || exports.config.esp.status == 'box_chams' || exports.config.esp.status == 'full';
+
+exports.draw_chams = () => exports.config.esp.status == 'chams' || exports.config.esp.status == 'box_chams' || exports.config.esp.status == 'full';
+
+exports.update_frustum = () => exports.world.frustum.setFromProjectionMatrix(new exports.three.Matrix4().multiplyMatrices(exports.world.camera.projectionMatrix, exports.world.camera.matrixWorldInverse));
+
+exports.process = () => {
+	try{
+		if(exports.game && exports.world){
+			for(var ent of exports.game.players.list){
+				let player = exports.add(ent);
+				
+				if(!player.active)continue;
+				
+				if(player.is_you)exports.player = player;
+				
+				player.tick();
+			}
 		};
 		
-		// config.js
-		var head_size = 1.5;
-		
-		if(this.active && !this.is_you && this.chest && this.leg){
-			var chest_box = new exports.three.Box3().setFromObject(this.chest),
-				chest_size = chest_box.getSize(),
-				chest_pos = chest_box.getCenter(),
-				// rotated offset
-				translate = (obj, input, translate) => {
-					for(var axis in translate){
-						var ind = ['x','y','z'].indexOf(axis),
-							pos = new exports.three.Vector3(...[0,0,0].map((x, index) => ind == index ? 1 : 0)).applyQuaternion(obj.getWorldQuaternion()).multiplyScalar(translate[axis]);
-						
-						input.x += pos.x;
-						input.y += pos.y;
-						input.z += pos.z;
-					}
-					
-					return input;
-				};
-			
-			// parts centered
-			this.store.parts.torso = translate(this.chest, {
-				x: chest_pos.x,
-				y: chest_pos.y,
-				z: chest_pos.z,
-				height: chest_size.y - head_size,
-			}, {
-				y: -head_size / 2,
-			});
-			
-			this.store.parts.head = translate(this.chest, {
-				x: chest_pos.x,
-				y: chest_pos.y,
-				z: chest_pos.z,
-			}, {
-				y: this.store.parts.torso.height / 2,
-			});
-			
-			var leg_pos = this.leg[vars.getWorldPosition](),
-				leg_scale = this.leg.getWorldScale();
-			
-			this.store.parts.legs = translate(this.leg, {
-				x: leg_pos.x,
-				y: leg_pos.y,
-				z: leg_pos.z,
-			}, {
-				x: -leg_scale.x / 2,
-				y: -leg_scale.y / 2,
-			});
-		}
-		
-		if(this.active)this.store.world_pos = this.active ? this.obj[vars.getWorldPosition]() : { x: 0, y: 0, z: 0 };
+		visual();
+	}catch(err){
+		api.report_error('frame', err);
 	}
+	
+	requestAnimationFrame(exports.process);
 };
 
 exports.camera_world = () => {
@@ -13954,8 +13717,6 @@ exports.contains_point = point => {
 	for(var ind = 0; ind < 6; ind++)if(exports.world.frustum.planes[ind].distanceToPoint(point) < 0)return false;
 	return true;
 };
-
-exports.test_vec = (vector, match) => match.every((value, index) => vector[['x', 'y', 'z'][index]] == value);
 
 /***/ }),
 
@@ -13990,7 +13751,7 @@ exports.api_url = 'https://api.sys32.dev/';
 exports.hostname = 'krunker.io';
 exports.mm_url = 'https://matchmaker.krunker.io/';
 
-exports.extracted = typeof 1621966827471 != 'number' ? Date.now() : 1621966827471;
+exports.extracted = typeof 1621972181091 != 'number' ? Date.now() : 1621972181091;
 
 exports.store = {
 	get: async key => GM.get_value ? await GM.get_value(key) : localStorage.getItem('ss' + key),
@@ -14089,6 +13850,7 @@ exports.base_config = {
 	esp: {
 		status: 'off',
 		walls: 100,
+		labels: false,
 		tracers: false,
 	},
 	game: {
@@ -14254,6 +14016,10 @@ exports.ui = cheat => ({
 			type: 'slider',
 			walk: 'esp.walls',
 			range: [ 0, 100, 5 ],
+		},{
+			name: 'Labels',
+			type: 'boolean',
+			walk: 'esp.labels',
 		}]
 	},{
 		name: 'Binds',
@@ -14328,19 +14094,6 @@ exports.ui = cheat => ({
 
 /***/ }),
 
-/***/ "./index.js":
-/*!******************!*\
-  !*** ./index.js ***!
-  \******************/
-/***/ ((__unused_webpack_module, __unused_webpack_exports, __webpack_require__) => {
-
-"use strict";
-
-
-if(__webpack_require__(/*! ./consts */ "./consts.js").krunker)__webpack_require__(/*! ./main */ "./main.js");
-
-/***/ }),
-
 /***/ "./input.js":
 /*!******************!*\
   !*** ./input.js ***!
@@ -14352,6 +14105,7 @@ if(__webpack_require__(/*! ./consts */ "./consts.js").krunker)__webpack_require_
 var cheat = __webpack_require__(/*! ./cheat */ "./cheat.js"),
 	vars = __webpack_require__(/*! ./libs/vars */ "./libs/vars.js"),
 	integrate = __webpack_require__(/*! ./libs/integrate */ "./libs/integrate.js"),
+	Player = __webpack_require__(/*! ./libs/player */ "./libs/player.js"),
 	{ utils } = __webpack_require__(/*! ./consts */ "./consts.js"),
 	smooth = target	=> {
 		var aj = 17,
@@ -14410,7 +14164,84 @@ var cheat = __webpack_require__(/*! ./cheat */ "./cheat.js"),
 		controls.keys[controls.binds.interact.val] ? 1 : 0
 	];
 	*/
-	keys = { frame: 0, delta: 1, xdir: 2, ydir: 3, moveDir: 4, shoot: 5, scope: 6, jump: 7, reload: 8, crouch: 9, weaponScroll: 10, weaponSwap: 11, moveLock: 12, speed_limit: 13, reset: 14, interact: 15 };
+	keys = { frame: 0, delta: 1, xdir: 2, ydir: 3, moveDir: 4, shoot: 5, scope: 6, jump: 7, reload: 8, crouch: 9, weaponScroll: 10, weaponSwap: 11, moveLock: 12, speed_limit: 13, reset: 14, interact: 15 },
+	modify = modify = array => {
+		var data = new InputData(array);
+		
+		// bhop
+		if(integrate.focused && cheat.config.game.bhop != 'off' && (integrate.inputs.Space || cheat.config.game.bhop == 'autojump' || cheat.config.game.bhop == 'autoslide')){
+			cheat.controls.keys[cheat.controls.binds.jump.val] ^= 1;
+			if(cheat.controls.keys[cheat.controls.binds.jump.val])cheat.controls.didPressed[cheat.controls.binds.jump.val] = 1;
+			
+			if((cheat.config.game.bhop == 'keyslide' && integrate.inputs.Space || cheat.config.game.bhop == 'autoslide') && cheat.player.y_vel < -0.02 && cheat.player.can_slide)setTimeout(() => cheat.controls.keys[cheat.controls.binds.crouch.val] = 0, 325), cheat.controls.keys[cheat.controls.binds.crouch.val] = 1;
+		}
+		
+		// auto reload
+		if(!cheat.player.has_ammo && (cheat.config.aim.status == 'auto' || cheat.config.aim.auto_reload))data.reload = 1;
+		
+		// TODO: target once on aim
+		
+		// aimbot
+		
+		var can_hit = (Math.random() * 100) < cheat.config.aim.hitchance,
+			can_shoot = !data.reloading && cheat.player.has_ammo,
+			target = cheat.target = cheat.config.aim.status != 'auto' && !data.scope && !data.shoot
+			? null
+			: cheat.target && cheat.target.can_target
+				? cheat.target
+				: cheat.pick_target();
+		
+		/*
+		y_val = target.world_pos.y + (target.is_ai ? -(target.enity.dat.mSize / 2) : (target.jump_bob_y * 0.072) + 1 - target.crouch * 3);
+			
+			switch(cheat.config.aim.offset != 'random' ? cheat.config.aim.offset : y_offset_rand){
+				case'chest':
+					y_val -= target.height / 2;
+					break;
+				case'feet':
+					y_val -= target.height - target.height / 2.5;
+					break;
+			};
+		*/
+		
+		// todo: triggerbot delay
+		if(can_shoot && cheat.config.aim.status == 'trigger')data.shoot = enemy_sight() || data.shoot;
+		else if(can_shoot && cheat.config.aim.status != 'off' && target && cheat.player.health){
+			var camera_world = cheat.camera_world(),
+				target_pos = target.parts[cheat.config.aim.offset != 'random' ? cheat.config.aim.offset : y_offset_rand],
+				x_dire = utils.getXDire(camera_world.x, camera_world.y, camera_world.z, target_pos.x, target_pos.y - cheat.player.jump_bob_y, target_pos.z),
+				y_dire = utils.getDir(camera_world.z, camera_world.x, target_pos.z, target_pos.x),
+				rot = {
+					x: utils.round(Math.max(-utils.halfpi, Math.min(utils.halfpi, x_dire - (cheat.player.entity.landBobY * 0.1) - cheat.player.recoil_y * 0.27)) % utils.pi2, 3) || 0,
+					y: utils.normal_radian(utils.round(y_dire % utils.pi2, 3)) || 0,
+				};
+			
+			if(can_hit){
+				if(cheat.config.aim.status == 'correction')correct_aim(rot, data);
+				else if(cheat.config.aim.status == 'auto'){
+					data.scope = 1;
+					
+					if(cheat.player.aim)data.shoot = cheat.player.shot ? 0 : 1;
+					correct_aim(rot, data);
+				}
+			}
+			
+			if(cheat.config.aim.status == 'assist' && cheat.player.aim_press){
+				if(cheat.config.aim.smooth)rot = smooth({ xD: rot.x, yD: rot.y });
+				
+				aim_camera(rot);
+				aim_input(rot, data);
+				
+				// offset aim rather than revert to any previous camera rotation
+				if(data.shoot && !cheat.player.shot && !can_hit)data.ydir += 75;
+			}
+		}
+		
+		if(data.shoot && cheat.player.auto_weapon && !cheat.player.store.shot){
+			cheat.player.store.shot = true;
+			setTimeout(() => cheat.player.store.shot = false, cheat.player.weapon.rate + 25);
+		}
+	};
 
 class InputData {
 	constructor(array){
@@ -14430,81 +14261,9 @@ for(let key in keys)Object.defineProperty(InputData.prototype, key, {
 setInterval(() => y_offset_rand = y_offset_types[~~(Math.random() * y_offset_types.length)], 2000);
 
 module.exports = array => {
-	var data = new InputData(array);
+	if(cheat.player && cheat.controls)modify(array);
 	
-	// bhop
-	if(integrate.focused && cheat.config.game.bhop != 'off' && (integrate.inputs.Space || cheat.config.game.bhop == 'autojump' || cheat.config.game.bhop == 'autoslide')){
-		cheat.controls.keys[cheat.controls.binds.jump.val] ^= 1;
-		if(cheat.controls.keys[cheat.controls.binds.jump.val])cheat.controls.didPressed[cheat.controls.binds.jump.val] = 1;
-		
-		if((cheat.config.game.bhop == 'keyslide' && integrate.inputs.Space || cheat.config.game.bhop == 'autoslide') && cheat.player.y_vel < -0.02 && cheat.player.can_slide)setTimeout(() => cheat.controls.keys[cheat.controls.binds.crouch.val] = 0, 325), cheat.controls.keys[cheat.controls.binds.crouch.val] = 1;
-	}
-	
-	// auto reload
-	if(!cheat.player.has_ammo && (cheat.config.aim.status == 'auto' || cheat.config.aim.auto_reload))data.reload = 1;
-	
-	// TODO: target once on aim
-	
-	// aimbot
-	
-	var can_hit = (Math.random() * 100) < cheat.config.aim.hitchance,
-		can_shoot = !data.reloading && cheat.player.has_ammo,
-		target = cheat.target = cheat.config.aim.status != 'auto' && !data.scope && !data.shoot
-		? null
-		: cheat.target && cheat.target.can_target
-			? cheat.target
-			: cheat.pick_target();
-	
-	/*
-	y_val = target.world_pos.y + (target.is_ai ? -(target.enity.dat.mSize / 2) : (target.jump_bob_y * 0.072) + 1 - target.crouch * 3);
-		
-		switch(cheat.config.aim.offset != 'random' ? cheat.config.aim.offset : y_offset_rand){
-			case'chest':
-				y_val -= target.height / 2;
-				break;
-			case'feet':
-				y_val -= target.height - target.height / 2.5;
-				break;
-		};
-	*/
-	
-	// todo: triggerbot delay
-	if(can_shoot && cheat.config.aim.status == 'trigger')data.shoot = enemy_sight() || data.shoot;
-	else if(can_shoot && cheat.config.aim.status != 'off' && target && cheat.player.health){
-		var camera_world = cheat.camera_world(),
-			target_pos = target.parts[cheat.config.aim.offset != 'random' ? cheat.config.aim.offset : y_offset_rand],
-			x_dire = utils.getXDire(camera_world.x, camera_world.y, camera_world.z, target_pos.x, target_pos.y - cheat.player.jump_bob_y, target_pos.z),
-			y_dire = utils.getDir(camera_world.z, camera_world.x, target_pos.z, target_pos.x),
-			rot = {
-				x: utils.round(Math.max(-utils.halfpi, Math.min(utils.halfpi, x_dire - (cheat.player.entity.landBobY * 0.1) - cheat.player.recoil_y * 0.27)) % utils.pi2, 3) || 0,
-				y: utils.normal_radian(utils.round(y_dire % utils.pi2, 3)) || 0,
-			};
-		
-		if(can_hit){
-			if(cheat.config.aim.status == 'correction')correct_aim(rot, data);
-			else if(cheat.config.aim.status == 'auto'){
-				data.scope = 1;
-				
-				if(cheat.player.aim)data.shoot = cheat.player.shot ? 0 : 1;
-				correct_aim(rot, data);
-			}
-		}
-		
-		if(cheat.config.aim.status == 'assist' && cheat.player.aim_press){
-			if(cheat.config.aim.smooth)rot = smooth({ xD: rot.x, yD: rot.y });
-			
-			aim_camera(rot);
-			aim_input(rot, data);
-			
-			// offset aim rather than revert to any previous camera rotation
-			if(data.shoot && !cheat.player.shot && !can_hit)data.ydir += 75;
-		}
-	}
-	
-	if(data.shoot && cheat.player.auto_weapon && !cheat.player.entity[cheat.shot]){
-		cheat.player.entity[cheat.shot] = true;
-		setTimeout(() => cheat.player.entity[cheat.shot] = false, cheat.player.weapon.rate + 15);
-	}
+	return array;
 };
 
 /***/ }),
@@ -14679,6 +14438,234 @@ module.exports={"name":"Sploit","author":"Divide","version":"1.6.2","main":"inde
 /***/ ((module) => {
 
 module.exports={"rename":"<svg class='rename' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 226 226'><path d='M149.0505288 34.524144c2.3905494 1.1540553 4.3414544 2.582897 6.1549712 3.9567694 1.8135168-1.3738724 3.7644218-2.8027041 6.1549712-3.9567693C168.4771602 31.0619784 178.1767261 28.589 190.37675 28.589v14.0685c-10.3040782 0-18.0252694 2.033344-22.8613075 4.3964038-2.4180191 1.1815348-4.2590155 2.500458-5.0558653 3.2973078-.164858.1648678-.164858.1099086-.2198172.2198172v124.8579424c.0549592.1099086.0549592.0549593.2198172.2198172.7968498.7968498 2.6378462 2.115773 5.0558653 3.2973078 4.8360481 2.3630698 12.5572293 4.3964038 22.8613175 4.3964038v14.0685c-12.200024 0-21.8995998-2.4729784-29.0162788-5.935144-2.3905494-1.1540553-4.3414445-2.582887-6.1549712-3.9567694-1.8135168 1.3738824-3.7644219 2.802714-6.1549713 3.9567693C141.9338498 194.9380316 132.234284 197.411 120.03426 197.411v-14.0685c10.3040781 0 18.0252693-2.033334 22.8613174-4.3964038 2.4180191-1.1815348 4.2590156-2.500458 5.0558654-3.2973078.1648678-.1648579.1648678-.1099086.2198172-.2198172V50.5710387c-.0549494-.1099086-.0549494-.0549493-.2198172-.2198172-.7968498-.7968498-2.6378463-2.1157729-5.0558654-3.2973078-4.836048-2.3630697-12.5572293-4.3964037-22.8613075-4.3964037v-14.0685c12.200024 0 21.8995998 2.4729783 29.0162788 5.935144zM134.10275 70.7945V84.863h-112.548v56.274h112.548v14.0685H7.48625v-84.411zm84.411 0v84.411h-42.2055V141.137h28.137V84.863h-28.137V70.7945zm-126.6165 28.137v28.137h-56.274v-28.137z' fill='currentColor' stroke='#ccc' stroke-linejoin='round' stroke-width='.996'/><path d='M.452 225.548V.452h225.096v225.096z' fill='none'/><path d='M120.03425 28.589v14.0685c10.3040782 0 18.0252694 2.033344 22.8613175 4.3964038 2.418019 1.1815348 4.2590155 2.500458 5.0558653 3.2973078.1648679.1648678.1648679.1099086.2198172.2198172v124.8579424c-.0549493.1099086-.0549493.0549593-.2198172.2198172-.7968498.7968498-2.6378462 2.115773-5.0558653 3.2973078-4.8360481 2.3630698-12.5572294 4.3964038-22.8613075 4.3964038v14.0685c12.2000239 0 21.8995998-2.4729784 29.0162787-5.935144 2.3905494-1.1540553 4.3414545-2.582887 6.1549713-3.9567694 1.8135168 1.3738824 3.7644218 2.802714 6.1549712 3.9567693 7.116689 3.4621757 16.8162548 5.9351441 29.0162788 5.9351441v-14.0685c-10.3040782 0-18.0252694-2.033334-22.8613076-4.3964038-2.418019-1.1815348-4.2590155-2.500458-5.0558653-3.2973078-.1648579-.1648579-.1648579-.1099086-.2198172-.2198172V50.5710387c.0549593-.1099086.0549593-.0549493.2198172-.2198172.7968498-.7968498 2.6378463-2.1157729 5.0558653-3.2973078 4.8360482-2.3630697 12.5572294-4.3964037 22.8613175-4.3964037v-14.0685c-12.2000239 0-21.8995998 2.4729783-29.0162787 5.935144-2.3905494 1.1540553-4.3414445 2.582897-6.1549713 3.9567694-1.8135168-1.3738724-3.7644218-2.8027042-6.1549712-3.9567694-7.116689-3.4621657-16.8162549-5.935144-29.0162788-5.935144zM7.48625 70.7945v84.411h126.6165V141.137h-112.548V84.863h112.548V70.7945zm168.822 0V84.863h28.137v56.274h-28.137v14.0685h42.2055v-84.411zm-140.685 28.137v28.137h56.274v-28.137z' fill='currentColor'/></svg>","close":"<svg class='close button' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path fill='currentColor' d='M5.7070312 4.2929688L4.2929688 5.7070312 10.585938 12l-6.2929692 6.292969 1.4140624 1.414062L12 13.414062l6.292969 6.292969 1.414062-1.414062L13.414062 12l6.292969-6.2929688-1.414062-1.4140624L12 10.585938 5.7070312 4.2929688z'/></svg>","add_file":"<svg class='new button' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><path d='M6 3v26h11.78125C19.25 30.828125 21.480469 32 24 32c4.40625 0 8-3.59375 8-8 0-3.710937-2.5625-6.820312-6-7.71875v-6.6875l-.28125-.3125-6-6L19.40625 3zm2 2h10v6h6v5c-4.40625 0-8 3.59375-8 8 0 1.066406.210938 2.070313.59375 3H8zm12 1.4375L22.5625 9H20zM24 18c3.324219 0 6 2.675781 6 6s-2.675781 6-6 6-6-2.675781-6-6 2.675781-6 6-6zm-1 2v3h-3v2h3v3h2v-3h3v-2h-3v-3z' fill='currentcolor'/></svg>","save":"<svg class='save button' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 226 226'><g fill='none' stroke-linejoin='none' stroke-miterlimit='10' font-family='none' font-weight='none' font-size='none' text-anchor='none' style='mix-blend-mode:normal'><path d='M156.2876938 78.369847h-25.9726123V17.7670814h25.9726123zM225.548 52.3972345v147.178153c0 14.3390436-11.6335688 25.9726124-25.9726123 25.9726124H26.4246223C12.0855788 225.548.45201 213.9144312.45201 199.5753877V26.4246223C.45201 12.0855788 12.0855788.45201 26.4246223.45201h147.178153c7.1695268 0 11.1262862.372006 31.3497574 20.5954672C225.175994 41.2709485 225.548 45.2277178 225.548 52.3972346zM43.7396938 78.3698469c0 4.7684098 3.889131 8.6575408 8.6575408 8.6575408h112.548c4.7684098 0 8.6575408-3.889131 8.6575408-8.6575408V17.7670815c0-4.7684097-3.889131-8.6575407-8.6575408-8.6575407h-112.548c-4.7684098 0-8.6575408 3.889131-8.6575408 8.6575407zm155.8356939 43.2876939c0-4.7684098-3.889131-8.6575408-8.6575408-8.6575408H35.0821531c-4.7684098 0-8.6575408 3.889131-8.6575408 8.6575408v86.5753876c0 4.7684098 3.889131 8.6575408 8.6575408 8.6575408h155.8356938c4.7684098 0 8.6575408-3.889131 8.6575408-8.6575408z' fill='currentColor'/><path d='M.452 225.548V.452h225.096v225.096z'/><path d='M156.2876938 78.369847h-25.9726123V17.7670814h25.9726123zM225.548 52.3972345v147.178153c0 14.3390436-11.6335688 25.9726124-25.9726123 25.9726124H26.4246223C12.0855788 225.548.45201 213.9144312.45201 199.5753877V26.4246223C.45201 12.0855788 12.0855788.45201 26.4246223.45201h147.178153c7.1695268 0 11.1262862.372006 31.3497574 20.5954672C225.175994 41.2709485 225.548 45.2277178 225.548 52.3972346zM43.7396938 78.3698469c0 4.7684098 3.889131 8.6575408 8.6575408 8.6575408h112.548c4.7684098 0 8.6575408-3.889131 8.6575408-8.6575408V17.7670815c0-4.7684097-3.889131-8.6575407-8.6575408-8.6575407h-112.548c-4.7684098 0-8.6575408 3.889131-8.6575408 8.6575407zm155.8356939 43.2876939c0-4.7684098-3.889131-8.6575408-8.6575408-8.6575408H35.0821531c-4.7684098 0-8.6575408 3.889131-8.6575408 8.6575408v86.5753876c0 4.7684098 3.889131 8.6575408 8.6575408 8.6575408h155.8356938c4.7684098 0 8.6575408-3.889131 8.6575408-8.6575408z' fill='currentColor' stroke-linejoin='miter'/></g></svg>","web":"<svg class='button new' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 172 172'><g fill='none' stroke-miterlimit='10' font-family='none' font-weight='none' font-size='none' text-anchor='none' style='mix-blend-mode:normal'><path d='M0 172V0h172v172z'/><path d='M86 0C47.80649 0 15.32392 25.04026 4.13462 59.53846h14.05769c1.86058-4.75481 4.23798-9.22536 7.02885-13.4375.41346.07753.80108.20673 1.24038.20673h12.40385c-1.31791 4.1863-2.40324 8.65685-3.30769 13.23077h13.64423c1.03365-4.6256 2.22236-9.09615 3.72115-13.23077h66.15385c1.4988 4.13462 2.6875 8.60517 3.72115 13.23077h13.64423c-.90445-4.57392-1.98978-9.04447-3.30769-13.23077h12.40385c.4393 0 .82692-.12921 1.24038-.20673 2.76503 4.21214 5.16827 8.68269 7.02885 13.4375h14.05769C156.67609 25.04026 124.19352 0 86.00001 0zm0 13.23077c10.25901 0 19.74279 7.6232 26.875 19.84615h-53.75C66.25721 20.85396 75.74099 13.23077 86 13.23077zm-36.38462 9.71635c-2.04147 3.10096-3.8762 6.53786-5.58173 10.12981h-7.85577c4.08294-3.85036 8.55349-7.28726 13.4375-10.12981zm72.76924 0c4.88401 2.84255 9.35457 6.27945 13.4375 10.12981h-7.85577c-1.70553-3.59195-3.54026-7.02885-5.58173-10.12981zM1.65385 72.14904c-.25841.12921-.4393.41346-.62019.62019-.33594.4393-.41346.95613-.20673 1.44712l10.33654 25.01442c.25842.62019.87861 1.03365 1.65385 1.03365h5.58173c.72356 0 1.36959-.4393 1.65385-1.03365l5.58173-11.78365c.49099-1.08533.95613-2.27404 1.44712-3.51442.4393 1.11118.93029 2.11899 1.44712 3.30769l5.16827 11.99038c.25842.62019.90445 1.03365 1.65385 1.03365h5.78846c.7494 0 1.39544-.41346 1.65385-1.03365l10.95673-25.01442c.20673-.49099.15505-1.00781-.20673-1.44712-.33594-.4393-.85276-.62019-1.44712-.62019h-6.20192c-.77524 0-1.39543.38762-1.65385 1.03365l-4.96154 12.61058c-.4393 1.11118-.69772 1.96394-1.03365 2.89423-.38762-.98197-.77524-1.96394-1.24038-3.10096l-5.375-12.40385c-.25841-.62019-.90445-1.03365-1.65385-1.03365h-5.16827c-.7494 0-1.60216.41346-1.86058 1.03365l-5.58173 12.61058c-.46514 1.08534-.85276 2.14483-1.24038 3.10096-.33594-.95613-.64603-2.04147-1.03365-3.10096L10.5433 73.18269c-.23257-.67187-.85276-1.03365-1.65385-1.03365H2.4808c-.3101 0-.56851-.12921-.82692 0zm59.125 0c-.25841.12921-.64603.41346-.82692.62019-.33594.4393-.41346.95613-.20673 1.44712l10.33654 25.01442c.25842.62019.87861 1.03365 1.65385 1.03365h5.78846c.7494 0 1.36959-.4393 1.65385-1.03365l5.58173-11.78365c.49099-1.08533.95613-2.27404 1.44712-3.51442.4393 1.11118.72356 2.11899 1.24038 3.30769l5.375 11.99038c.25842.62019.90445 1.03365 1.65385 1.03365h5.58173c.7494 0 1.39544-.41346 1.65385-1.03365l11.16346-25.01442c.20673-.49099.15505-1.00781-.20673-1.44712-.33594-.4393-1.03365-.62019-1.65385-.62019h-5.99519c-.77524 0-1.60216.38762-1.86058 1.03365l-4.75481 12.61058c-.4393 1.11118-.90445 1.96394-1.24038 2.89423-.38762-.98197-.77524-1.96394-1.24038-3.10096l-5.16827-12.40385c-.25841-.62019-1.11118-1.03365-1.86058-1.03365h-5.16827c-.7494 0-1.39543.41346-1.65385 1.03365L76.4904 85.79327c-.46514 1.08534-.85276 2.14483-1.24038 3.10096-.33594-.95613-.64603-2.04147-1.03365-3.10096l-4.54808-12.61058c-.23257-.67187-1.05949-1.03365-1.86058-1.03365h-6.20192c-.28426 0-.56851-.12921-.82692 0zm58.91827 0c-.25841.12921-.4393.41346-.62019.62019-.33594.4393-.38762.95613-.20673 1.44712l10.33654 25.01442c.25842.62019.87861 1.03365 1.65385 1.03365h5.58173c.72356 0 1.36959-.4393 1.65385-1.03365l5.58173-11.78365c.49099-1.08533.95613-2.27404 1.44712-3.51442.4393 1.11118.93029 2.11899 1.44712 3.30769l5.16827 11.99038c.25842.62019.90445 1.03365 1.65385 1.03365h5.78846c.7494 0 1.36959-.41346 1.65385-1.03365l10.95673-25.01442c.20673-.49099.12921-1.00781-.20673-1.44712-.33594-.4393-.82692-.62019-1.44712-.62019h-6.20192c-.77524 0-1.42128.38762-1.65385 1.03365l-4.96154 12.61058c-.4393 1.11118-.69772 1.96394-1.03365 2.89423-.38762-.98197-.77524-1.96394-1.24038-3.10096l-5.375-12.40385c-.25841-.62019-.90445-1.03365-1.65385-1.03365h-5.375c-.7494 0-1.39543.41346-1.65385 1.03365l-5.58173 12.61058c-.46514 1.08534-.85276 2.14483-1.24038 3.10096-.33594-.95613-.64603-2.04147-1.03365-3.10096l-4.54808-12.61058c-.23257-.67187-.85276-1.03365-1.65385-1.03365h-6.40865c-.3101 0-.56851-.12921-.82692 0zm-115.5625 40.3125C15.32392 146.95974 47.8065 172 86 172c38.19351 0 70.67608-25.04026 81.86538-59.53846h-14.05769c-1.86058 4.75481-4.26382 9.22536-7.02885 13.4375-.41346-.07753-.80108-.20673-1.24038-.20673h-12.40385c1.31791-4.18629 2.19651-8.65685 3.10096-13.23077h-13.4375c-1.00781 4.6256-2.22235 9.12199-3.72115 13.23077H52.92307c-1.49879-4.10878-2.6875-8.60517-3.72115-13.23077h-13.4375c.90445 4.57392 1.78305 9.04447 3.10096 13.23077H26.46153c-.4393 0-.82692.12921-1.24038.20673-2.76503-4.21214-5.16827-8.68269-7.02885-13.4375zm32.04326 26.46154h7.85577c1.70553 3.59195 3.54026 7.02885 5.58173 10.12981-4.88401-2.84254-9.35456-6.27945-13.4375-10.12981zm22.94712 0h53.75c-7.13221 12.22296-16.61599 19.84615-26.875 19.84615s-19.74279-7.6232-26.875-19.84615zm68.84135 0h7.85577c-4.08293 3.85036-8.55349 7.28726-13.4375 10.12981 2.04147-3.10096 3.87621-6.53786 5.58173-10.12981z' fill='currentColor'/></g></svg>","reload":"<svg class='new button' xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M 12 3 C 7.037 3 3 7.038 3 12 L 5 12 C 5 8.14 8.141 5 12 5 C 14.185097 5 16.125208 6.0167955 17.408203 7.5917969 L 15 10 L 21 10 L 21 4 L 18.833984 6.1660156 C 17.184843 4.2316704 14.736456 3 12 3 z M 19 12 C 19 15.859 15.859 19 12 19 C 9.8149031 19 7.8747922 17.983204 6.5917969 16.408203 L 9 14 L 3 14 L 3 20 L 5.1660156 17.833984 C 6.8151574 19.76833 9.263544 21 12 21 C 16.963 21 21 16.963 21 12 L 19 12 z' fill='currentColor'></path></svg>"}
+
+/***/ }),
+
+/***/ "./libs/player.js":
+/*!************************!*\
+  !*** ./libs/player.js ***!
+  \************************/
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+"use strict";
+
+
+var vars = __webpack_require__(/*! ./vars */ "./libs/vars.js");
+
+class Player {
+	constructor(cheat, utils, entity){
+		this.cheat = cheat;
+		this.utils = utils;
+		this.entity = typeof entity == 'object' && entity != null ? entity : {};
+	}
+	distance_to(point){
+		return Math.hypot(this.x - point.x, this.y - point.y, this.z - point.z)
+	}
+	get x(){ return this.entity.x || 0 }
+	get y(){ return this.entity.y || 0 }
+	get z(){ return this.entity.z || 0 }
+	get parts(){ return this.store.parts }
+	// cached cpu-heavy data such as world_pos or can_see
+	get store(){ return this.entity[Player.store] || (this.entity[Player.store] = {}) }
+	get can_see(){ return this.store.can_see }
+	get in_fov(){
+		if(!this.active)return false;
+		if(this.cheat.config.aim.fov == 110)return true;
+		
+		var fov_bak = this.cheat.world.camera.fov;
+		
+		// config fov is percentage of current fov
+		this.cheat.world.camera.fov = this.cheat.config.aim.fov / fov_bak * 100;
+		this.cheat.world.camera.updateProjectionMatrix();
+		
+		this.cheat.update_frustum();
+		var ret = this.frustum;
+		
+		this.cheat.world.camera.fov = fov_bak;
+		this.cheat.world.camera.updateProjectionMatrix();
+		
+		return ret;
+	}
+	get can_target(){
+		return this.active && this.enemy && this.can_see && this.in_fov;
+	}
+	get frustum(){
+		return this.active ? this.cheat.contains_point(this) : false;
+	}
+	get hp_color(){
+		var hp_perc = (this.health / this.max_health) * 100,
+			hp_red = hp_perc < 50 ? 255 : Math.round(510 - 5.10 * hp_perc),
+			hp_green = hp_perc < 50 ? Math.round(5.1 * hp_perc) : 255;
+		
+		return '#' + ('000000' + (hp_red * 65536 + hp_green * 256 + 0 * 1).toString(16)).slice(-6);
+	}
+	get esp_color(){
+		// teammate = green, enemy = red, risk + enemy = orange
+		var hex = this.enemy ? this.risk ? [ 0xFF, 0x77, 0x00 ] : [ 0xFF, 0x00, 0x00 ] : [ 0x00, 0xFF, 0x00 ],
+			inc = this.can_see ? 0x00 : -0x77,
+			part_str = part => Math.max(Math.min(part + inc, 0xFF), 0).toString(16).padStart(2, 0);
+		
+		return '#' + hex.map(part_str).join('');
+	}
+	get ping(){ return this.entity.ping }
+	get jump_bob_y(){ return this.entity.jumpBobY }
+	get clan(){ return this.entity.clan }
+	get alias(){ return this.entity.alias }
+	get weapon(){ return this.entity.weapon }
+	get can_slide(){ return this.entity.canSlide }
+	// not to be confused with social player values 
+	get risk(){ return this.entity.account && (this.entity.account.featured || this.entity.account.premiumT) || this.entity.level >= 30 }
+	get is_you(){ return this.entity[vars.isYou] }
+	get aim_val(){ return this.entity[vars.aimVal] }
+	get y_vel(){ return this.entity[vars.yVel] }
+	get aim(){ return this.weapon.noAim || !this.aim_val || this.cheat.target && this.cheat.target.active && this.weapon.melee && this.distance_to(this.cheat.target) <= 18 }
+	get aim_press(){ return this.cheat.controls[vars.mouseDownR] || this.cheat.controls.keys[this.cheat.controls.binds.aim.val] }
+	get crouch(){ return this.entity[vars.crouchVal] }
+	// buggy
+	bounds(){
+		return {
+			min: this.utils.pos2d(this.store.box.min),
+			max: this.utils.pos2d(this.store.box.max),
+		};
+	}
+	rect(){
+		// hitbox rect, add a accurate player rect similar to junker
+		var src_pos = this.utils.pos2d(this),
+			src_pos_crouch = this.utils.pos2d(this, this.height),
+			width = ~~((src_pos.y - this.utils.pos2d(this, this.entity.height).y) * 0.7),
+			height = src_pos.y - src_pos_crouch.y,
+			center = {
+				x: src_pos.x,
+				y: src_pos.y - height / 2,
+			};
+		
+		return {
+			x: center.x,
+			y: center.y,
+			left: center.x - width / 2,
+			top: center.y - height / 2,
+			right: center.x + width / 2,
+			bottom: center.y + height / 2,
+			width: width,
+			height: height,
+		};
+	}
+	distance_camera(){
+		return this.cheat.world.camera[vars.getWorldPosition]().distanceTo(this);
+	}
+	get world_pos(){
+		return this.store.world_pos;
+	}
+	get obj(){ return this.is_ai ? target.enity.dat : this.entity[vars.objInstances] }
+	get recoil_y(){ return this.entity[vars.recoilAnimY] }
+	get has_ammo(){ return this.weapon.melee || this.ammo }
+	get ammo(){ return this.entity[vars.ammos][this.entity[vars.weaponIndex]] }
+	get height(){ return (this.entity.height || 0) - this.entity[vars.crouchVal] * 3 }
+	get health(){ return this.entity.health || 0 }
+	get max_health(){ return this.entity[vars.maxHealth] || 100 }
+	//  && (this.is_you ? true : this.chest && this.leg)
+	get active(){ return this.entity.active && this.entity.x != null && this.health > 0 && this.obj }
+	get teammate(){ return this.is_you || this.cheat.player && this.team && this.team == this.cheat.player.team }
+	get enemy(){ return !this.teammate }
+	get team(){ return this.entity.team }
+	get auto_weapon(){ return !this.weapon.nAuto }
+	get shot(){ return this.auto_weapon ? this.store.shot : this.entity[vars.didShoot] }
+	get chest(){
+		return this.obj && this.obj.children[0] && this.obj.children[0].children[4] && this.obj.children[0].children[4].children[0];
+		
+		var found;
+		// console.log(this.chest.parent.position, this.leg.scale);
+		if(this.obj)this.obj.traverse(obj => {
+			if(this.cheat.test_vec(obj.parent.position, [ 0, 4.2, 0 ]) && this.cheat.test_vec(obj.scale, [ 1, 1, 1 ]))found = obj;
+		});
+		
+		return found;
+	}
+	get leg(){
+		return this.obj && this.obj.children[0] && this.obj.children[0].children[0];
+		
+		var found;
+		
+		if(this.obj)this.obj.traverse(obj => {
+			if(this.cheat.test_vec(obj.scale, [ 1.3, 4.2, 1.3 ]))found = obj;
+		});
+		
+		return found;
+	}
+	tick(){
+		/*this.store.box = new this.cheat.three.Box3();
+		
+		if(this.active)this.obj.traverse(obj => {
+			if(obj.visible && obj.type == 'Mesh')this.store.box.expandByObject(this.obj);;
+		});*/
+		
+		this.store.can_see = this.cheat.player && this.active && this.utils.obstructing(this.cheat.player, this, this.cheat.player.weapon && this.cheat.player.weapon.pierce && this.cheat.config.aim.wallbangs) == null ? true : false;
+		
+		this.store.parts = {
+			torso: { x: 0, y: 0, z: 0 },
+			head: { x: 0, y: 0, z: 0 },
+			legs: { x: 0, y: 0, z: 0 },
+		};
+		
+		// config.js
+		var head_size = 1.5;
+		
+		if(this.active && !this.is_you && this.chest && this.leg){
+			var chest_box = new this.cheat.three.Box3().setFromObject(this.chest),
+				chest_size = chest_box.getSize(),
+				chest_pos = chest_box.getCenter(),
+				// rotated offset
+				translate = (obj, input, translate) => {
+					for(var axis in translate){
+						var ind = ['x','y','z'].indexOf(axis),
+							pos = new this.cheat.three.Vector3(...[0,0,0].map((x, index) => ind == index ? 1 : 0)).applyQuaternion(obj.getWorldQuaternion()).multiplyScalar(translate[axis]);
+						
+						input.x += pos.x;
+						input.y += pos.y;
+						input.z += pos.z;
+					}
+					
+					return input;
+				};
+			
+			// parts centered
+			this.store.parts.torso = translate(this.chest, {
+				x: chest_pos.x,
+				y: chest_pos.y,
+				z: chest_pos.z,
+				height: chest_size.y - head_size,
+			}, {
+				y: -head_size / 2,
+			});
+			
+			this.store.parts.head = translate(this.chest, {
+				x: chest_pos.x,
+				y: chest_pos.y,
+				z: chest_pos.z,
+			}, {
+				y: this.store.parts.torso.height / 2,
+			});
+			
+			var leg_pos = this.leg[vars.getWorldPosition](),
+				leg_scale = this.leg.getWorldScale();
+			
+			this.store.parts.legs = translate(this.leg, {
+				x: leg_pos.x,
+				y: leg_pos.y,
+				z: leg_pos.z,
+			}, {
+				x: -leg_scale.x / 2,
+				y: -leg_scale.y / 2,
+			});
+		}
+		
+		if(this.active)this.store.world_pos = this.active ? this.obj[vars.getWorldPosition]() : { x: 0, y: 0, z: 0 };
+	}
+};
+
+Player.store = Symbol();
+
+module.exports = Player;
 
 /***/ }),
 
@@ -15778,8 +15765,6 @@ var vars = new Map(),
 	add_patch = (regex, replacement) => patches.set(regex, replacement),
 	key = '_' + Math.random().toString().substr(2);
 
-add_var('tmpInpts', /for\(var (\w+)=0;\1<(\w+)\.(\w+)\.length;\)\2.\3\[\w+\]\[0\]/, 3);
-
 add_var('isYou', /this\.accid=0,this\.(\w+)=\w+,this\.isPlayer/, 1);
 
 add_var('pchObjc', /0,this\.(\w+)=new \w+\.Object3D,this/, 1);
@@ -15820,6 +15805,9 @@ add_patch(/\(\w+,(\w+),\w+\){(?=[a-z ';\.\(\),]+ACESFilmic)/, (match, three) => 
 
 // Skins
 add_patch(/((?:[a-zA-Z]+(?:\.|(?=\.skins)))+)\.skins(?!=)/g, (match, player) => key + '.skins(' + player + ')');
+
+// Input
+add_patch(/((\w+\.\w+)\[\2\._push\?'_push':'push']\()(\w+)(\),)/, (match, func, array, input, end) => func + key + '.input(' + input + ')' + end);
 
 exports.patch = source => {
 	var found = {},
@@ -15867,7 +15855,8 @@ var Utils = __webpack_require__(/*! ./libs/utils */ "./libs/utils.js"),
 	updater = new Updater(constants.script, constants.extracted),
 	api = new API(constants.mm_url, constants.api_url),
 	UI = __webpack_require__(/*! ./libs/ui */ "./libs/ui.js"),
-	cheat = __webpack_require__(/*! ./cheat */ "./cheat.js");
+	cheat = __webpack_require__(/*! ./cheat */ "./cheat.js"),
+	input = __webpack_require__(/*! ./input */ "./input.js");
 
 integrate.listen_load(() => {
 	if(integrate.has_instruct('connection banned 0x2'))localStorage.removeItem('krunker_token'), UI.alert([
@@ -15901,6 +15890,7 @@ UI.ready.then(() => {
 		// migrate
 		if(typeof cheat.config.aim.smooth == 'object')cheat.config.aim.smooth = cheat.config.aim.smooth.value;
 		if(typeof cheat.config.esp.walls == 'object')cheat.config.esp.walls = 100;
+		if(cheat.config.aim.target == 'feet')cheat.config.aim.target == 'legs';
 		
 		var loading = {
 			visible: cheat.config.game.custom_loading,
@@ -15962,6 +15952,7 @@ UI.ready.then(() => {
 				world(world){ cheat.world = constants.utils.world = world },
 				can_see: inview => cheat.config.esp.status == 'full' ? false : (cheat.config.esp.nametags || inview),
 				skins: ent => cheat.config.game.skins && typeof ent == 'object' && ent != null && ent.stats ? cheat.skins : ent.skins,
+				input: input,
 			}, class extends WebSocket {
 				constructor(url, proto){
 					super(url, proto);
@@ -16240,13 +16231,13 @@ module.exports = () => {
 		}
 		
 		// part labels
-		/*for(var part in player.parts){
+		if(cheat.config.esp.labels)for(var part in player.parts){
 			var srcp = utils.pos2d(player.parts[part]);
 			ctx.fillStyle = '#FFF';
 			ctx.font = '13px monospace thin';
 			ctx.fillRect(srcp.x - 2, srcp.y - 2, 4, 4);
 			ctx.fillText(part, srcp.x, srcp.y - 6);
-		}*/
+		}
 	}
 };
 
@@ -16266,30 +16257,30 @@ module.exports = () => {
 /******/ 		}
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = __webpack_module_cache__[moduleId] = {
-/******/ 			id: moduleId,
-/******/ 			loaded: false,
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
 /******/ 			exports: {}
 /******/ 		};
 /******/ 	
 /******/ 		// Execute the module function
 /******/ 		__webpack_modules__[moduleId].call(module.exports, module, module.exports, __webpack_require__);
 /******/ 	
-/******/ 		// Flag the module as loaded
-/******/ 		module.loaded = true;
-/******/ 	
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
 /******/ 	}
 /******/ 	
-/******/ 	// expose the module cache
-/******/ 	__webpack_require__.c = __webpack_module_cache__;
-/******/ 	
 /************************************************************************/
-/******/ 	
-/******/ 	// module cache are used so entry inlining is disabled
-/******/ 	// startup
-/******/ 	// Load entry module and return exports
-/******/ 	var __webpack_exports__ = __webpack_require__("./index.js");
-/******/ 	
+var __webpack_exports__ = {};
+// This entry need to be wrapped in an IIFE because it need to be in strict mode.
+(() => {
+"use strict";
+/*!******************!*\
+  !*** ./index.js ***!
+  \******************/
+
+
+if(__webpack_require__(/*! ./consts */ "./consts.js").krunker)__webpack_require__(/*! ./main */ "./main.js");
+})();
+
 /******/ })()
 ;

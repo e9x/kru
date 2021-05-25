@@ -11,7 +11,8 @@ var Utils = require('./libs/utils'),
 	updater = new Updater(constants.script, constants.extracted),
 	api = new API(constants.mm_url, constants.api_url),
 	UI = require('./libs/ui'),
-	cheat = require('./cheat');
+	cheat = require('./cheat'),
+	input = require('./input');
 
 integrate.listen_load(() => {
 	if(integrate.has_instruct('connection banned 0x2'))localStorage.removeItem('krunker_token'), UI.alert([
@@ -45,6 +46,7 @@ UI.ready.then(() => {
 		// migrate
 		if(typeof cheat.config.aim.smooth == 'object')cheat.config.aim.smooth = cheat.config.aim.smooth.value;
 		if(typeof cheat.config.esp.walls == 'object')cheat.config.esp.walls = 100;
+		if(cheat.config.aim.target == 'feet')cheat.config.aim.target == 'legs';
 		
 		var loading = {
 			visible: cheat.config.game.custom_loading,
@@ -106,6 +108,7 @@ UI.ready.then(() => {
 				world(world){ cheat.world = constants.utils.world = world },
 				can_see: inview => cheat.config.esp.status == 'full' ? false : (cheat.config.esp.nametags || inview),
 				skins: ent => cheat.config.game.skins && typeof ent == 'object' && ent != null && ent.stats ? cheat.skins : ent.skins,
+				input: input,
 			}, class extends WebSocket {
 				constructor(url, proto){
 					super(url, proto);

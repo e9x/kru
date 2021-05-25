@@ -212,12 +212,12 @@ module.exports = () => {
 		}
 		
 		// part labels
-		/*for(var part in player.parts){
+		if(cheat.config.esp.labels)for(var part in player.parts){
 			var srcp = utils.pos2d(player.parts[part]);
 			ctx.fillStyle = '#FFF';
 			ctx.font = '13px monospace thin';
 			ctx.fillRect(srcp.x - 2, srcp.y - 2, 4, 4);
 			ctx.fillText(part, srcp.x, srcp.y - 6);
-		}*/
+		}
 	}
 };

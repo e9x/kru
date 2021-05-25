@@ -35,6 +35,7 @@ exports.base_config = {
 	esp: {
 		status: 'off',
 		walls: 100,
+		labels: false,
 		tracers: false,
 	},
 	game: {
@@ -200,6 +201,10 @@ exports.ui = cheat => ({
 			type: 'slider',
 			walk: 'esp.walls',
 			range: [ 0, 100, 5 ],
+		},{
+			name: 'Labels',
+			type: 'boolean',
+			walk: 'esp.labels',
 		}]
 	},{
 		name: 'Binds',

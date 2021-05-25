@@ -14,8 +14,6 @@ var vars = new Map(),
 	add_patch = (regex, replacement) => patches.set(regex, replacement),
 	key = '_' + Math.random().toString().substr(2);
 
-add_var('tmpInpts', /for\(var (\w+)=0;\1<(\w+)\.(\w+)\.length;\)\2.\3\[\w+\]\[0\]/, 3);
-
 add_var('isYou', /this\.accid=0,this\.(\w+)=\w+,this\.isPlayer/, 1);
 
 add_var('pchObjc', /0,this\.(\w+)=new \w+\.Object3D,this/, 1);
@@ -56,6 +54,9 @@ add_patch(/\(\w+,(\w+),\w+\){(?=[a-z ';\.\(\),]+ACESFilmic)/, (match, three) => 
 
 // Skins
 add_patch(/((?:[a-zA-Z]+(?:\.|(?=\.skins)))+)\.skins(?!=)/g, (match, player) => key + '.skins(' + player + ')');
+
+// Input
+add_patch(/((\w+\.\w+)\[\2\._push\?'_push':'push']\()(\w+)(\),)/, (match, func, array, input, end) => func + key + '.input(' + input + ')' + end);
 
 exports.patch = source => {
 	var found = {},
