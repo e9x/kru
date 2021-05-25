@@ -1,9 +1,10 @@
 'use strict';
-var api = require('./libs/api'),
+var API = require('./libs/api'),
+	{ mm_url, api_url, utils } = require('./consts'),
+	api = new API(mm_url, api_url),
 	vars = require('./libs/vars'),
 	inputs = require('./input'),
-	visual = require('./visual'),
-	{ utils } = require('./consts');
+	visual = require('./visual');
 
 exports.add = entity => new Player(entity),
 
