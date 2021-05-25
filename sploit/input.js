@@ -18,7 +18,7 @@ var cheat = require('./cheat'),
 			x: cheat.controls[vars.pchObjc].rotation.x + x_ang * aj * turn,
 		};
 	},
-	y_offset_types = ['head', 'chest', 'legs'],
+	y_offset_types = ['head', 'torso', 'legs'],
 	y_offset_rand = 'head',
 	enemy_sight = () => {
 		if(cheat.player.shot)return;
@@ -105,7 +105,8 @@ var cheat = require('./cheat'),
 		if(can_shoot && cheat.config.aim.status == 'trigger')data.shoot = enemy_sight() || data.shoot;
 		else if(can_shoot && cheat.config.aim.status != 'off' && target && cheat.player.health){
 			var camera_world = cheat.camera_world(),
-				target_pos = target.parts[cheat.config.aim.offset != 'random' ? cheat.config.aim.offset : y_offset_rand],
+				part = cheat.config.aim.offset != 'random' ? cheat.config.aim.offset : y_offset_rand,
+				target_pos = target.parts[part] || (console.error(part, 'not registered'), { x: 0, y: 0, z: 0 }),
 				x_dire = utils.getXDire(camera_world.x, camera_world.y, camera_world.z, target_pos.x, target_pos.y - cheat.player.jump_bob_y, target_pos.z),
 				y_dire = utils.getDir(camera_world.z, camera_world.x, target_pos.z, target_pos.x),
 				rot = {

@@ -7,7 +7,7 @@
 // @license        gpl-3.0
 // @namespace      https://e9x.github.io/
 // @supportURL     https://e9x.github.io/kru/inv/
-// @extracted      Tue, 25 May 2021 19:52:49 GMT
+// @extracted      Tue, 25 May 2021 20:12:18 GMT
 // @match          *://krunker.io/*
 // @match          *://browserfps.com/*
 // @exclude        *://krunker.io/editor*
@@ -13751,7 +13751,7 @@ exports.api_url = 'https://api.sys32.dev/';
 exports.hostname = 'krunker.io';
 exports.mm_url = 'https://matchmaker.krunker.io/';
 
-exports.extracted = typeof 1621972369478 != 'number' ? Date.now() : 1621972369478;
+exports.extracted = typeof 1621973538614 != 'number' ? Date.now() : 1621973538614;
 
 exports.store = {
 	get: async key => GM.get_value ? await GM.get_value(key) : localStorage.getItem('ss' + key),
@@ -13991,7 +13991,7 @@ exports.ui = cheat => ({
 			walk: 'aim.offset',
 			vals: [
 				[ 'head', 'Head' ],
-				[ 'chest', 'Chest' ],
+				[ 'torso', 'Torso' ],
 				[ 'legs', 'Legs' ],
 				[ 'random', 'Random' ],
 			],
@@ -14121,7 +14121,7 @@ var cheat = __webpack_require__(/*! ./cheat */ "./cheat.js"),
 			x: cheat.controls[vars.pchObjc].rotation.x + x_ang * aj * turn,
 		};
 	},
-	y_offset_types = ['head', 'chest', 'legs'],
+	y_offset_types = ['head', 'torso', 'legs'],
 	y_offset_rand = 'head',
 	enemy_sight = () => {
 		if(cheat.player.shot)return;
@@ -14208,7 +14208,8 @@ var cheat = __webpack_require__(/*! ./cheat */ "./cheat.js"),
 		if(can_shoot && cheat.config.aim.status == 'trigger')data.shoot = enemy_sight() || data.shoot;
 		else if(can_shoot && cheat.config.aim.status != 'off' && target && cheat.player.health){
 			var camera_world = cheat.camera_world(),
-				target_pos = target.parts[cheat.config.aim.offset != 'random' ? cheat.config.aim.offset : y_offset_rand],
+				part = cheat.config.aim.offset != 'random' ? cheat.config.aim.offset : y_offset_rand,
+				target_pos = target.parts[part] || (console.error(part, 'not registered'), { x: 0, y: 0, z: 0 }),
 				x_dire = utils.getXDire(camera_world.x, camera_world.y, camera_world.z, target_pos.x, target_pos.y - cheat.player.jump_bob_y, target_pos.z),
 				y_dire = utils.getDir(camera_world.z, camera_world.x, target_pos.z, target_pos.x),
 				rot = {
@@ -15897,7 +15898,9 @@ UI.ready.then(() => {
 		// migrate
 		if(typeof cheat.config.aim.smooth == 'object')cheat.config.aim.smooth = cheat.config.aim.smooth.value;
 		if(typeof cheat.config.esp.walls == 'object')cheat.config.esp.walls = 100;
+		
 		if(cheat.config.aim.target == 'feet')cheat.config.aim.target == 'legs';
+		else if(cheat.config.aim.target == 'chest')cheat.config.aim.target == 'torso';
 		
 		var loading = {
 			visible: cheat.config.game.custom_loading,

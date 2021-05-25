@@ -176,7 +176,7 @@ exports.ui = cheat => ({
 			walk: 'aim.offset',
 			vals: [
 				[ 'head', 'Head' ],
-				[ 'chest', 'Chest' ],
+				[ 'torso', 'Torso' ],
 				[ 'legs', 'Legs' ],
 				[ 'random', 'Random' ],
 			],

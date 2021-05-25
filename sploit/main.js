@@ -46,7 +46,9 @@ UI.ready.then(() => {
 		// migrate
 		if(typeof cheat.config.aim.smooth == 'object')cheat.config.aim.smooth = cheat.config.aim.smooth.value;
 		if(typeof cheat.config.esp.walls == 'object')cheat.config.esp.walls = 100;
+		
 		if(cheat.config.aim.target == 'feet')cheat.config.aim.target == 'legs';
+		else if(cheat.config.aim.target == 'chest')cheat.config.aim.target == 'torso';
 		
 		var loading = {
 			visible: cheat.config.game.custom_loading,
