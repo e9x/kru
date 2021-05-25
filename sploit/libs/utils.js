@@ -1,6 +1,5 @@
 'use strict';
 
-
 class Utils {
 	constructor(canvas, three, game, world){
 		this.canvas = canvas;
@@ -146,6 +145,27 @@ class Utils {
 			top: center.y - size.height / 2,
 			bottom: center.y + size.height / 2,
 		};
+	}
+	css(obj){
+		var string = [];
+		
+		for(var name in obj)string.push(name + ': ' + obj[name] + ';');
+		
+		return string.join('\n');
+	}
+	sanitize(string){
+		var node = document.createElement('div');
+		
+		node.textContent = string;
+		
+		return node.innerHTML;
+	}
+	unsanitize(string){
+		var node = document.createElement('div');
+		
+		node.innerHTML = string;
+		
+		return node.textContent;
 	}
 }
 

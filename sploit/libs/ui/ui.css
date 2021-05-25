@@ -1,6 +1,6 @@
 @font-face {
 	font-family: 'inconsolata';
-	src: url('assets:inconsolata.woff2') format('truetype');
+	src: url('assets:ui/inconsolata.woff2') format('truetype');
 	font-weight: 400;
 }
 
@@ -29,12 +29,12 @@ html {
 .loading > div {
 	width: 178px;
 	height: 178px;
-	background: url('https://e9x.github.io/kru/sploit/libs/gg.gif');
+	background: url('assets:ui/gg.gif');
 	background-size: contain;
 }
 
 .loading a {
-	background-image: url('assets:discord-normal.png');
+	background-image: url('assets:ui/discord-normal.png');
 	width: 50px;
 	height: 56px;
 	background-size: contain;
@@ -47,12 +47,12 @@ html {
 }
 
 .loading a:hover {
-	background-image: url('assets:discord-hover.png');
+	background-image: url('assets:ui/discord-hover.png');
 	transform: scale(.95);
 }
 
 .loading a:active {
-	background-image: url('assets:discord-pressed.png');
+	background-image: url('assets:ui/discord-pressed.png');
 }
 
 main {

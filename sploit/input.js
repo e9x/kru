@@ -3,7 +3,7 @@ var cheat = require('./cheat'),
 	vars = require('./libs/vars'),
 	integrate = require('./libs/integrate'),
 	Player = require('./libs/player'),
-	{ utils } = require('./consts'),
+	{ api, utils } = require('./consts'),
 	smooth = target	=> {
 		var aj = 17,
 			// default 0.0022
@@ -33,9 +33,12 @@ var cheat = require('./cheat'),
 		data.xdir = rot.x * 1000;
 		data.ydir = rot.y * 1000;
 	},
-	aim_camera = rot => {
+	aim_camera = (rot, data) => {
+		// updating camera will make a difference next tick, update current tick with aim_input
 		cheat.controls[vars.pchObjc].rotation.x = rot.x;
 		cheat.controls.object.rotation.y = rot.y;
+		
+		aim_input(rot, data);
 	},
 	correct_aim = (rot, data) => {
 		if(data.shoot)data.shoot = !cheat.player.shot;
@@ -127,8 +130,7 @@ var cheat = require('./cheat'),
 			if(cheat.config.aim.status == 'assist' && cheat.player.aim_press){
 				if(cheat.config.aim.smooth)rot = smooth({ xD: rot.x, yD: rot.y });
 				
-				aim_camera(rot);
-				aim_input(rot, data);
+				aim_camera(rot, data);
 				
 				// offset aim rather than revert to any previous camera rotation
 				if(data.shoot && !cheat.player.shot && !can_hit)data.ydir += 75;
@@ -159,7 +161,11 @@ for(let key in keys)Object.defineProperty(InputData.prototype, key, {
 setInterval(() => y_offset_rand = y_offset_types[~~(Math.random() * y_offset_types.length)], 2000);
 
 module.exports = array => {
-	if(cheat.player && cheat.controls)modify(array);
+	if(cheat.player && cheat.controls)try{
+		modify(array);
+	}catch(err){
+		api.report_error(err);
+	}
 	
 	return array;
 };

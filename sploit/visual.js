@@ -1,7 +1,7 @@
 'use strict';
 
 var cheat = require('./cheat'),
-	UI = require('./libs/ui'),
+	UI = require('./libs/ui/'),
 	{ utils } = require('./consts'),
 	v3 = ['x', 'y', 'z'],
 	esp_mats = {},

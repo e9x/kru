@@ -264,10 +264,7 @@ exports.ui = cheat => ({
 			},
 			bind: 'binds.reset',
 		},{
-			name: 'Shoutout to <a href="https://krunker.io/social.html?p=profile&q=So_Cloudy" target="_blank">So_Cloudy</a> for getting 170 kills with silent aimbot in a SINGLE game! Add Cloudy#0898 on discord for tips on getting no bans!',
-			type: 'text',
-		},{
-			name: 'Huge thanks to KPal#1311 from <a href="https://discord.gg/8McHhwg">KPal Hub</a> for providing the Krunker source!',
+			name: `Huge thanks to KPal#1311 from [KPal Hub](https://discord.gg/8McHhwg) for providing Krunker's source`,
 			type: 'text',
 		}],
 	},{

@@ -1,7 +1,6 @@
 'use strict';
 var Utils = require('./libs/utils'),
 	Updater = require('./libs/updater'),
-	API = require('./libs/api'),
 	vars = require('./libs/vars'),
 	integrate = require('./libs/integrate'),
 	constants = require('./consts'),
@@ -9,8 +8,7 @@ var Utils = require('./libs/utils'),
 	msgpack = require('msgpack-lite'),
 	utils = new Utils(),
 	updater = new Updater(constants.script, constants.extracted),
-	api = new API(constants.mm_url, constants.api_url),
-	UI = require('./libs/ui'),
+	UI = require('./libs/ui/'),
 	cheat = require('./cheat'),
 	input = require('./input');
 
@@ -50,24 +48,7 @@ UI.ready.then(() => {
 		if(cheat.config.aim.target == 'feet')cheat.config.aim.target == 'legs';
 		else if(cheat.config.aim.target == 'chest')cheat.config.aim.target == 'torso';
 		
-		var loading = {
-			visible: cheat.config.game.custom_loading,
-			node: utils.add_ele('div', UI.doc, { className: 'loading' }),
-			show(){
-				this.visible = true;
-				this.update();
-			},
-			hide(){
-				this.visible = false;
-				this.update();
-			},
-			blur(){},
-			focus(){},
-			update(){
-				this.node.style.opacity = this.visible ? 1 : 0;
-				this.node.style['pointer-events'] = this.visible ? 'all' : 'none';
-			},
-		};
+		var loading = new UI.Loading(cheat.config.game.custom_loading);
 		
 		loading.update();
 		
@@ -86,78 +67,88 @@ UI.ready.then(() => {
 			},
 		});
 		
-		api.source().then(krunker => {
+		constants.api.source().then(krunker => {
 			cheat.process();
 			
 			krunker = vars.patch(krunker);
 			
-			api.media('sploit',cheat,constants);
+			constants.api.media('sploit',cheat,constants);
 			
-			integrate.page_load.then(async () => new Function('WP_fetchMMToken', vars.key, 'WebSocket', krunker)(api.token().finally(token => loading.hide()), {
-				three(three){ cheat.three = constants.utils.three = three },
-				game(game){
-					cheat.game = constants.utils.game = game;
-					Object.defineProperty(game, 'controls', {
-						configurable: true,
-						set(value){
-							// delete definition
-							delete game.controls;
-							
-							return cheat.controls = game.controls = value;
-						},
-					});
+			var args = {
+				[ vars.key ]: {
+					three(three){ cheat.three = constants.utils.three = three },
+					game(game){
+						cheat.game = constants.utils.game = game;
+						Object.defineProperty(game, 'controls', {
+							configurable: true,
+							set(value){
+								// delete definition
+								delete game.controls;
+								
+								return cheat.controls = game.controls = value;
+							},
+						});
+					},
+					world(world){ cheat.world = constants.utils.world = world },
+					can_see: inview => cheat.config.esp.status == 'full' ? false : (cheat.config.esp.nametags || inview),
+					skins: ent => cheat.config.game.skins && typeof ent == 'object' && ent != null && ent.stats ? cheat.skins : ent.skins,
+					input: input,
 				},
-				world(world){ cheat.world = constants.utils.world = world },
-				can_see: inview => cheat.config.esp.status == 'full' ? false : (cheat.config.esp.nametags || inview),
-				skins: ent => cheat.config.game.skins && typeof ent == 'object' && ent != null && ent.stats ? cheat.skins : ent.skins,
-				input: input,
-			}, class extends WebSocket {
-				constructor(url, proto){
-					super(url, proto);
-					
-					this.addEventListener('message', event => {
-						var [ label, ...data ] = msgpack.decode(new Uint8Array(event.data)), client;
+				WebSocket: class extends WebSocket {
+					constructor(url, proto){
+						super(url, proto);
 						
-						if(label == 'io-init')cheat.socket_id = data[0];
-						else if(cheat.config.game.skins && label == 0 && cheat.skin_cache && (client = data[0].indexOf(cheat.socket_id)) != -1){
-							// loadout
-							data[0][client + 12] = cheat.skin_cache[2];
+						this.addEventListener('message', event => {
+							var [ label, ...data ] = msgpack.decode(new Uint8Array(event.data)), client;
 							
-							// hat
-							data[0][client + 13] = cheat.skin_cache[3];
-							
-							// body
-							data[0][client + 14] = cheat.skin_cache[4];
-							
-							// knife
-							data[0][client + 19] = cheat.skin_cache[9];
-							
-							// dye
-							data[0][client + 24] = cheat.skin_cache[14];
-							
-							// waist
-							data[0][client + 33] = cheat.skin_cache[17];
-							
-							// event.data is non-writable but configurable
-							// concat message signature ( 2 bytes )
-							var encoded = msgpack.encode([ label, ...data ]),
-								final = new Uint8Array(encoded.byteLength + 2);
-							
-							final.set(encoded, 0);
-							final.set(event.data.slice(-2), encoded.byteLength);
-							
-							Object.defineProperty(event, 'data', { value: final.buffer });
-						}
-					});
-				}
-				send(data){
-					var [ label, ...sdata ] = msgpack.decode(data.slice(0, -2));
-					
-					if(label == 'en')cheat.skin_cache = sdata[0];
-					
-					super.send(data);
-				}
-			}));
+							if(label == 'io-init')cheat.socket_id = data[0];
+							else if(cheat.config.game.skins && label == 0 && cheat.skin_cache && (client = data[0].indexOf(cheat.socket_id)) != -1){
+								// loadout
+								data[0][client + 12] = cheat.skin_cache[2];
+								
+								// hat
+								data[0][client + 13] = cheat.skin_cache[3];
+								
+								// body
+								data[0][client + 14] = cheat.skin_cache[4];
+								
+								// knife
+								data[0][client + 19] = cheat.skin_cache[9];
+								
+								// dye
+								data[0][client + 24] = cheat.skin_cache[14];
+								
+								// waist
+								data[0][client + 33] = cheat.skin_cache[17];
+								
+								// event.data is non-writable but configurable
+								// concat message signature ( 2 bytes )
+								var encoded = msgpack.encode([ label, ...data ]),
+									final = new Uint8Array(encoded.byteLength + 2);
+								
+								final.set(encoded, 0);
+								final.set(event.data.slice(-2), encoded.byteLength);
+								
+								Object.defineProperty(event, 'data', { value: final.buffer });
+							}
+						});
+					}
+					send(data){
+						var [ label, ...sdata ] = msgpack.decode(data.slice(0, -2));
+						
+						if(label == 'en')cheat.skin_cache = sdata[0];
+						
+						super.send(data);
+					}
+				},
+				WP_fetchMMToken: constants.api.token(),
+			};
+			
+			args.WP_fetchMMToken.then(() => {
+				loading.hide();
+			});
+			
+			integrate.page_load.then(async () => new Function(...Object.keys(args), krunker)(...Object.values(args)));
 		});
 	});
 });
