@@ -7,7 +7,7 @@
 // @license        gpl-3.0
 // @namespace      https://e9x.github.io/
 // @supportURL     https://e9x.github.io/kru/inv/
-// @extracted      Tue, 25 May 2021 17:26:38 GMT
+// @extracted      Tue, 25 May 2021 18:15:11 GMT
 // @match          *://krunker.io/*
 // @match          *://browserfps.com/*
 // @exclude        *://krunker.io/editor*
@@ -13647,7 +13647,8 @@ function write0(type) {
 
 "use strict";
 
-var vars = __webpack_require__(/*! ./libs/vars */ "./libs/vars.js"),
+var api = __webpack_require__(/*! ./libs/api */ "./libs/api.js"),
+	vars = __webpack_require__(/*! ./libs/vars */ "./libs/vars.js"),
 	inputs = __webpack_require__(/*! ./input */ "./input.js"),
 	visual = __webpack_require__(/*! ./visual */ "./visual.js"),
 	{ utils } = __webpack_require__(/*! ./consts */ "./consts.js");
@@ -13677,30 +13678,38 @@ exports.reload = () => {
 };
 
 exports.process = () => {
-	if(exports.game && exports.world){
-		for(var ent of exports.game.players.list){
-			let player = exports.add(ent);
-			
-			if(!player.active)continue;
-			
-			if(player.is_you)exports.player = player;
-			
-			player.tick();
-			
-			if(exports.controls && exports.controls[vars.tmpInpts] && !exports.controls[vars.tmpInpts][exports.hooked]){
-				exports.controls[vars.tmpInpts][exports.hooked] = true;
+	try{
+		if(exports.game && exports.world){
+			for(var ent of exports.game.players.list){
+				let player = exports.add(ent);
 				
-				var push = exports.controls[vars.tmpInpts].push;
+				if(!player.active)continue;
 				
-				exports.controls[vars.tmpInpts].push = function(data){
-					if(exports.player && exports.player.weapon)inputs(data);
-					return push.call(this, data);
+				if(player.is_you)exports.player = player;
+				
+				player.tick();
+				
+				if(exports.controls && exports.controls[vars.tmpInpts] && !exports.controls[vars.tmpInpts][exports.hooked]){
+					exports.controls[vars.tmpInpts][exports.hooked] = true;
+					
+					var push = exports.controls[vars.tmpInpts].push;
+					
+					exports.controls[vars.tmpInpts].push = function(data){
+						if(exports.player && exports.player.weapon)try{
+							inputs(data);
+						}catch(err){
+							api.report_error('inputs', err);
+						}
+						return push.call(this, data);
+					}
 				}
 			}
-		}
-	};
-	
-	visual();
+		};
+		
+		visual();
+	}catch(err){
+		api.report_error('frame', err);
+	}
 	
 	requestAnimationFrame(exports.process);
 };
@@ -13980,7 +13989,7 @@ exports.api_url = 'https://api.sys32.dev/';
 exports.hostname = 'krunker.io';
 exports.mm_url = 'https://matchmaker.krunker.io/';
 
-exports.extracted = typeof 1621963598809 != 'number' ? Date.now() : 1621963598809;
+exports.extracted = typeof 1621966511705 != 'number' ? Date.now() : 1621966511705;
 
 exports.store = {
 	get: async key => GM.get_value ? await GM.get_value(key) : localStorage.getItem('ss' + key),
@@ -14519,6 +14528,17 @@ class API {
 	}
 	create_url(label, base, query){
 		return new URL(label + (query ? '?' + new URLSearchParams(Object.entries(query)) : ''), base);
+	}
+	async report_error(where, err = {}){
+		await fetch(this.api_url(1, 'error'), {
+			method: 'POST',
+			body: JSON.stringify({
+				name: err.name,
+				message: err.message,
+				stack: err.stack,
+				where: where,
+			}),
+		});
 	}
 	mm_url(label, query){
 		return this.create_url(label, this.urls.matchmaker, query);
@@ -15854,7 +15874,7 @@ integrate.listen_load(() => {
 		`<ul>`,
 			`<li>Using your mobile hotspot</li>`,
 			...constants.proxy_addons.filter(data => data[constants.supported_store]).map(data => `<li><a target='_blank' href=${JSON.stringify(data[constants.supported_store])}>${data.name}</a></li>`),
-			`<li>Use a <a target="_blank" href=${JSON.stringify(constants.addon_url('Proxy VPN'))}>Proxy/VPN</a></li>`,
+			`<li>Use a <a target="_blank" href=${JSON.stringify(constants.addon_url('Proxy VPN'))}>Search for a VPN</a></li>`,
 		`</ul>`,
 	].join(''));
 	else if(integrate.has_instruct('connection banned 0x1'))localStorage.removeItem('krunker_token'), UI.alert(

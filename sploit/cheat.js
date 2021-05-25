@@ -1,5 +1,6 @@
 'use strict';
-var vars = require('./libs/vars'),
+var api = require('./libs/api'),
+	vars = require('./libs/vars'),
 	inputs = require('./input'),
 	visual = require('./visual'),
 	{ utils } = require('./consts');
@@ -29,30 +30,38 @@ exports.reload = () => {
 };
 
 exports.process = () => {
-	if(exports.game && exports.world){
-		for(var ent of exports.game.players.list){
-			let player = exports.add(ent);
-			
-			if(!player.active)continue;
-			
-			if(player.is_you)exports.player = player;
-			
-			player.tick();
-			
-			if(exports.controls && exports.controls[vars.tmpInpts] && !exports.controls[vars.tmpInpts][exports.hooked]){
-				exports.controls[vars.tmpInpts][exports.hooked] = true;
+	try{
+		if(exports.game && exports.world){
+			for(var ent of exports.game.players.list){
+				let player = exports.add(ent);
 				
-				var push = exports.controls[vars.tmpInpts].push;
+				if(!player.active)continue;
 				
-				exports.controls[vars.tmpInpts].push = function(data){
-					if(exports.player && exports.player.weapon)inputs(data);
-					return push.call(this, data);
+				if(player.is_you)exports.player = player;
+				
+				player.tick();
+				
+				if(exports.controls && exports.controls[vars.tmpInpts] && !exports.controls[vars.tmpInpts][exports.hooked]){
+					exports.controls[vars.tmpInpts][exports.hooked] = true;
+					
+					var push = exports.controls[vars.tmpInpts].push;
+					
+					exports.controls[vars.tmpInpts].push = function(data){
+						if(exports.player && exports.player.weapon)try{
+							inputs(data);
+						}catch(err){
+							api.report_error('inputs', err);
+						}
+						return push.call(this, data);
+					}
 				}
 			}
-		}
-	};
-	
-	visual();
+		};
+		
+		visual();
+	}catch(err){
+		api.report_error('frame', err);
+	}
 	
 	requestAnimationFrame(exports.process);
 };

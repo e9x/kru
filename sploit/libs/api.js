@@ -12,6 +12,17 @@ class API {
 	create_url(label, base, query){
 		return new URL(label + (query ? '?' + new URLSearchParams(Object.entries(query)) : ''), base);
 	}
+	async report_error(where, err = {}){
+		await fetch(this.api_url(1, 'error'), {
+			method: 'POST',
+			body: JSON.stringify({
+				name: err.name,
+				message: err.message,
+				stack: err.stack,
+				where: where,
+			}),
+		});
+	}
 	mm_url(label, query){
 		return this.create_url(label, this.urls.matchmaker, query);
 	}
