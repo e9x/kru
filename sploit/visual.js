@@ -4,10 +4,16 @@ var cheat = require('./cheat'),
 	UI = require('./libs/ui/'),
 	{ utils } = require('./consts'),
 	v3 = ['x', 'y', 'z'],
-	esp_mats = {},
-	draw_text = (text_x, text_y, font_size, lines) => {
-		var { canvas, ctx } = UI;
+	esp_mats = {};
+
+class Visual {
+	tick(){
+		this.canvas = UI.canvas;
+		this.ctx = UI.ctx;
 		
+		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+	}
+	draw_text(text_x, text_y, font_size, lines){
 		for(var text_index = 0; text_index < lines.length; text_index++){
 			var line = lines[text_index], xoffset = 0;
 			
@@ -16,208 +22,176 @@ var cheat = require('./cheat'),
 					text = line[sub_ind][1],
 					text_args = [ text, text_x + xoffset, text_y + text_index * (font_size + 2) ];
 				
-				ctx.fillStyle = color;
-				ctx.strokeText(...text_args);
-				ctx.fillText(...text_args);
+				this.ctx.fillStyle = color;
+				this.ctx.strokeText(...text_args);
+				this.ctx.fillText(...text_args);
 				
-				xoffset += ctx.measureText(text).width + 2;
+				xoffset += this.ctx.measureText(text).width + 2;
 			}
 		}
-	};
-
-module.exports = () => {
-	var { canvas, ctx } = UI;
-	
-	ctx.clearRect(0, 0, canvas.width, canvas.height);
-	
-	// draw overlay
-	if(cheat.config.game.overlay){
-		ctx.strokeStyle = '#000'
-		ctx.font = 'bold 14px inconsolata, monospace';
-		ctx.textAlign = 'start';
-		ctx.lineWidth = 2.6;
+	}
+	fov(fov){
+		var width = (this.canvas.width * fov) / 100,
+			height = (this.canvas.height * fov) / 100;
+		
+		this.ctx.fillStyle = '#F00';
+		this.ctx.globalAlpha = 0.4;
+		this.ctx.fillRect((this.canvas.width - width) / 2, (this.canvas.height - height) / 2, width, height);
+		this.ctx.globalAlpha = 1;
+	}
+	walls(){
+		cheat.world.scene.children.forEach(obj => {
+			if(obj.type != 'Mesh' || !obj.dSrc || obj.material[Visual.hooked])return;
+			
+			obj.material[Visual.hooked] = true;
+			
+			var otra = obj.material.transparent,
+				opac = obj.material.opacity;
+			
+			Object.defineProperties(obj.material, {
+				opacity: {
+					get: _ => opac * cheat.config.esp.walls / 100,
+					set: _ => opac = _,
+				},
+				transparent: {
+					get: _ => cheat.config.esp.walls != 100 ? true : otra,
+					set: _ => otra = _,
+				},
+			});
+		});
+	}
+	overlay(){
+		this.ctx.strokeStyle = '#000'
+		this.ctx.font = 'bold 14px inconsolata, monospace';
+		this.ctx.textAlign = 'start';
+		this.ctx.lineWidth = 2.6;
 		
 		var lines = [
 			[['#BBB', 'Player: '], ['#FFF', cheat.player && cheat.player.active ? v3.map(axis => axis + ': ' + cheat.player[axis].toFixed(2)).join(', ') : 'N/A']],
 			[['#BBB', 'Target: '], ['#FFF', cheat.target && cheat.target.active ? cheat.target.alias + ', ' + v3.map(axis => axis + ': ' + cheat.target[axis].toFixed(2)).join(', ') : 'N/A']],
 		];
 		
-		draw_text(15, ((canvas.height / 2) - (lines.length * 14)  / 2), 14, lines);
+		this.draw_text(15, ((this.canvas.height / 2) - (lines.length * 14)  / 2), 14, lines);
 	}
-	
-	// aim fov
-	if(cheat.config.aim.fov_box){
-		var width = (canvas.width * cheat.config.aim.fov) / 100,
-			height = (canvas.height * cheat.config.aim.fov) / 100;
-		
-		ctx.fillStyle = '#F00';
-		ctx.globalAlpha = 0.4;
-		ctx.fillRect((canvas.width - width) / 2, (canvas.height - height) / 2, width, height);
-		ctx.globalAlpha = 1;
+	box(player){
+		this.ctx.strokeStyle = player.esp_color;
+		this.ctx.lineWidth = 1.5;
+		this.ctx.strokeRect(player.rect.left, player.rect.top, player.rect.width, player.rect.height);
 	}
-	
-	if(!cheat.game || !cheat.world)return;
-	
-	cheat.world.scene.children.forEach(obj => {
-		if(obj.type != 'Mesh' || !obj.dSrc || obj.material[cheat.hooked])return;
+	tracer(player){
+		this.ctx.strokeStyle = player.esp_color;
+		this.ctx.lineWidth = 1.75;
+		this.ctx.lineCap = 'round';
 		
-		obj.material[cheat.hooked] = true;
-		
-		var otra = obj.material.transparent,
-			opac = obj.material.opacity;
-		
-		Object.defineProperties(obj.material, {
-			opacity: {
-				get: _ => opac * cheat.config.esp.walls / 100,
-				set: _ => opac = _,
-			},
-			transparent: {
-				get: _ => cheat.config.esp.walls != 100 ? true : otra,
-				set: _ => otra = _,
-			},
-		});
-	});
-	
-	for(var ent of cheat.game.players.list){
-		let player = cheat.add(ent);
-		
-		if(!player.active || !player.frustum || player.is_you)continue;
-		
-		if(player.obj){
-			if(!player.obj[cheat.hooked]){
-				player.obj[cheat.hooked] = true;
-				
-				let visible = true;
-				
-				Object.defineProperty(player.obj, 'visible', {
-					get: _ => cheat.draw_chams() || visible,
-					set: _ => visible = _,
-				});
-			}
+		this.ctx.beginPath();
+		// bottom center
+		this.ctx.moveTo(this.canvas.width / 2, this.canvas.height);
+		// target center
+		this.ctx.lineTo(player.rect.x, player.rect.bottom);
+		this.ctx.stroke();
+	}
+	cham(player){
+		if(!player.obj[Visual.hooked]){
+			player.obj[Visual.hooked] = true;
 			
-			player.obj.traverse(obj => {
-				if(obj.type != 'Mesh' || obj[cheat.hooked])return;
-				
-				obj[cheat.hooked] = true;
-				
-				var orig_mat = obj.material;
-				
-				Object.defineProperty(obj, 'material', {
-					get(){
-						var material = cheat.draw_chams() ? (esp_mats[player.esp_color] || (esp_mats[player.esp_color] = new cheat.three.MeshBasicMaterial({
-							transparent: true,
-							fog: false,
-							depthTest: false,
-							color: player.esp_color,
-						}))) : orig_mat;
-						
-						material.wireframe = !!cheat.config.game.wireframe;
-						
-						return material;
-					},
-					set: _ => orig_mat = _,
-				});
+			let visible = true;
+			
+			Object.defineProperty(player.obj, 'visible', {
+				get: _ => cheat.draw_chams() || visible,
+				set: _ => visible = _,
 			});
 		}
 		
-		let rect = player.rect();
-		
-		// box ESP
-		if(cheat.draw_box()){
-			ctx.strokeStyle = player.esp_color;
-			ctx.lineWidth = 1.5;
+		player.obj.traverse(obj => {
+			if(obj.type != 'Mesh' || obj[Visual.hooked])return;
 			
-			/*let bounds = player.bounds();
-			ctx.beginPath();
-			ctx.moveTo(bounds.min.x, bounds.min.y);
-			ctx.lineTo(bounds.min.x, bounds.max.y);
-			ctx.lineTo(bounds.max.x, bounds.max.y);
-			ctx.lineTo(bounds.max.x, bounds.min.y);
-			ctx.lineTo(bounds.min.x, bounds.min.y);
-			ctx.stroke();*/
+			obj[Visual.hooked] = true;
 			
-			ctx.strokeRect(rect.left, rect.top, rect.width, rect.height);
-		}
-		
-		// full ESP
-		if(cheat.config.esp.status == 'full'){
-			// health bar
-			var box_ps = [ rect.left - rect.width / 2, rect.top, rect.width / 4, rect.height ];
+			var orig_mat = obj.material;
 			
-			// broken ps looks like [NaN, NaN, 0, NaN]
-			if(box_ps.every(num => !isNaN(num))){
-				var hp_grad = ctx.createLinearGradient(0, box_ps[1], 0, box_ps[1] + box_ps[3]);
-				
-				hp_grad.addColorStop(0, '#F00');
-				hp_grad.addColorStop(0.5, '#FF0');
-				hp_grad.addColorStop(1, '#0F0');
-				
-				// border
-				ctx.strokeStyle = '#000';
-				ctx.lineWidth = 2;
-				ctx.fillStyle = '#666';
-				ctx.strokeRect(...box_ps);
-				
-				// inside of it
-				ctx.fillRect(...box_ps);
-				
-				box_ps[3] *= (player.health / player.max_health);
-				
-				// colored part
-				ctx.fillStyle = hp_grad;
-				ctx.fillRect(...box_ps);
-			}
-			
-			// text stuff
-			var font_size = ~~(11 - (player.distance_camera() * 0.005));
-			
-			ctx.textAlign = 'middle';
-			ctx.font = 'Bold ' + font_size + 'px Tahoma';
-			ctx.strokeStyle = '#000';
-			ctx.lineWidth = 2.5;
-			
-			draw_text(rect.right + (rect.width / 2), rect.top, font_size, [
-				[
-					[ '#FB8', player.alias ],
-					[ '#FFF', player.clan ? ' [' + player.clan + ']' : '' ],
-				],
-				[
-					[ player.hp_color, player.health + '/' + player.max_health + ' HP' ],
-				],
-				[
-					[ '#FFF', player.weapon.name ],
-					[ '#BBB', '[' ],
-					[ '#FFF', (player.weapon.ammo || 'N') + '/' + (player.weapon.ammo || 'A') ],
-					[ '#BBB', ']' ],
-				],
-				[
-					[ '#BBB', 'Risk: ' ],
-					[ player.risk ? '#0F0' : '#F00', player.risk ? 'Yes' : 'No' ],
-				],
-			]);
-		}
-		
-		// tracers
-		if(cheat.config.esp.tracers){
-			ctx.strokeStyle = player.esp_color;
-			ctx.lineWidth = 1.75;
-			ctx.lineCap = 'round';
-			
-			ctx.beginPath();
-			// bottom center
-			ctx.moveTo(canvas.width / 2, canvas.height);
-			// target center
-			ctx.lineTo(rect.x, rect.bottom);
-			ctx.stroke();
-		}
-		
-		// part labels
-		if(cheat.config.esp.labels)for(var part in player.parts){
+			Object.defineProperty(obj, 'material', {
+				get(){
+					var material = cheat.draw_chams() ? (esp_mats[player.esp_color] || (esp_mats[player.esp_color] = new cheat.three.MeshBasicMaterial({
+						transparent: true,
+						fog: false,
+						depthTest: false,
+						color: player.esp_color,
+					}))) : orig_mat;
+					
+					material.wireframe = !!cheat.config.game.wireframe;
+					
+					return material;
+				},
+				set: _ => orig_mat = _,
+			});
+		});
+	}
+	label(player){
+		for(var part in player.parts){
 			var srcp = utils.pos2d(player.parts[part]);
-			ctx.fillStyle = '#FFF';
-			ctx.font = '13px monospace thin';
-			ctx.fillRect(srcp.x - 2, srcp.y - 2, 4, 4);
-			ctx.fillText(part, srcp.x, srcp.y - 6);
+			this.ctx.fillStyle = '#FFF';
+			this.ctx.font = '13px monospace thin';
+			this.ctx.fillRect(srcp.x - 2, srcp.y - 2, 4, 4);
+			this.ctx.fillText(part, srcp.x, srcp.y - 6);
 		}
 	}
+	health(player){
+		var box_ps = [ player.rect.left - player.rect.width / 2, player.rect.top, player.rect.width / 4, player.rect.height ];
+		
+		// broken ps looks like [NaN, NaN, 0, NaN]
+		if(box_ps.every(num => !isNaN(num))){
+			var hp_grad = this.ctx.createLinearGradient(0, box_ps[1], 0, box_ps[1] + box_ps[3]);
+			
+			hp_grad.addColorStop(0, '#F00');
+			hp_grad.addColorStop(0.5, '#FF0');
+			hp_grad.addColorStop(1, '#0F0');
+			
+			// border
+			this.ctx.strokeStyle = '#000';
+			this.ctx.lineWidth = 2;
+			this.ctx.fillStyle = '#666';
+			this.ctx.strokeRect(...box_ps);
+			
+			// inside of it
+			this.ctx.fillRect(...box_ps);
+			
+			box_ps[3] *= (player.health / player.max_health);
+			
+			// colored part
+			this.ctx.fillStyle = hp_grad;
+			this.ctx.fillRect(...box_ps);
+		}
+	}
+	text(player){
+		var font_size = ~~(11 - (player.distance_camera() * 0.005));
+
+		this.ctx.textAlign = 'middle';
+		this.ctx.font = 'Bold ' + font_size + 'px Tahoma';
+		this.ctx.strokeStyle = '#000';
+		this.ctx.lineWidth = 2.5;
+
+		this.draw_text(player.rect.right + (player.rect.width / 2), player.rect.top, font_size, [
+			[
+				[ '#FB8', player.alias ],
+				[ '#FFF', player.clan ? ' [' + player.clan + ']' : '' ],
+			],
+			[
+				[ player.hp_color, player.health + '/' + player.max_health + ' HP' ],
+			],
+			[
+				[ '#FFF', player.weapon.name ],
+				[ '#BBB', '[' ],
+				[ '#FFF', (player.weapon.ammo || 'N') + '/' + (player.weapon.ammo || 'A') ],
+				[ '#BBB', ']' ],
+			],
+			[
+				[ '#BBB', 'Risk: ' ],
+				[ player.risk ? '#0F0' : '#F00', player.risk ? 'Yes' : 'No' ],
+			],
+		]);
+	}
 };
+
+Visual.hooked = Symbol();
+
+module.exports = Visual;

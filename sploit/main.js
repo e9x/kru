@@ -1,6 +1,7 @@
 'use strict';
 var Utils = require('./libs/utils'),
 	Updater = require('./libs/updater'),
+	Visual = require('./visual'),
 	vars = require('./libs/vars'),
 	integrate = require('./libs/integrate'),
 	constants = require('./consts'),
@@ -10,30 +11,78 @@ var Utils = require('./libs/utils'),
 	updater = new Updater(constants.script, constants.extracted),
 	UI = require('./libs/ui/'),
 	cheat = require('./cheat'),
-	input = require('./input');
-
-integrate.listen_load(() => {
-	if(integrate.has_instruct('connection banned 0x2'))localStorage.removeItem('krunker_token'), UI.alert([
-		`<p>You were IP banned, Sploit has signed you out.\nSpoof your IP to bypass this ban with one of the following:</p>`,
-		`<ul>`,
-			`<li>Using your mobile hotspot</li>`,
-			...constants.proxy_addons.filter(data => data[constants.supported_store]).map(data => `<li><a target='_blank' href=${JSON.stringify(data[constants.supported_store])}>${data.name}</a></li>`),
-			`<li>Use a <a target="_blank" href=${JSON.stringify(constants.addon_url('Proxy VPN'))}>Search for a VPN</a></li>`,
-		`</ul>`,
-	].join(''));
-	else if(integrate.has_instruct('connection banned 0x1'))localStorage.removeItem('krunker_token'), UI.alert(
-		`<p>You were banned, Sploit has signed you out.\nCreate a new account to bypass this ban.</p>`,
-	);
-	
-	
-	if(cheat.config.game.auto_respawn){
-		if(integrate.has_instruct('connection error', 'game is full', 'kicked by vote', 'disconnected'))location.assign('https://krunker.io');
-		else if(integrate.has_instruct('to play') && (!cheat.player || !cheat.player.active)){
-			cheat.controls.locklessChange(true);
-			cheat.controls.locklessChange(false);
+	input = require('./input'),
+	visual = new Visual(),
+	page_load = integrate.listen_load(() => {
+		if(integrate.has_instruct('connection banned 0x2'))localStorage.removeItem('krunker_token'), UI.alert([
+			`<p>You were IP banned, Sploit has signed you out.\nSpoof your IP to bypass this ban with one of the following:</p>`,
+			`<ul>`,
+				`<li>Using your mobile hotspot</li>`,
+				...constants.proxy_addons.filter(data => data[constants.supported_store]).map(data => `<li><a target='_blank' href=${JSON.stringify(data[constants.supported_store])}>${data.name}</a></li>`),
+				`<li>Use a <a target="_blank" href=${JSON.stringify(constants.addon_url('Proxy VPN'))}>Search for a VPN</a></li>`,
+			`</ul>`,
+		].join(''));
+		else if(integrate.has_instruct('connection banned 0x1'))localStorage.removeItem('krunker_token'), UI.alert(
+			`<p>You were banned, Sploit has signed you out.\nCreate a new account to bypass this ban.</p>`,
+		);
+		
+		if(cheat.config.game.auto_respawn){
+			if(integrate.has_instruct('connection error', 'game is full', 'kicked by vote', 'disconnected'))location.assign('https://krunker.io');
+			else if(integrate.has_instruct('to play') && (!cheat.player || !cheat.player.active)){
+				cheat.controls.locklessChange(true);
+				cheat.controls.locklessChange(false);
+			}
 		}
-	}
-});
+	}),
+	process = () => {
+		try{
+			visual.tick();
+			
+			if(cheat.config.game.overlay){
+				visual.overlay();
+			}
+			
+			if(cheat.config.aim.fov_box){
+				visual.fov(cheat.config.aim.fov);
+			}
+			
+			if(cheat.game && cheat.world)for(var ent of cheat.game.players.list){
+				let player = cheat.add(ent);
+				
+				if(!player.active)continue;
+				
+				if(player.is_you)cheat.player = player;
+				
+				player.tick();
+				
+				if(!player.frustum || player.is_you)continue;
+				
+				visual.cham(player);
+				
+				if(['box', 'box_chams', 'full'].includes(cheat.config.esp.status)){
+					visual.box(player);
+				}
+				
+				if(cheat.config.esp.status == 'full'){
+					visual.health(player);
+					visual.text(player);
+				}
+				
+				if(cheat.config.esp.tracers){
+					visual.tracer(player);
+				}
+				
+				if(cheat.config.esp.labels){
+					visual.label(player);
+				}
+			};
+		}catch(err){
+			console.error(err);
+			// constants.api.report_error('frame', err);
+		}
+		
+		requestAnimationFrame(process);
+	};
 
 UI.ready.then(() => {
 	constants.utils.canvas = UI.canvas;
@@ -68,7 +117,7 @@ UI.ready.then(() => {
 		});
 		
 		constants.api.source().then(krunker => {
-			cheat.process();
+			process();
 			
 			krunker = vars.patch(krunker);
 			
@@ -148,11 +197,13 @@ UI.ready.then(() => {
 				loading.hide();
 			});
 			
-			integrate.page_load.then(async () => new Function(...Object.keys(args), krunker)(...Object.values(args)));
+			page_load.then(async () => new Function(...Object.keys(args), krunker)(...Object.values(args)));
 		});
 	});
 });
 
 window.addEventListener('load', () => {
-	updater.watch(() => confirm('A new Sploit version is available, do you wish to update?') && updater.update(), 60e3 * 3);	
+	updater.watch(() => {
+		if(confirm('A new Sploit version is available, do you wish to update?'))updater.update();
+	}, 60e3 * 3);	
 });

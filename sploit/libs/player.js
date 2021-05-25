@@ -18,6 +18,7 @@ class Player {
 	// cached cpu-heavy data such as world_pos or can_see
 	get store(){ return this.entity[Player.store] || (this.entity[Player.store] = {}) }
 	get can_see(){ return this.store.can_see }
+	get rect(){ return this.store.rect }
 	get in_fov(){
 		if(!this.active)return false;
 		if(this.cheat.config.aim.fov == 110)return true;
@@ -78,30 +79,11 @@ class Player {
 			max: this.utils.pos2d(this.store.box.max),
 		};
 	}
-	rect(){
-		// hitbox rect, add a accurate player rect similar to junker
-		var src_pos = this.utils.pos2d(this),
-			src_pos_crouch = this.utils.pos2d(this, this.height),
-			width = ~~((src_pos.y - this.utils.pos2d(this, this.entity.height).y) * 0.7),
-			height = src_pos.y - src_pos_crouch.y,
-			center = {
-				x: src_pos.x,
-				y: src_pos.y - height / 2,
-			};
-		
-		return {
-			x: center.x,
-			y: center.y,
-			left: center.x - width / 2,
-			top: center.y - height / 2,
-			right: center.x + width / 2,
-			bottom: center.y + height / 2,
-			width: width,
-			height: height,
-		};
-	}
 	distance_camera(){
 		return this.cheat.world.camera[vars.getWorldPosition]().distanceTo(this);
+	}
+	test_vec(vector, match){
+		return match.every((value, index) => vector[['x', 'y', 'z'][index]] == value);
 	}
 	get world_pos(){
 		return this.store.world_pos;
@@ -121,26 +103,11 @@ class Player {
 	get auto_weapon(){ return !this.weapon.nAuto }
 	get shot(){ return this.auto_weapon ? this.store.shot : this.entity[vars.didShoot] }
 	get chest(){
-		return this.obj && this.obj.children[0] && this.obj.children[0].children[4] && this.obj.children[0].children[4].children[0];
-		
-		var found;
-		// console.log(this.chest.parent.position, this.leg.scale);
-		if(this.obj)this.obj.traverse(obj => {
-			if(this.cheat.test_vec(obj.parent.position, [ 0, 4.2, 0 ]) && this.cheat.test_vec(obj.scale, [ 1, 1, 1 ]))found = obj;
-		});
-		
-		return found;
+		return this.entity.lowerBody.children[0];
 	}
 	get leg(){
-		return this.obj && this.obj.children[0] && this.obj.children[0].children[0];
-		
-		var found;
-		
-		if(this.obj)this.obj.traverse(obj => {
-			if(this.cheat.test_vec(obj.scale, [ 1.3, 4.2, 1.3 ]))found = obj;
-		});
-		
-		return found;
+		for(var mesh of this.entity.legMeshes)if(mesh.visible)return mesh;
+		return this.entity.legMeshes[0];
 	}
 	tick(){
 		/*this.store.box = new this.cheat.three.Box3();
@@ -151,6 +118,28 @@ class Player {
 		
 		this.store.can_see = this.cheat.player && this.active && this.utils.obstructing(this.cheat.player, this, this.cheat.player.weapon && this.cheat.player.weapon.pierce && this.cheat.config.aim.wallbangs) == null ? true : false;
 		
+		this.store.rect = {};
+		
+		var src_pos = this.utils.pos2d(this),
+			src_pos_crouch = this.utils.pos2d(this, this.height),
+			width = ~~((src_pos.y - this.utils.pos2d(this, this.entity.height).y) * 0.7),
+			height = src_pos.y - src_pos_crouch.y,
+			center = {
+				x: src_pos.x,
+				y: src_pos.y - height / 2,
+			};
+		
+		this.store.rect = {
+			x: center.x,
+			y: center.y,
+			left: center.x - width / 2,
+			top: center.y - height / 2,
+			right: center.x + width / 2,
+			bottom: center.y + height / 2,
+			width: width,
+			height: height,
+		};
+		
 		this.store.parts = {
 			torso: { x: 0, y: 0, z: 0 },
 			head: { x: 0, y: 0, z: 0 },
@@ -160,7 +149,7 @@ class Player {
 		// config.js
 		var head_size = 1.5;
 		
-		if(this.active && !this.is_you && this.chest && this.leg){
+		if(this.active && !this.is_you){
 			var chest_box = new this.cheat.three.Box3().setFromObject(this.chest),
 				chest_size = chest_box.getSize(),
 				chest_pos = chest_box.getCenter(),

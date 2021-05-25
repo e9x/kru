@@ -1,15 +1,11 @@
 'use strict';
 
-var page_load;
-
-exports.page_load = new Promise(resolve => page_load = resolve);
-
 exports.has_instruct = (...ors) => {
 	var instruction = exports.instruction_holder ? exports.instruction_holder.textContent.trim().toLowerCase() : '';
 	
 	return ors.some(check => instruction.includes(check));
 }
-exports.listen_load = instruct_cb => new MutationObserver((muts, observer) => muts.forEach(mut => [...mut.addedNodes].forEach(node => {
+exports.listen_load = instruct_cb => new Promise(resolve => new MutationObserver((muts, observer) => muts.forEach(mut => [...mut.addedNodes].forEach(node => {
 	if(node.tagName == 'DIV' && node.id == 'instructionHolder'){
 		exports.instruction_holder = node;
 		
@@ -21,9 +17,9 @@ exports.listen_load = instruct_cb => new MutationObserver((muts, observer) => mu
 	
 	if(node.tagName == 'SCRIPT' && node.textContent.includes('Yendis Entertainment')){
 		node.textContent = '';
-		page_load();
+		resolve();
 	}
-}))).observe(document, { childList: true, subtree: true });
+}))).observe(document, { childList: true, subtree: true }));
 
 document.addEventListener('pointerlockchange', () => {
 	exports.focused = document.pointerLockElement != null;
