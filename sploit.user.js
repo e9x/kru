@@ -7,7 +7,7 @@
 // @license        gpl-3.0
 // @namespace      https://e9x.github.io/
 // @supportURL     https://e9x.github.io/kru/inv/
-// @extracted      Tue, 25 May 2021 18:15:11 GMT
+// @extracted      Tue, 25 May 2021 18:20:27 GMT
 // @match          *://krunker.io/*
 // @match          *://browserfps.com/*
 // @exclude        *://krunker.io/editor*
@@ -13647,11 +13647,12 @@ function write0(type) {
 
 "use strict";
 
-var api = __webpack_require__(/*! ./libs/api */ "./libs/api.js"),
+var API = __webpack_require__(/*! ./libs/api */ "./libs/api.js"),
+	{ mm_url, api_url, utils } = __webpack_require__(/*! ./consts */ "./consts.js"),
+	api = new API(mm_url, api_url),
 	vars = __webpack_require__(/*! ./libs/vars */ "./libs/vars.js"),
 	inputs = __webpack_require__(/*! ./input */ "./input.js"),
-	visual = __webpack_require__(/*! ./visual */ "./visual.js"),
-	{ utils } = __webpack_require__(/*! ./consts */ "./consts.js");
+	visual = __webpack_require__(/*! ./visual */ "./visual.js");
 
 exports.add = entity => new Player(entity),
 
@@ -13989,7 +13990,7 @@ exports.api_url = 'https://api.sys32.dev/';
 exports.hostname = 'krunker.io';
 exports.mm_url = 'https://matchmaker.krunker.io/';
 
-exports.extracted = typeof 1621966511705 != 'number' ? Date.now() : 1621966511705;
+exports.extracted = typeof 1621966827471 != 'number' ? Date.now() : 1621966827471;
 
 exports.store = {
 	get: async key => GM.get_value ? await GM.get_value(key) : localStorage.getItem('ss' + key),
