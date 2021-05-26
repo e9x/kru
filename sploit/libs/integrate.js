@@ -35,5 +35,3 @@ exports.inputs = {};
 window.addEventListener('keydown', event => exports.inputs[event.code] = true);
 window.addEventListener('keyup', event => exports.inputs[event.code] = false);
 window.addEventListener('blur', event => exports.inputs = {});
-
-console.log(window);
