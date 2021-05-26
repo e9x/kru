@@ -18,8 +18,6 @@ var cheat = require('./cheat'),
 			x: cheat.controls[vars.pchObjc].rotation.x + x_ang * aj * turn,
 		};
 	},
-	y_offset_types = ['head', 'torso', 'legs'],
-	y_offset_rand = 'head',
 	enemy_sight = () => {
 		if(cheat.player.shot)return;
 		
@@ -85,36 +83,20 @@ var cheat = require('./cheat'),
 		
 		var can_hit = (Math.random() * 100) < cheat.config.aim.hitchance,
 			can_shoot = !data.reloading && cheat.player.has_ammo,
-			target = cheat.target = cheat.config.aim.status != 'auto' && !data.scope && !data.shoot
-			? null
-			: cheat.target && cheat.target.can_target
-				? cheat.target
-				: cheat.pick_target();
+			can_target = cheat.config.aim.status == 'auto' || data.scope || data.shoot,
+			target = cheat.target = can_target && cheat.pick_target();
 		
-		/*
-		y_val = target.world_pos.y + (target.is_ai ? -(target.enity.dat.mSize / 2) : (target.jump_bob_y * 0.072) + 1 - target.crouch * 3);
-			
-			switch(cheat.config.aim.offset != 'random' ? cheat.config.aim.offset : y_offset_rand){
-				case'chest':
-					y_val -= target.height / 2;
-					break;
-				case'feet':
-					y_val -= target.height - target.height / 2.5;
-					break;
-			};
-		*/
+		// cheat.target && cheat.target.can_target ? cheat.target
 		
 		// todo: triggerbot delay
 		if(can_shoot && cheat.config.aim.status == 'trigger')data.shoot = enemy_sight() || data.shoot;
 		else if(can_shoot && cheat.config.aim.status != 'off' && target && cheat.player.health){
 			var camera_world = utils.camera_world(),
-				part = cheat.config.aim.offset != 'random' ? cheat.config.aim.offset : y_offset_rand,
-				target_pos = target.parts[part] || (console.error(part, 'not registered'), { x: 0, y: 0, z: 0 }),
-				x_dire = utils.getXDire(camera_world.x, camera_world.y, camera_world.z, target_pos.x, target_pos.y - cheat.player.jump_bob_y, target_pos.z),
-				y_dire = utils.getDir(camera_world.z, camera_world.x, target_pos.z, target_pos.x),
+				x_dire = utils.getXDire(camera_world.x, camera_world.y, camera_world.z, target.aim_point.x, target.aim_point.y - cheat.player.jump_bob_y, target.aim_point.z),
+				y_dire = utils.getDir(camera_world.z, camera_world.x, target.aim_point.z, target.aim_point.x),
 				rot = {
 					x: utils.round(Math.max(-utils.halfpi, Math.min(utils.halfpi, x_dire - (cheat.player.entity.landBobY * 0.1) - cheat.player.recoil_y * 0.27)) % utils.pi2, 3) || 0,
-					y: utils.normal_radian(utils.round(y_dire % utils.pi2, 3)) || 0,
+					y: utils.round(y_dire % utils.pi2, 3) || 0,
 				};
 			
 			if(can_hit){
@@ -157,8 +139,6 @@ for(let key in keys)Object.defineProperty(InputData.prototype, key, {
 		return this.array[keys[key]] = typeof value == 'boolean' ? +value : value;
 	},
 });
-
-setInterval(() => y_offset_rand = y_offset_types[~~(Math.random() * y_offset_types.length)], 2000);
 
 module.exports = array => {
 	if(cheat.player && cheat.controls)try{

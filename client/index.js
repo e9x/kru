@@ -1,96 +1,83 @@
 'use strict';
-var os = require('os'),
-	fs = require('fs'),
-	vm = require('vm'),
-	https = require('https'),
+var vm = require('vm'),
 	mod = require('module'),
-	util = require('util'),
 	path = require('path'),
-	child_process = require('child_process');
-
-
-if(typeof nw == 'undefined')child_process.execFile(require('nw/lib/findpath')(), [
-	__dirname,
-	'--remote-debugging-port=9222',
-	// '--disable-frame-rate-limit',
-], { stdio: 'inherit', stderr: 'inherit' }).on('close', () => {
-	process.nextTick(() => process.exit(0));
-}); else{
-	window.addEventListener('error', event => alert(`Uncaught exception\nScript: ${event.filename}\nLine: ${event.lineno}\nChar: ${event.colno}\nError: \n${event.error instanceof Error ? event.error.type : event.error}\nCode: ${event.error instanceof Error ? event.error.code : ''}\nStack:\n${(event.error instanceof Error ? event.error : new Error()).stack}`));
-	
-	var screen = nw.Screen.screens[0],
-		loaders = {
-			'.json': require(path.join(__dirname, '..', 'sploit', 'libs', 'json.js')),
-			'.css': require(path.join(__dirname, '..', 'sploit', 'libs', 'css.js')),
+	electron = require('electron'),
+	useragent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36 Edg/86.0.622.69',
+	keybinds = [{ 
+		key: 'Escape',
+		press(){
+			this.webContents.executeJavaScript(`document.exitPointerLock()`);
 		},
-		eval_require = (func, base, req) => req = Object.assign(fn => {
-			var resolved = req.resolve(fn);
-			
-			// internal module
-			if(!fs.existsSync(resolved))return require(resolved);
-			
-			if(req.cache[resolved])return req.cache[resolved].exports;
-			
-			var mod = req.cache[resolved] = Object.setPrototypeOf({ _exports: {}, get exports(){ return this._exports }, set exports(v){ return this._exports = v }, filename: resolved, id: resolved, path: path.dirname(resolved), loaded: true, children: [] }, null),
-				ext = path.extname(resolved),
-				script = loaders[ext] ? loaders[ext](fs.readFileSync(resolved)) : fs.readFileSync(resolved) + '\n//@ sourceURL=' + resolved;
-			
-			try{
-				new vm.Script(script, { filename : resolved });
-				new func('__dirname', '__filename', 'module', 'exports', 'require', script)(mod.path, resolved, mod, mod.exports, Object.assign(eval_require(func, mod.path + '/'), { cache: req.cache }));
-			}catch(err){
-				return alert(util.format(err));
-			}
-			
-			return mod.exports;
-		}, {
-			resolve: fn => req.base.resolve(fn),
-			base: mod.createRequire(base + '/'),
-			cache: {},
-		});
+	},{
+		key: 'F5',
+		press(){
+			this.webContents.reloadIgnoringCache();
+		},
+	},{
+		key: 'F11',
+		press(){
+			this.setFullScreen(!this.isFullScreen());
+		}
+	}, {
+		key: 'F12',
+		press(){
+			if(this.webContents.isDevToolsOpened())this.webContents.closeDevTools();
+			else this.webContents.openDevTools({ mode: 'undocked' });
+		}
+	}];
 
-	nw.Window.open('https://krunker.io/', {
-		position: 'center',
-		width: ~~(screen.bounds.width * 0.8),
-		height: ~~(screen.bounds.height * 0.7),
-		title: 'Sploit',
-		icon: 'icon.png',
-	}, win => {
-		win.on('close', () => nw.App.quit());
+// electron.app.commandLine.appendSwitch('disable-frame-rate-limit');
+
+electron.app.on('ready', () => {
+	var screen = electron.screen.getPrimaryDisplay().workAreaSize,
+		window = new electron.BrowserWindow({
+			width: ~~(screen.width * 0.7),
+			height: ~~(screen.height * 0.7),
+			show: false,
+			webPreferences: {
+				contextIsolation: false,
+				preload: path.join(__dirname, 'preload.js'),
+			},
+			thickFrame: true,
+		});
 		
-		win.on('document-start', window => {
-			if(window.parent != window || window.location.hostname != 'krunker.io' && !window.location.hostname.endsWith('.krunker.io') || window.location.pathname != '/')return;
-			
-			// add keybinds
-			window.addEventListener('keydown', event => {
-				switch(event.code){
-					case'F5': // reload
-						
-						window.location.reload();
-						
-						break;
-				}
-			});
-			
-			/*local_address = ui.options('Select a network interface', Object.entries(require('os').networkInterfaces()).map(([ label, value ]) => [ label + ' - ' + value.map(ip => ip.family + ': ' + ip.address).join(', '), value ])).then(inter => (inter.find(ip => ip.family == 'IPv4') || inter[0]).address);*/
-			
-			// create node require in context
-			eval_require(window.Function, path.join(__dirname, '..', 'sploit'))('.');
-		});
+	electron.globalShortcut.unregister('Escape');
+	
+	window.webContents.on('page-title-updated', () => {
+		window.setTitle('Sploit');
 	});
-
-	chrome.webRequest.onBeforeRequest.addListener(details => {
-		var url = new URL(details.url),	
-			result = {},
+	
+	window.webContents.on('before-input-event', (sender, event) => {
+		for(var keybind of keybinds)if(event.type == 'keyDown' && keybind.key == event.code)keybind.press.call(window, event);
+	});
+	
+	window.loadURL('https://krunker.io', {
+		userAgent: useragent,
+	});
+	
+	window.removeMenu();
+	
+	window.webContents.once('ready-to-show', () => {
+		window.show();
+	});
+	
+	electron.session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
+		details.requestHeaders['user-agent'] = useragent;
+		callback({ cancel: false, requestHeaders: details.requestHeaders });
+	});
+	
+	electron.session.defaultSession.webRequest.onBeforeRequest({ urls: [ '*://*/*' ] }, (details, callback) => {
+		var url = new URL(details.url),
 			host = test => url.hostname.endsWith('.' + test) || url.hostname == test;
 		
-		return { cancel:
+		callback({ cancel:
 			host('paypal.com') && url.pathname == '/xoplatform/logger/api/logger' ||
 			host('googlesyndication.com') ||
 			host('googletagmanager.com') ||
 			host('pub.network') ||
 			host('adinplay.com') ||
 			url.pathname.startsWith('/tagmanager/pptm.') ||
-		false };
-	}, { urls: [ '<all_urls>' ] }, [ 'blocking' ]);
-}
+		false });
+	});
+});

@@ -1,6 +1,10 @@
 'use strict';
 
-var vars = require('./vars');
+var vars = require('./vars'),
+	y_offset_types = ['head', 'torso', 'legs'],
+	y_offset_rand = 'head';
+
+setInterval(() => y_offset_rand = y_offset_types[~~(Math.random() * y_offset_types.length)], 2000);
 
 class Player {
 	constructor(cheat, utils, entity){
@@ -19,10 +23,11 @@ class Player {
 	get store(){ return this.entity[Player.store] || (this.entity[Player.store] = {}) }
 	get can_see(){ return this.store.can_see }
 	get rect(){ return this.store.rect }
-	get srect(){
-		var out = {};
+	scale_rect(sx, sy){
+		var out = {},
+			horiz = [ 'y', 'height', 'top', 'bottom' ];
 		
-		for(var key in this.store.rect)out[key] = this.store.rect[key] / this.scale;
+		for(var key in this.store.rect)out[key] = this.store.rect[key] / (horiz.includes(key) ? sy : sx);
 		
 		return out;
 	}
@@ -43,6 +48,11 @@ class Player {
 		this.utils.world.camera.updateProjectionMatrix();
 		
 		return ret;
+	}
+	get aim_point(){
+		var part = this.cheat.config.aim.offset != 'random' ? this.cheat.config.aim.offset : y_offset_rand;
+		
+		return this.store.parts[part] || (console.error(part, 'not registered'), { x: 0, y: 0, z: 0 });
 	}
 	get can_target(){
 		return this.active && this.enemy && this.can_see && this.in_fov;
@@ -79,13 +89,19 @@ class Player {
 	get aim(){ return this.weapon.noAim || !this.aim_val || this.cheat.target && this.cheat.target.active && this.weapon.melee && this.distance_to(this.cheat.target) <= 18 }
 	get aim_press(){ return this.cheat.controls[vars.mouseDownR] || this.cheat.controls.keys[this.cheat.controls.binds.aim.val] }
 	get crouch(){ return this.entity[vars.crouchVal] }
-	// buggy
-	get bounds(){ return this.store.bounds }
-	get scale(){
-		var world_camera = this.utils.camera_world(),
-			center = this.store.box.getCenter();
+	get box_scale(){
+		var view = this.utils.camera_world(),	
+			center = this.store.box.getCenter(),
+			a = side => Math.min(1, (this.rect[side] / this.utils.canvas[side]) * 10);
 		
-		return Math.max(0.7, 1 - this.utils.getD3D(world_camera.x, world_camera.y, world_camera.z, center.x, center.y, center.z) / 600);
+		return [ a('width'), a('height') ];
+	}
+	get dist_scale(){
+		var view = this.utils.camera_world(),	
+			center = this.store.box.getCenter(),
+			scale = Math.max(0.65, 1 - this.utils.getD3D(view.x, view.y, view.z, this.x, this.y, this.z) / 600);
+		
+		return [ scale, scale ];
 	}
 	get distance_camera(){
 		return this.utils.camera_world().distanceTo(this);
@@ -96,13 +112,15 @@ class Player {
 	get world_pos(){ return this.store.world_pos }
 	get obj(){ return this.is_ai ? target.enity.dat : this.entity[vars.objInstances] }
 	get recoil_y(){ return this.entity[vars.recoilAnimY] }
-	get has_ammo(){ return this.weapon.melee || this.ammo }
-	get ammo(){ return this.entity[vars.ammos][this.entity[vars.weaponIndex]] }
+	get has_ammo(){ return this.ammo || this.ammo == this.max_ammo }
+	get ammo(){ return this.entity[vars.ammos][this.entity[vars.weaponIndex]] || 0 }
+	get max_ammo(){ return this.weapon.ammo || 0 }
 	get height(){ return (this.entity.height || 0) - this.entity[vars.crouchVal] * 3 }
 	get health(){ return this.entity.health || 0 }
+	get scale(){ return this.entity.scale }
 	get max_health(){ return this.entity[vars.maxHealth] || 100 }
 	//  && (this.is_you ? true : this.chest && this.leg)
-	get active(){ return this.entity.active && this.entity.x != null && this.health > 0 && this.obj }
+	get active(){ return this.entity.active && this.entity.x != null && this.health > 0 && (this.is_you ? true : this.chest && this.leg) }
 	get teammate(){ return this.is_you || this.cheat.player && this.team && this.team == this.cheat.player.team }
 	get enemy(){ return !this.teammate }
 	get team(){ return this.entity.team }
@@ -113,11 +131,9 @@ class Player {
 	}
 	get leg(){
 		for(var mesh of this.entity.legMeshes)if(mesh.visible)return mesh;
-		return this.entity.legMeshes[0];
+		return this.chest;
 	}
 	tick(){
-		this.store.can_see = this.cheat.player && this.active && this.utils.obstructing(this.cheat.player, this, this.cheat.player.weapon && this.cheat.player.weapon.pierce && this.cheat.config.aim.wallbangs) == null ? true : false;
-		
 		var box = this.store.box = new this.utils.three.Box3();
 		
 		box.expandByObject(this.chest);
@@ -132,14 +148,17 @@ class Player {
 		for(var obj of this.entity.legMeshes)add_obj(obj);
 		for(var obj of this.entity.upperBody.children)add_obj(obj);
 		
-		this.store.bounds = {
-			min: { x: 0, y: 0 },
-			max: { x: 0, y: 0 }
+		var bounds = {
+			center: this.utils.pos2d(box.getCenter()),
+			min: {
+				x:  Infinity,
+				y: Infinity,
+			},
+			max: {
+				x: -Infinity,
+				y: -Infinity,
+			},
 		};
-		
-		
-		var x = [],
-			y = [];
 		
 		for(var vec of [
 			{ x: box.min.x, y: box.min.y, z: box.min.z },
@@ -155,26 +174,12 @@ class Player {
 			
 			var td  = this.utils.pos2d(vec);
 			
-			x.push(td.x);
-			y.push(td.y);
+			if(td.x < bounds.min.x)bounds.min.x = td.x;
+			else if(td.x > bounds.max.x)bounds.max.x = td.x;
+			
+			if(td.y < bounds.min.y)bounds.min.y = td.y;
+			else if(td.y > bounds.max.y)bounds.max.y = td.y;
 		}
-		
-		var big_first = (a, b) => b - a;
-		
-		x = x.sort(big_first);
-		y = y.sort(big_first);
-		
-		var bounds = {
-			center: this.utils.pos2d(box.getCenter()),
-			min: {
-				x: x[x.length - 1],
-				y: y[y.length - 1],
-			},
-			max: {
-				x: x[0],
-				y: y[0],
-			},
-		};
 		
 		this.store.rect = {
 			x: bounds.center.x,
@@ -187,65 +192,65 @@ class Player {
 			height: bounds.max.y - bounds.min.y,
 		};
 		
-		this.store.parts = {
-			torso: { x: 0, y: 0, z: 0 },
-			head: { x: 0, y: 0, z: 0 },
-			legs: { x: 0, y: 0, z: 0 },
-		};
+		this.store.parts = {};
 		
-		// config.js
-		var head_size = 1.5;
-		
-		if(this.active && !this.is_you){
-			var chest_box = new this.utils.three.Box3().setFromObject(this.chest),
-				chest_size = chest_box.getSize(),
-				chest_pos = chest_box.getCenter(),
-				// rotated offset
-				translate = (obj, input, translate) => {
-					for(var axis in translate){
-						var ind = ['x','y','z'].indexOf(axis),
-							pos = new this.utils.three.Vector3(...[0,0,0].map((x, index) => ind == index ? 1 : 0)).applyQuaternion(obj.getWorldQuaternion()).multiplyScalar(translate[axis]);
-						
-						input.x += pos.x;
-						input.y += pos.y;
-						input.z += pos.z;
-					}
+		var head_size = 1.5,
+			chest_box = new this.utils.three.Box3().setFromObject(this.chest),
+			chest_size = chest_box.getSize(),
+			chest_pos = chest_box.getCenter(),
+			// rotated offset
+			translate = (obj, input, translate) => {
+				for(var axis in translate){
+					var ind = ['x','y','z'].indexOf(axis),
+						pos = new this.utils.three.Vector3(...[0,0,0].map((x, index) => ind == index ? 1 : 0)).applyQuaternion(obj.getWorldQuaternion()).multiplyScalar(translate[axis]);
 					
-					return input;
-				};
-			
-			// parts centered
-			this.store.parts.torso = translate(this.chest, {
-				x: chest_pos.x,
-				y: chest_pos.y,
-				z: chest_pos.z,
-				height: chest_size.y - head_size,
-			}, {
-				y: -head_size / 2,
-			});
-			
-			this.store.parts.head = translate(this.chest, {
-				x: chest_pos.x,
-				y: chest_pos.y,
-				z: chest_pos.z,
-			}, {
-				y: this.store.parts.torso.height / 2,
-			});
-			
-			var leg_pos = this.leg[vars.getWorldPosition](),
-				leg_scale = this.leg.getWorldScale();
-			
-			this.store.parts.legs = translate(this.leg, {
-				x: leg_pos.x,
-				y: leg_pos.y,
-				z: leg_pos.z,
-			}, {
-				x: -leg_scale.x / 2,
-				y: -leg_scale.y / 2,
-			});
-		}
+					input.x += pos.x;
+					input.y += pos.y;
+					input.z += pos.z;
+				}
+				
+				return input;
+			};
 		
-		if(this.active)this.store.world_pos = this.active ? this.obj[vars.getWorldPosition]() : { x: 0, y: 0, z: 0 };
+		// parts centered
+		this.store.parts.torso = translate(this.chest, {
+			x: chest_pos.x,
+			y: chest_pos.y,
+			z: chest_pos.z,
+			height: chest_size.y - head_size,
+		}, {
+			y: -head_size / 2,
+		});
+		
+		this.store.parts.head = translate(this.chest, {
+			x: chest_pos.x,
+			y: chest_pos.y,
+			z: chest_pos.z,
+		}, {
+			y: this.store.parts.torso.height / 2,
+		});
+		
+		var leg_pos = this.leg[vars.getWorldPosition](),
+			leg_scale = this.leg.getWorldScale();
+		
+		this.store.parts.legs = translate(this.leg, {
+			x: leg_pos.x,
+			y: leg_pos.y,
+			z: leg_pos.z,
+		}, {
+			x: -leg_scale.x / 2,
+			y: -leg_scale.y / 2,
+		});
+		
+		this.store.world_pos = this.active ? this.obj[vars.getWorldPosition]() : { x: 0, y: 0, z: 0 };
+		
+		this.store.can_see = this.cheat.player && this.active && this.utils.obstructing(this.cheat.player, this.aim_point, this.cheat.player.weapon && this.cheat.player.weapon.pierce && this.cheat.config.aim.wallbangs) == null ? true : false;
+	}
+	get process_inputs(){
+		return this.entity[vars.procInputs];
+	}
+	set process_inputs(value){
+		return this.entity[vars.procInputs] = value;
 	}
 };
 

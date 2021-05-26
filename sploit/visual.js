@@ -2,11 +2,14 @@
 
 var cheat = require('./cheat'),
 	UI = require('./libs/ui/'),
-	{ utils } = require('./consts'),
-	v3 = ['x', 'y', 'z'],
-	esp_mats = {};
+	vars = require('./libs/vars'),
+	{ utils } = require('./consts');
 
 class Visual {
+	constructor(){
+		this.materials = {};
+		this.v3 = ['x', 'y', 'z']
+	}
 	tick(){
 		this.canvas = UI.canvas;
 		this.ctx = UI.ctx;
@@ -67,8 +70,8 @@ class Visual {
 		this.ctx.lineWidth = 2.6;
 		
 		var lines = [
-			[['#BBB', 'Player: '], ['#FFF', cheat.player && cheat.player.active ? v3.map(axis => axis + ': ' + cheat.player[axis].toFixed(2)).join(', ') : 'N/A']],
-			[['#BBB', 'Target: '], ['#FFF', cheat.target && cheat.target.active ? cheat.target.alias + ', ' + v3.map(axis => axis + ': ' + cheat.target[axis].toFixed(2)).join(', ') : 'N/A']],
+			[['#BBB', 'Player: '], ['#FFF', cheat.player && cheat.player.active ? this.v3.map(axis => axis + ': ' + cheat.player[axis].toFixed(2)).join(', ') : 'N/A']],
+			[['#BBB', 'Target: '], ['#FFF', cheat.target && cheat.target.active ? cheat.target.alias + ', ' + this.v3.map(axis => axis + ': ' + cheat.target[axis].toFixed(2)).join(', ') : 'N/A']],
 		];
 		
 		this.draw_text(15, ((this.canvas.height / 2) - (lines.length * 14)  / 2), 14, lines);
@@ -124,7 +127,7 @@ class Visual {
 			
 			Object.defineProperty(obj, 'material', {
 				get(){
-					var material = self.can_draw_chams ? (esp_mats[player.esp_color] || (esp_mats[player.esp_color] = new cheat.three.MeshBasicMaterial({
+					var material = self.can_draw_chams ? (self.materials[player.esp_color] || (self.materials[player.esp_color] = new cheat.three.MeshBasicMaterial({
 						transparent: true,
 						fog: false,
 						depthTest: false,
@@ -149,43 +152,29 @@ class Visual {
 		}
 	}
 	health(player){
-		var width = player.rect.height / 5,
-			box_ps = [ player.rect.left - width, player.rect.top, width, player.rect.height ];
+		this.ctx.save();
+		this.ctx.scale(...player.box_scale);
 		
-		// broken ps looks like [NaN, NaN, 0, NaN]
-		if(box_ps.every(num => !isNaN(num))){
-			var hp_grad = this.ctx.createLinearGradient(0, box_ps[1], 0, box_ps[1] + box_ps[3]);
-			
-			hp_grad.addColorStop(0, '#F00');
-			hp_grad.addColorStop(0.5, '#FF0');
-			hp_grad.addColorStop(1, '#0F0');
-			
-			// border
-			this.ctx.strokeStyle = '#000';
-			this.ctx.lineWidth = 2;
-			this.ctx.fillStyle = '#666';
-			this.ctx.strokeRect(...box_ps);
-			
-			// inside of it
-			this.ctx.fillRect(...box_ps);
-			
-			box_ps[3] *= (player.health / player.max_health);
-			
-			// colored part
-			this.ctx.fillStyle = hp_grad;
-			this.ctx.fillRect(...box_ps);
-		}
+		var rect = player.scale_rect(...player.box_scale);
+		
+		this.ctx.fillStyle = player.hp_color;
+		this.ctx.fillRect(rect.left - 30, rect.top, 25, rect.height);
+		
+		this.ctx.restore();
 	}
 	text(player){
 		this.ctx.save();
-		this.ctx.scale(player.scale, player.scale);
+		this.ctx.scale(...player.dist_scale);
 		
-		this.ctx.textAlign = 'middle';
-		this.ctx.font = 'Bold 11px Tahoma';
+		var rect = player.scale_rect(...player.dist_scale),
+			font_size = 13;
+		
+		this.ctx.font = 'Bold ' + font_size + 'px Tahoma';
 		this.ctx.strokeStyle = '#000';
 		this.ctx.lineWidth = 2.5;
-
-		this.draw_text(player.srect.right + 5, player.srect.top + 8, 11, [
+		this.ctx.textBaseline = 'top';
+		
+		this.draw_text(rect.right + 4, rect.top, font_size, [
 			[
 				[ '#FB8', player.alias ],
 				[ '#FFF', player.clan ? ' [' + player.clan + ']' : '' ],
@@ -196,12 +185,10 @@ class Visual {
 			[
 				[ '#FFF', player.weapon.name ],
 				[ '#BBB', '[' ],
-				[ '#FFF', (player.weapon.ammo || 'N') + '/' + (player.weapon.ammo || 'A') ],
+				[ '#FFF', player.ammo ],
+				[ '#BBB', '/' ],
+				[ '#FFF', player.max_ammo ],
 				[ '#BBB', ']' ],
-			],
-			[
-				[ '#BBB', 'Risk: ' ],
-				[ player.risk ? '#0F0' : '#F00', player.risk ? 'Yes' : 'No' ],
 			],
 		]);
 		

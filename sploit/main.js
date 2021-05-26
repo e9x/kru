@@ -36,6 +36,18 @@ var Utils = require('./libs/utils'),
 	}),
 	process = () => {
 		try{
+			if(cheat.player && cheat.player.process_inputs && !cheat.player.store.inputs_hooked){
+				cheat.player.store.inputs_hooked = true;
+
+				var process_inputs = cheat.player.process_inputs;
+				
+				cheat.player.process_inputs = (data, ...args) => {
+					if(cheat.controls && cheat.player && cheat.player.weapon)input(data);
+					
+					return process_inputs.call(cheat.player.entity, data, ...args);
+				};
+			}
+			
 			visual.tick();
 			
 			if(cheat.config.game.overlay){
@@ -52,8 +64,7 @@ var Utils = require('./libs/utils'),
 				if(!player.active)continue;
 				
 				if(player.is_you)cheat.player = player;
-				
-				player.tick();
+				else player.tick();
 				
 				if(!player.frustum || player.is_you)continue;
 				

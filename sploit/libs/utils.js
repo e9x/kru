@@ -23,6 +23,22 @@ class Utils {
 	is_host(host, url){
 		return url.hostname == host || url.hostname.endsWith('.' + host);
 	}
+	wait_for(check){
+		return new Promise(resolve => {
+			var run = () => {
+				try{
+					if(check()){
+						clearInterval(interval);
+						resolve();
+					}
+				}catch(err){console.log(err)}
+			};
+			
+			var interval = setInterval(run, 50);
+			
+			run();
+		});
+	}
 	normal_radian(radian){
 		radian = radian % this.pi2;
 		
@@ -156,7 +172,7 @@ class Utils {
 	css(obj){
 		var string = [];
 		
-		for(var name in obj)string.push(name + ': ' + obj[name] + ';');
+		for(var name in obj)string.push(name + ':' + obj[name] + ';');
 		
 		return string.join('\n');
 	}
