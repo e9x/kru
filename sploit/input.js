@@ -107,7 +107,7 @@ var cheat = require('./cheat'),
 		// todo: triggerbot delay
 		if(can_shoot && cheat.config.aim.status == 'trigger')data.shoot = enemy_sight() || data.shoot;
 		else if(can_shoot && cheat.config.aim.status != 'off' && target && cheat.player.health){
-			var camera_world = cheat.camera_world(),
+			var camera_world = utils.camera_world(),
 				part = cheat.config.aim.offset != 'random' ? cheat.config.aim.offset : y_offset_rand,
 				target_pos = target.parts[part] || (console.error(part, 'not registered'), { x: 0, y: 0, z: 0 }),
 				x_dire = utils.getXDire(camera_world.x, camera_world.y, camera_world.z, target_pos.x, target_pos.y - cheat.player.jump_bob_y, target_pos.z),

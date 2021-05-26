@@ -76,6 +76,14 @@ class Visual {
 	box(player){
 		this.ctx.strokeStyle = player.esp_color;
 		this.ctx.lineWidth = 1.5;
+		
+		/*this.ctx.beginPath();
+		this.ctx.moveTo(player.bounds.min.x, player.bounds.min.y);
+		this.ctx.lineTo(player.bounds.min.x, player.bounds.max.y);
+		this.ctx.lineTo(player.bounds.max.x, player.bounds.max.y);
+		this.ctx.lineTo(player.bounds.max.x, player.bounds.min.y);
+		this.ctx.lineTo(player.bounds.min.x, player.bounds.min.y);
+		this.ctx.stroke();*/
 		this.ctx.strokeRect(player.rect.left, player.rect.top, player.rect.width, player.rect.height);
 	}
 	tracer(player){
@@ -90,14 +98,19 @@ class Visual {
 		this.ctx.lineTo(player.rect.x, player.rect.bottom);
 		this.ctx.stroke();
 	}
+	get can_draw_chams(){
+		return cheat.config.esp.status == 'chams' || cheat.config.esp.status == 'box_chams' || cheat.config.esp.status == 'full';
+	}
 	cham(player){
+		var self = this;
+		
 		if(!player.obj[Visual.hooked]){
 			player.obj[Visual.hooked] = true;
 			
 			let visible = true;
 			
 			Object.defineProperty(player.obj, 'visible', {
-				get: _ => cheat.draw_chams() || visible,
+				get: _ => this.can_draw_chams || visible,
 				set: _ => visible = _,
 			});
 		}
@@ -111,7 +124,7 @@ class Visual {
 			
 			Object.defineProperty(obj, 'material', {
 				get(){
-					var material = cheat.draw_chams() ? (esp_mats[player.esp_color] || (esp_mats[player.esp_color] = new cheat.three.MeshBasicMaterial({
+					var material = self.can_draw_chams ? (esp_mats[player.esp_color] || (esp_mats[player.esp_color] = new cheat.three.MeshBasicMaterial({
 						transparent: true,
 						fog: false,
 						depthTest: false,
@@ -136,7 +149,8 @@ class Visual {
 		}
 	}
 	health(player){
-		var box_ps = [ player.rect.left - player.rect.width / 2, player.rect.top, player.rect.width / 4, player.rect.height ];
+		var width = player.rect.height / 5,
+			box_ps = [ player.rect.left - width, player.rect.top, width, player.rect.height ];
 		
 		// broken ps looks like [NaN, NaN, 0, NaN]
 		if(box_ps.every(num => !isNaN(num))){
@@ -163,14 +177,15 @@ class Visual {
 		}
 	}
 	text(player){
-		var font_size = ~~(11 - (player.distance_camera() * 0.005));
-
+		this.ctx.save();
+		this.ctx.scale(player.scale, player.scale);
+		
 		this.ctx.textAlign = 'middle';
-		this.ctx.font = 'Bold ' + font_size + 'px Tahoma';
+		this.ctx.font = 'Bold 11px Tahoma';
 		this.ctx.strokeStyle = '#000';
 		this.ctx.lineWidth = 2.5;
 
-		this.draw_text(player.rect.right + (player.rect.width / 2), player.rect.top, font_size, [
+		this.draw_text(player.srect.right + 5, player.srect.top + 8, 11, [
 			[
 				[ '#FB8', player.alias ],
 				[ '#FFF', player.clan ? ' [' + player.clan + ']' : '' ],
@@ -189,6 +204,8 @@ class Visual {
 				[ player.risk ? '#0F0' : '#F00', player.risk ? 'Yes' : 'No' ],
 			],
 		]);
+		
+		this.ctx.restore();
 	}
 };
 

@@ -19,21 +19,28 @@ class Player {
 	get store(){ return this.entity[Player.store] || (this.entity[Player.store] = {}) }
 	get can_see(){ return this.store.can_see }
 	get rect(){ return this.store.rect }
+	get srect(){
+		var out = {};
+		
+		for(var key in this.store.rect)out[key] = this.store.rect[key] / this.scale;
+		
+		return out;
+	}
 	get in_fov(){
 		if(!this.active)return false;
 		if(this.cheat.config.aim.fov == 110)return true;
 		
-		var fov_bak = this.cheat.world.camera.fov;
+		var fov_bak = this.utils.world.camera.fov;
 		
 		// config fov is percentage of current fov
-		this.cheat.world.camera.fov = this.cheat.config.aim.fov / fov_bak * 100;
-		this.cheat.world.camera.updateProjectionMatrix();
+		this.utils.world.camera.fov = this.cheat.config.aim.fov / fov_bak * 100;
+		this.utils.world.camera.updateProjectionMatrix();
 		
-		this.cheat.update_frustum();
+		this.utils.update_frustum();
 		var ret = this.frustum;
 		
-		this.cheat.world.camera.fov = fov_bak;
-		this.cheat.world.camera.updateProjectionMatrix();
+		this.utils.world.camera.fov = fov_bak;
+		this.utils.world.camera.updateProjectionMatrix();
 		
 		return ret;
 	}
@@ -41,7 +48,7 @@ class Player {
 		return this.active && this.enemy && this.can_see && this.in_fov;
 	}
 	get frustum(){
-		return this.active ? this.cheat.contains_point(this) : false;
+		return this.active ? this.utils.contains_point(this) : false;
 	}
 	get hp_color(){
 		var hp_perc = (this.health / this.max_health) * 100,
@@ -73,21 +80,20 @@ class Player {
 	get aim_press(){ return this.cheat.controls[vars.mouseDownR] || this.cheat.controls.keys[this.cheat.controls.binds.aim.val] }
 	get crouch(){ return this.entity[vars.crouchVal] }
 	// buggy
-	bounds(){
-		return {
-			min: this.utils.pos2d(this.store.box.min),
-			max: this.utils.pos2d(this.store.box.max),
-		};
+	get bounds(){ return this.store.bounds }
+	get scale(){
+		var world_camera = this.utils.camera_world(),
+			center = this.store.box.getCenter();
+		
+		return Math.max(0.7, 1 - this.utils.getD3D(world_camera.x, world_camera.y, world_camera.z, center.x, center.y, center.z) / 600);
 	}
-	distance_camera(){
-		return this.cheat.world.camera[vars.getWorldPosition]().distanceTo(this);
+	get distance_camera(){
+		return this.utils.camera_world().distanceTo(this);
 	}
 	test_vec(vector, match){
 		return match.every((value, index) => vector[['x', 'y', 'z'][index]] == value);
 	}
-	get world_pos(){
-		return this.store.world_pos;
-	}
+	get world_pos(){ return this.store.world_pos }
 	get obj(){ return this.is_ai ? target.enity.dat : this.entity[vars.objInstances] }
 	get recoil_y(){ return this.entity[vars.recoilAnimY] }
 	get has_ammo(){ return this.weapon.melee || this.ammo }
@@ -110,34 +116,75 @@ class Player {
 		return this.entity.legMeshes[0];
 	}
 	tick(){
-		/*this.store.box = new this.cheat.three.Box3();
-		
-		if(this.active)this.obj.traverse(obj => {
-			if(obj.visible && obj.type == 'Mesh')this.store.box.expandByObject(this.obj);;
-		});*/
-		
 		this.store.can_see = this.cheat.player && this.active && this.utils.obstructing(this.cheat.player, this, this.cheat.player.weapon && this.cheat.player.weapon.pierce && this.cheat.config.aim.wallbangs) == null ? true : false;
 		
-		this.store.rect = {};
+		var box = this.store.box = new this.utils.three.Box3();
 		
-		var src_pos = this.utils.pos2d(this),
-			src_pos_crouch = this.utils.pos2d(this, this.height),
-			width = ~~((src_pos.y - this.utils.pos2d(this, this.entity.height).y) * 0.7),
-			height = src_pos.y - src_pos_crouch.y,
-			center = {
-				x: src_pos.x,
-				y: src_pos.y - height / 2,
-			};
+		box.expandByObject(this.chest);
+		
+		var add_obj = obj => {
+			if(obj.visible)obj.traverse(obj => {
+				if(obj.type == 'Mesh' && obj.visible)box.expandByObject(obj);
+			});
+		};
+		
+		
+		for(var obj of this.entity.legMeshes)add_obj(obj);
+		for(var obj of this.entity.upperBody.children)add_obj(obj);
+		
+		this.store.bounds = {
+			min: { x: 0, y: 0 },
+			max: { x: 0, y: 0 }
+		};
+		
+		
+		var x = [],
+			y = [];
+		
+		for(var vec of [
+			{ x: box.min.x, y: box.min.y, z: box.min.z },
+			{ x: box.min.x, y: box.min.y, z: box.max.z },
+			{ x: box.min.x, y: box.max.y, z: box.min.z },
+			{ x: box.min.x, y: box.max.y, z: box.max.z },
+			{ x: box.max.x, y: box.min.y, z: box.min.z },
+			{ x: box.max.x, y: box.min.y, z: box.max.z },
+			{ x: box.max.x, y: box.max.y, z: box.min.z },
+			{ x: box.max.x, y: box.max.y, z: box.max.z },
+		]){
+			if(!this.utils.contains_point(vec))continue;
+			
+			var td  = this.utils.pos2d(vec);
+			
+			x.push(td.x);
+			y.push(td.y);
+		}
+		
+		var big_first = (a, b) => b - a;
+		
+		x = x.sort(big_first);
+		y = y.sort(big_first);
+		
+		var bounds = {
+			center: this.utils.pos2d(box.getCenter()),
+			min: {
+				x: x[x.length - 1],
+				y: y[y.length - 1],
+			},
+			max: {
+				x: x[0],
+				y: y[0],
+			},
+		};
 		
 		this.store.rect = {
-			x: center.x,
-			y: center.y,
-			left: center.x - width / 2,
-			top: center.y - height / 2,
-			right: center.x + width / 2,
-			bottom: center.y + height / 2,
-			width: width,
-			height: height,
+			x: bounds.center.x,
+			y: bounds.center.y,
+			left: bounds.min.x,
+			top: bounds.min.y,
+			right: bounds.max.x,
+			bottom: bounds.max.y,
+			width: bounds.max.x - bounds.min.x,
+			height: bounds.max.y - bounds.min.y,
 		};
 		
 		this.store.parts = {
@@ -150,14 +197,14 @@ class Player {
 		var head_size = 1.5;
 		
 		if(this.active && !this.is_you){
-			var chest_box = new this.cheat.three.Box3().setFromObject(this.chest),
+			var chest_box = new this.utils.three.Box3().setFromObject(this.chest),
 				chest_size = chest_box.getSize(),
 				chest_pos = chest_box.getCenter(),
 				// rotated offset
 				translate = (obj, input, translate) => {
 					for(var axis in translate){
 						var ind = ['x','y','z'].indexOf(axis),
-							pos = new this.cheat.three.Vector3(...[0,0,0].map((x, index) => ind == index ? 1 : 0)).applyQuaternion(obj.getWorldQuaternion()).multiplyScalar(translate[axis]);
+							pos = new this.utils.three.Vector3(...[0,0,0].map((x, index) => ind == index ? 1 : 0)).applyQuaternion(obj.getWorldQuaternion()).multiplyScalar(translate[axis]);
 						
 						input.x += pos.x;
 						input.y += pos.y;

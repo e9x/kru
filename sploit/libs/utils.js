@@ -1,5 +1,7 @@
 'use strict';
 
+var vars = require('./vars');
+
 class Utils {
 	constructor(canvas, three, game, world){
 		this.canvas = canvas;
@@ -35,6 +37,13 @@ class Utils {
 	project3d(pos, camera){
 		return this.applyMatrix4(this.applyMatrix4(pos, camera.matrixWorldInverse), camera.projectionMatrix);
 	}
+	update_frustum(){
+		this.world.frustum.setFromProjectionMatrix(new this.three.Matrix4().multiplyMatrices(this.world.camera.projectionMatrix, this.world.camera.matrixWorldInverse));
+	}
+	update_camera(){
+		this.world.camera.updateMatrix();
+		this.world.camera.updateMatrixWorld();
+	}
 	pos2d(pos, offset_y = 0){
 		if(isNaN(pos.x) || isNaN(pos.y) || isNaN(pos.z))return { x: 0, y: 0 };
 		
@@ -42,8 +51,7 @@ class Utils {
 		
 		pos.y += offset_y;
 		
-		this.world.camera.updateMatrix();
-		this.world.camera.updateMatrixWorld();
+		this.update_camera();
 		
 		this.project3d(pos, this.world.camera);
 		
@@ -120,7 +128,6 @@ class Utils {
 	}
 	// box = Box3
 	box_size(obj, box){
-		
 		var vFOV = this.world.camera.fov * Math.PI / 180;
 		var h = 2 * Math.tan( vFOV / 2 ) * this.world.camera.position.z;
 		var aspect = this.canvas.width / this.canvas.height;
@@ -166,6 +173,19 @@ class Utils {
 		node.innerHTML = string;
 		
 		return node.textContent;
+	}
+	contains_point(point){
+		for(var ind = 0; ind < 6; ind++)if(this.world.frustum.planes[ind].distanceToPoint(point) < 0)return false;
+		return true;
+	}
+	camera_world(){
+		var matrix_copy = this.world.camera.matrixWorld.clone(),
+			pos = this.world.camera[vars.getWorldPosition]();
+		
+		this.world.camera.matrixWorld.copy(matrix_copy);
+		this.world.camera.matrixWorldInverse.copy(matrix_copy).invert();
+		
+		return pos.clone();
 	}
 }
 
