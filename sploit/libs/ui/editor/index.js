@@ -121,7 +121,7 @@ class Editor extends PanelDraggable {
 	update(){
 		this.saven.classList[this.saved ? 'add' : 'remove']('saved');
 		
-		this.footer.textContent = this.saved == null ? 'Editor loaded' : this.saved ? 'All changes saved' : 'Warning: unsaved changes, press the SAVE icon';
+		this.footer.innerHTML = this.saved == null ? 'Editor loaded' : this.saved ? 'All changes saved' : `Warning: unsaved changes, press the ${svg.save} icon`;
 		
 		this.apply_bounds();
 	}

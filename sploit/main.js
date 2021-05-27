@@ -92,7 +92,7 @@ var Utils = require('./libs/utils'),
 			// constants.api.report_error('frame', err);
 		}
 		
-		requestAnimationFrame(process);
+		utils.request_frame(process);
 	};
 
 UI.ready.then(() => {
@@ -149,6 +149,7 @@ UI.ready.then(() => {
 							},
 						});
 					},
+					socket(socket){ cheat.socket = socket },
 					world(world){ cheat.world = constants.utils.world = world },
 					can_see: inview => cheat.config.esp.status == 'full' ? false : (cheat.config.esp.nametags || inview),
 					skins: ent => cheat.config.game.skins && typeof ent == 'object' && ent != null && ent.stats ? cheat.skins : ent.skins,

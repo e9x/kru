@@ -203,6 +203,9 @@ class Utils {
 		
 		return pos.clone();
 	}
+	request_frame(callback){
+		requestAnimationFrame(callback);
+	}
 }
 
 module.exports = Utils;

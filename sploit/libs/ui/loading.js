@@ -19,8 +19,7 @@ class Loading {
 	blur(){}
 	focus(){}
 	update(){
-		this.node.style.opacity = this.visible ? 1 : 0;
-		this.node.style['pointer-events'] = this.visible ? 'all' : 'none';
+		this.node.classList[this.visible ? 'remove' : 'add']('hidden');
 	}
 };
 

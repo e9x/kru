@@ -18,21 +18,19 @@ class Panel {
 	focus(){
 		for(var panel of panels)panel.blur();
 		this.node.classList.add('focus');
-		this.node.style['z-index'] = 2;
+		this.node.style['z-index'] = 3;
 	}
 	blur(){
 		this.node.classList.remove('focus');
-		this.node.style['z-index'] = 1;
+		this.node.style['z-index'] = 2;
 	}
 	show(){
 		this.visible = true;
-		this.node.style.opacity = '';
-		this.node.style['pointer-events'] = '';
+		this.node.classList.remove('hidden');
 	}
 	hide(){
 		this.visible = false;
-		this.node.style.opacity = 0;
-		this.node.style['pointer-events'] = 'none';
+		this.node.classList.add('hidden');
 	}
 	remove(){
 		panels.splice(panels.indexOf(this), 1);
