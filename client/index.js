@@ -10,9 +10,15 @@ var vm = require('vm'),
 			this.webContents.executeJavaScript(`document.exitPointerLock()`);
 		},
 	},{
+		// new match
+		key: 'F4',
+		press(){
+			this.loadURL('https://krunker.io');
+		},
+	},{
 		key: 'F5',
 		press(){
-			this.webContents.reloadIgnoringCache();
+			this.reload();
 		},
 	},{
 		key: 'F11',
