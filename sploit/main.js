@@ -88,8 +88,7 @@ var Utils = require('./libs/utils'),
 				}
 			};
 		}catch(err){
-			console.error(err);
-			// constants.api.report_error('frame', err);
+			constants.api.report_error('frame', err);
 		}
 		
 		utils.request_frame(process);
