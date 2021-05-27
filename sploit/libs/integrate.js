@@ -24,7 +24,7 @@ exports.listen_load = instruct_cb => new Promise(resolve => new MutationObserver
 		node.textContent = '';
 		resolve();
 	}
-}))).observe(document, { childList: true, subtree: true })).then(() => utils.wait_for(() => window.Howler));
+}))).observe(document, { childList: true, subtree: true }));/*.then(() => utils.wait_for(() => window.Howler));*/
 
 document.addEventListener('pointerlockchange', () => {
 	exports.focused = document.pointerLockElement != null;

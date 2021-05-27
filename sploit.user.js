@@ -7,7 +7,7 @@
 // @license        gpl-3.0
 // @namespace      https://e9x.github.io/
 // @supportURL     https://e9x.github.io/kru/inv/
-// @extracted      Thu, 27 May 2021 05:36:05 GMT
+// @extracted      Thu, 27 May 2021 05:43:37 GMT
 // @match          *://krunker.io/*
 // @match          *://browserfps.com/*
 // @exclude        *://krunker.io/editor*
@@ -13707,7 +13707,7 @@ exports.api_url = 'https://api.sys32.dev/';
 exports.hostname = 'krunker.io';
 exports.mm_url = 'https://matchmaker.krunker.io/';
 
-exports.extracted = typeof 1622093765896 != 'number' ? Date.now() : 1622093765896;
+exports.extracted = typeof 1622094217159 != 'number' ? Date.now() : 1622094217159;
 
 exports.store = {
 	get: async key => GM.get_value ? await GM.get_value(key) : localStorage.getItem('ss' + key),
@@ -14357,7 +14357,7 @@ exports.listen_load = instruct_cb => new Promise(resolve => new MutationObserver
 		node.textContent = '';
 		resolve();
 	}
-}))).observe(document, { childList: true, subtree: true })).then(() => utils.wait_for(() => window.Howler));
+}))).observe(document, { childList: true, subtree: true }));/*.then(() => utils.wait_for(() => window.Howler));*/
 
 document.addEventListener('pointerlockchange', () => {
 	exports.focused = document.pointerLockElement != null;
@@ -16273,8 +16273,6 @@ window.addEventListener('load', () => {
 		if(confirm('A new Sploit version is available, do you wish to update?'))updater.update();
 	}, 60e3 * 3);	
 });
-
-window.cheat = cheat;
 
 /***/ }),
 
