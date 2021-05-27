@@ -7,7 +7,7 @@
 // @license        gpl-3.0
 // @namespace      https://e9x.github.io/
 // @supportURL     https://e9x.github.io/kru/inv/
-// @extracted      Thu, 27 May 2021 05:43:37 GMT
+// @extracted      Thu, 27 May 2021 05:56:39 GMT
 // @match          *://krunker.io/*
 // @match          *://browserfps.com/*
 // @exclude        *://krunker.io/editor*
@@ -13707,7 +13707,7 @@ exports.api_url = 'https://api.sys32.dev/';
 exports.hostname = 'krunker.io';
 exports.mm_url = 'https://matchmaker.krunker.io/';
 
-exports.extracted = typeof 1622094217159 != 'number' ? Date.now() : 1622094217159;
+exports.extracted = typeof 1622094999473 != 'number' ? Date.now() : 1622094999473;
 
 exports.store = {
 	get: async key => GM.get_value ? await GM.get_value(key) : localStorage.getItem('ss' + key),
@@ -14099,7 +14099,7 @@ var cheat = __webpack_require__(/*! ./cheat */ "./cheat.js"),
 	correct_aim = (rot, data) => {
 		if(data.shoot)data.shoot = !cheat.player.shot;
 		
-		if(data.shoot && !cheat.player.shot)aim_input(rot, data);
+		if(!data.reload && cheat.player.has_ammo && data.shoot && !cheat.player.shot)aim_input(rot, data);
 	},
 	/*
 	[
@@ -14140,7 +14140,7 @@ var cheat = __webpack_require__(/*! ./cheat */ "./cheat.js"),
 		// aimbot
 		
 		var can_hit = (Math.random() * 100) < cheat.config.aim.hitchance,
-			can_shoot = !data.reloading && cheat.player.has_ammo,
+			can_shoot = !data.reload && cheat.player.has_ammo,
 			can_target = cheat.config.aim.status == 'auto' || data.scope || data.shoot,
 			target = cheat.target = can_target && cheat.pick_target();
 		
@@ -16018,7 +16018,7 @@ add_patch(/((?:[a-zA-Z]+(?:\.|(?=\.skins)))+)\.skins(?!=)/g, (match, player) => 
 add_patch(/(\w+)(\.exports={ahNum:)/, (match, mod, other) => '({set exports(socket){' + key + '.socket(socket);return ' + mod + '.exports=socket}})' + other);
 
 // Input
-//add_patch(/((\w+\.\w+)\[\2\._push\?'_push':'push']\()(\w+)(\),)/, (match, func, array, input, end) => func + key + '.input(' + input + ')' + end);
+add_patch(/((\w+\.\w+)\[\2\._push\?'_push':'push']\()(\w+)(\),)/, (match, func, array, input, end) => func + key + '.input(' + input + ')' + end);
 
 exports.patch = source => {
 	var found = {},
@@ -16091,7 +16091,7 @@ var Utils = __webpack_require__(/*! ./libs/utils */ "./libs/utils.js"),
 	}),
 	process = () => {
 		try{
-			if(cheat.player && cheat.player.process_inputs && !cheat.player.store.inputs_hooked){
+			/*if(cheat.player && cheat.player.process_inputs && !cheat.player.store.inputs_hooked){
 				cheat.player.store.inputs_hooked = true;
 
 				var process_inputs = cheat.player.process_inputs;
@@ -16101,7 +16101,7 @@ var Utils = __webpack_require__(/*! ./libs/utils */ "./libs/utils.js"),
 					
 					return process_inputs.call(cheat.player.entity, data, ...args);
 				};
-			}
+			}*/
 			
 			visual.tick();
 			

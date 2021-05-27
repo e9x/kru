@@ -36,7 +36,7 @@ var Utils = require('./libs/utils'),
 	}),
 	process = () => {
 		try{
-			if(cheat.player && cheat.player.process_inputs && !cheat.player.store.inputs_hooked){
+			/*if(cheat.player && cheat.player.process_inputs && !cheat.player.store.inputs_hooked){
 				cheat.player.store.inputs_hooked = true;
 
 				var process_inputs = cheat.player.process_inputs;
@@ -46,7 +46,7 @@ var Utils = require('./libs/utils'),
 					
 					return process_inputs.call(cheat.player.entity, data, ...args);
 				};
-			}
+			}*/
 			
 			visual.tick();
 			

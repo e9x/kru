@@ -41,7 +41,7 @@ var cheat = require('./cheat'),
 	correct_aim = (rot, data) => {
 		if(data.shoot)data.shoot = !cheat.player.shot;
 		
-		if(data.shoot && !cheat.player.shot)aim_input(rot, data);
+		if(!data.reload && cheat.player.has_ammo && data.shoot && !cheat.player.shot)aim_input(rot, data);
 	},
 	/*
 	[
@@ -82,7 +82,7 @@ var cheat = require('./cheat'),
 		// aimbot
 		
 		var can_hit = (Math.random() * 100) < cheat.config.aim.hitchance,
-			can_shoot = !data.reloading && cheat.player.has_ammo,
+			can_shoot = !data.reload && cheat.player.has_ammo,
 			can_target = cheat.config.aim.status == 'auto' || data.scope || data.shoot,
 			target = cheat.target = can_target && cheat.pick_target();
 		
