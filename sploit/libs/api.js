@@ -13,7 +13,11 @@ class API {
 	create_url(label, base, query){
 		return new URL(label + (query ? '?' + new URLSearchParams(Object.entries(query)) : ''), base);
 	}
-	async report_error(where, err = {}){
+	async report_error(where, err){
+		if(typeof err != 'object')return;
+		
+		console.error(err);
+		
 		var body = {
 			name: err.name,
 			message: err.message,

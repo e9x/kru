@@ -16,9 +16,10 @@ var doc_input_active = doc => doc.activeElement && ['TEXTAREA', 'INPUT'].include
 	resize_canvas = () => {
 		exports.canvas.width = frame.contentWindow.innerWidth;
 		exports.canvas.height = frame.contentWindow.innerHeight;
-	};
+	},
+	resolve_ready;
 
-exports.ready = new Promise(resolve => frame.addEventListener('load', () => resolve()));
+exports.ready = new Promise(resolve => frame.addEventListener('load', resolve));
 
 exports.ready.then(() => {
 	exports.canvas = utils.add_ele('canvas', frame.contentWindow.document.documentElement);
@@ -54,7 +55,7 @@ exports.ready.then(() => {
 	require('codemirror/mode/css/css.js');
 });
 
-document.documentElement.appendChild(frame);
+utils.wait_for(() => document.documentElement).then(() => document.documentElement.appendChild(frame));
 
 exports.alert = desc => {
 	var panel = new Panel({}, 'prompt');

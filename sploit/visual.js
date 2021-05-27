@@ -8,7 +8,6 @@ var cheat = require('./cheat'),
 class Visual {
 	constructor(){
 		this.materials = {};
-		this.v3 = ['x', 'y', 'z']
 	}
 	tick(){
 		this.canvas = UI.canvas;
@@ -63,16 +62,52 @@ class Visual {
 			});
 		});
 	}
+	axis_join(player){
+		return player && player.active ? ['x', 'y', 'z'].map(axis => axis + ': ' + player[axis].toFixed(2)).join(', ') : null;
+	}
 	overlay(){
 		this.ctx.strokeStyle = '#000'
 		this.ctx.font = 'bold 14px inconsolata, monospace';
 		this.ctx.textAlign = 'start';
 		this.ctx.lineWidth = 2.6;
 		
-		var lines = [
-			[['#BBB', 'Player: '], ['#FFF', cheat.player && cheat.player.active ? this.v3.map(axis => axis + ': ' + cheat.player[axis].toFixed(2)).join(', ') : 'N/A']],
-			[['#BBB', 'Target: '], ['#FFF', cheat.target && cheat.target.active ? cheat.target.alias + ', ' + this.v3.map(axis => axis + ': ' + cheat.target[axis].toFixed(2)).join(', ') : 'N/A']],
-		];
+		var data = {
+			Player: this.axis_join(cheat.player),
+			Target: this.axis_join(cheat.target),
+			/*'Shot': cheat.player ? cheat.player.shot : false,
+			'Aimed': cheat.player ? cheat.player.aimed : false,
+			'Can shoot': cheat.player ? cheat.player.can_shoot : false,
+			'Did shoot': cheat.player ? cheat.player.did_shoot : false,*/
+		};
+		
+		var lines = [];
+		
+		for(var key in data){
+			var color = '#FFF',
+				value = data[key];
+			
+			switch(typeof value){
+				case'boolean':
+					
+					color = value ? '#0F0' : '#F00';
+					value = value ? 'Yes' : 'No';
+					
+					break;
+				case'number':
+					
+					color = '#00F';
+					value = value.toFixed(2);
+					
+					break;
+				case'object':
+					
+					value = 'N/A';
+					
+					break;
+			}
+			
+			lines.push([ [ '#BBB', key + ': ' ], [ color, value ] ]);
+		}
 		
 		this.draw_text(15, ((this.canvas.height / 2) - (lines.length * 14)  / 2), 14, lines);
 	}

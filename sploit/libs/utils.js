@@ -25,18 +25,19 @@ class Utils {
 	}
 	wait_for(check){
 		return new Promise(resolve => {
-			var run = () => {
-				try{
-					if(check()){
-						clearInterval(interval);
-						resolve();
-					}
-				}catch(err){console.log(err)}
-			};
+			var interval,
+				run = () => {
+					try{
+						if(check()){
+							if(interval)clearInterval(interval);
+							resolve();
+							
+							return true;
+						}
+					}catch(err){console.log(err)}
+				};
 			
-			var interval = setInterval(run, 50);
-			
-			run();
+			interval = run() || setInterval(run, 50);
 		});
 	}
 	normal_radian(radian){

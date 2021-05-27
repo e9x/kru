@@ -25,7 +25,7 @@ var cheat = require('./cheat'),
 		
 		raycaster.setFromCamera({ x: 0, y: 0 }, cheat.world.camera);
 		
-		if(cheat.player.aim && raycaster.intersectObjects(cheat.game.players.list.map(cheat.add).filter(ent => ent.can_target).map(ent => ent.obj), true).length)return true;
+		if(cheat.player.aimed && raycaster.intersectObjects(cheat.game.players.list.map(cheat.add).filter(ent => ent.can_target).map(ent => ent.obj), true).length)return true;
 	},
 	aim_input = (rot, data) => {
 		data.xdir = rot.x * 1000;
@@ -43,6 +43,7 @@ var cheat = require('./cheat'),
 		
 		if(!data.reload && cheat.player.has_ammo && data.shoot && !cheat.player.shot)aim_input(rot, data);
 	},
+	pdata,
 	/*
 	[
 		controls.getISN(),
@@ -63,9 +64,7 @@ var cheat = require('./cheat'),
 	];
 	*/
 	keys = { frame: 0, delta: 1, xdir: 2, ydir: 3, moveDir: 4, shoot: 5, scope: 6, jump: 7, reload: 8, crouch: 9, weaponScroll: 10, weaponSwap: 11, moveLock: 12, speed_limit: 13, reset: 14, interact: 15 },
-	modify = modify = array => {
-		var data = new InputData(array);
-		
+	modify = data => {
 		// bhop
 		if(integrate.focused && cheat.config.game.bhop != 'off' && (integrate.inputs.Space || cheat.config.game.bhop == 'autojump' || cheat.config.game.bhop == 'autoslide')){
 			cheat.controls.keys[cheat.controls.binds.jump.val] ^= 1;
@@ -81,16 +80,15 @@ var cheat = require('./cheat'),
 		
 		// aimbot
 		
-		var can_hit = (Math.random() * 100) < cheat.config.aim.hitchance,
-			can_shoot = !data.reload && cheat.player.has_ammo,
+		data.could_shoot = cheat.player.can_shoot;
+		
+		var nauto = cheat.player.weapon_auto || !data.shoot || (!pdata.could_shoot || !pdata.shoot),
+			hitchance = (Math.random() * 100) < cheat.config.aim.hitchance,
 			can_target = cheat.config.aim.status == 'auto' || data.scope || data.shoot,
 			target = cheat.target = can_target && cheat.pick_target();
 		
-		// cheat.target && cheat.target.can_target ? cheat.target
-		
-		// todo: triggerbot delay
-		if(can_shoot && cheat.config.aim.status == 'trigger')data.shoot = enemy_sight() || data.shoot;
-		else if(can_shoot && cheat.config.aim.status != 'off' && target && cheat.player.health){
+		if(cheat.player.can_shoot)if(cheat.config.aim.status == 'trigger')data.shoot = enemy_sight() || data.shoot;
+		else if(cheat.config.aim.status != 'off' && target && cheat.player.health){
 			var camera_world = utils.camera_world(),
 				x_dire = utils.getXDire(camera_world.x, camera_world.y, camera_world.z, target.aim_point.x, target.aim_point.y - cheat.player.jump_bob_y, target.aim_point.z),
 				y_dire = utils.getDir(camera_world.z, camera_world.x, target.aim_point.z, target.aim_point.x),
@@ -99,14 +97,13 @@ var cheat = require('./cheat'),
 					y: utils.round(y_dire % utils.pi2, 3) || 0,
 				};
 			
-			if(can_hit){
-				if(cheat.config.aim.status == 'correction')correct_aim(rot, data);
-				else if(cheat.config.aim.status == 'auto'){
-					data.scope = 1;
-					
-					if(cheat.player.aim)data.shoot = cheat.player.shot ? 0 : 1;
-					correct_aim(rot, data);
-				}
+			if(hitchance)if(cheat.config.aim.status == 'correction' && nauto)correct_aim(rot, data);
+			else if(cheat.config.aim.status == 'auto'){
+				if(cheat.player.can_aim)data.scope = 1;
+				
+				if(cheat.player.aimed)data.shoot = !cheat.player.shot;
+				
+				correct_aim(rot, data);
 			}
 			
 			if(cheat.config.aim.status == 'assist' && cheat.player.aim_press){
@@ -115,13 +112,13 @@ var cheat = require('./cheat'),
 				aim_camera(rot, data);
 				
 				// offset aim rather than revert to any previous camera rotation
-				if(data.shoot && !cheat.player.shot && !can_hit)data.ydir += 75;
+				if(data.shoot && !cheat.player.shot && hitchance)data.ydir += 75;
 			}
 		}
 		
-		if(data.shoot && cheat.player.auto_weapon && !cheat.player.store.shot){
+		if(cheat.player.can_shoot && data.shoot && !cheat.player.store.shot){
 			cheat.player.store.shot = true;
-			setTimeout(() => cheat.player.store.shot = false, cheat.player.weapon.rate + 25);
+			setTimeout(() => cheat.player.store.shot = false, cheat.player.weapon_rate);
 		}
 	};
 
@@ -140,11 +137,17 @@ for(let key in keys)Object.defineProperty(InputData.prototype, key, {
 	},
 });
 
+pdata = new InputData([]);
+
 module.exports = array => {
 	if(cheat.player && cheat.controls)try{
-		modify(array);
+		var data = new InputData(array);
+		
+		modify(data);
+		
+		pdata = data;
 	}catch(err){
-		api.report_error(err);
+		api.report_error('inputs', err);
 	}
 	
 	return array;

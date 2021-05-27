@@ -84,9 +84,30 @@ class Player {
 	// not to be confused with social player values 
 	get risk(){ return this.entity.account && (this.entity.account.featured || this.entity.account.premiumT) || this.entity.level >= 30 }
 	get is_you(){ return this.entity[vars.isYou] }
-	get aim_val(){ return this.entity[vars.aimVal] }
 	get y_vel(){ return this.entity[vars.yVel] }
-	get aim(){ return this.weapon.noAim || !this.aim_val || this.cheat.target && this.cheat.target.active && this.weapon.melee && this.distance_to(this.cheat.target) <= 18 }
+	get can_melee(){
+		return this.weapon.melee && this.cheat.target && this.cheat.target.active && this.distance_to(this.cheat.target) <= 18 || false;
+	}
+	get reloading(){
+		// reloadTimer in var randomization array
+		return this.entity.reloadTimer != 0;
+	}
+	get can_aim(){
+		return !this.can_melee;
+	}
+	get can_throw(){
+		return this.entity.canThrow && this.weapon.canThrow;
+	}
+	get aimed(){
+		var aim_val = this.can_throw
+			? 1 - this.entity.chargeTime / this.entity.throwCharge
+			: this.weapon.melee ? 1 : this.entity[vars.aimVal];
+		
+		return this.weapon.noAim || aim_val == 0 || this.can_melee || false;
+	}
+	get can_shoot(){
+		return !this.reloading && this.has_ammo && (this.can_throw || !this.weapon.melee || this.can_melee);
+	}
 	get aim_press(){ return this.cheat.controls[vars.mouseDownR] || this.cheat.controls.keys[this.cheat.controls.binds.aim.val] }
 	get crouch(){ return this.entity[vars.crouchVal] }
 	get box_scale(){
@@ -124,8 +145,10 @@ class Player {
 	get teammate(){ return this.is_you || this.cheat.player && this.team && this.team == this.cheat.player.team }
 	get enemy(){ return !this.teammate }
 	get team(){ return this.entity.team }
-	get auto_weapon(){ return !this.weapon.nAuto }
-	get shot(){ return this.auto_weapon ? this.store.shot : this.entity[vars.didShoot] }
+	get weapon_auto(){ return !this.weapon.nAuto }
+	get weapon_rate(){ return this.weapon.rate + 25 }
+	get did_shoot(){ return this.entity[vars.didShoot] }
+	get shot(){ return (this.weapon_auto ? this.store.shot : this.did_shoot) || false }
 	get chest(){
 		return this.entity.lowerBody.children[0];
 	}
