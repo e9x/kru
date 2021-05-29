@@ -24,3 +24,12 @@ exports.sorts = {
 exports.add = entity => new Player(exports, utils, entity);
 
 exports.pick_target = () => exports.game.players.list.map(exports.add).filter(player => player.can_target).sort((ent_1, ent_2) => exports.sorts[exports.config.aim.target_sorting || 'dist2d'](ent_1, ent_2) * (ent_1.frustum ? 1 : 0.5))[0];
+
+var y_offset_types = ['head', 'torso', 'legs'],
+	y_offset_rand = 'head';
+
+setInterval(() => y_offset_rand = y_offset_types[~~(Math.random() * y_offset_types.length)], 2000);
+
+Object.defineProperty(exports, 'aim_part', {
+	get: _ => exports.config.aim.offset != 'random' ? exports.config.aim.offset : y_offset_rand,
+});

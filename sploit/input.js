@@ -89,6 +89,12 @@ var cheat = require('./cheat'),
 		
 		if(cheat.player.can_shoot)if(cheat.config.aim.status == 'trigger')data.shoot = enemy_sight() || data.shoot;
 		else if(cheat.config.aim.status != 'off' && target && cheat.player.health){
+			/*
+			var y_val = target.y + (target.is_ai ? -(target.dat.mSize / 2) : (target.jump_bob_y * 0.072) + 1 - target.crouch * 3),
+				y_dire = constants.utils.getDir(cheat.player.z, cheat.player.x, target.z, target.x),
+				x_dire = constants.utils.getXDire(cheat.player.x, cheat.player.y, cheat.player.z, target.x, y_val, target.z),
+			*/
+			
 			var camera_world = utils.camera_world(),
 				x_dire = utils.getXDire(camera_world.x, camera_world.y, camera_world.z, target.aim_point.x, target.aim_point.y - cheat.player.jump_bob_y, target.aim_point.z),
 				y_dire = utils.getDir(camera_world.z, camera_world.x, target.aim_point.z, target.aim_point.x),

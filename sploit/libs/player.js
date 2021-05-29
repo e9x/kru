@@ -1,10 +1,6 @@
 'use strict';
 
-var vars = require('./vars'),
-	y_offset_types = ['head', 'torso', 'legs'],
-	y_offset_rand = 'head';
-
-setInterval(() => y_offset_rand = y_offset_types[~~(Math.random() * y_offset_types.length)], 2000);
+var vars = require('./vars');
 
 class Player {
 	constructor(cheat, utils, entity){
@@ -50,9 +46,11 @@ class Player {
 		return ret;
 	}
 	get aim_point(){
-		var part = this.cheat.config.aim.offset != 'random' ? this.cheat.config.aim.offset : y_offset_rand;
+		var part = {...(this.store.parts[this.cheat.aim_part] || (console.error(this.cheat.aim_part, 'not registered'), part))};
 		
-		return this.store.parts[part] || (console.error(part, 'not registered'), { x: 0, y: 0, z: 0 });
+		if(this.cheat.aim_part == 'head')part.y = this.y + this.height - (this.is_ai ? this.dat.mSize / 2 : this.jump_bob_y * 0.072)
+	
+		return part;
 	}
 	get can_target(){
 		return this.active && this.enemy && this.can_see && this.in_fov;
