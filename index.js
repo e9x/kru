@@ -83,7 +83,6 @@ create_script({
 		namespace: 'https://greasyfork.org/users/704479',
 	},
 	after: [
-		`// For license information, please see https://raw.githubusercontent.com/e9x/kru/master/junker.user.js.LICENSE.txt`,
 		``,
 		`// Donations Accepted`,
 		`// BTC:  3CsDVq96KgmyPjktUe1YgVSurJVe7LT53G`,
