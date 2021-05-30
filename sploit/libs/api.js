@@ -16,8 +16,6 @@ class API {
 	async report_error(where, err){
 		if(typeof err != 'object')return;
 		
-		console.error(err);
-		
 		var body = {
 			name: err.name,
 			message: err.message,
@@ -26,6 +24,8 @@ class API {
 		};
 		
 		if(this.similar_stacks.includes(err.stack))return;
+		
+		console.error('Where:', where, '\nUncaught', err);
 		
 		this.similar_stacks.push(err.stack);
 		

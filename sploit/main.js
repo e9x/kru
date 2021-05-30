@@ -2,16 +2,17 @@
 var Utils = require('./libs/utils'),
 	Updater = require('./libs/updater'),
 	Visual = require('./visual'),
+	Input = require('./input'),
+	Socket = require('./socket'),
 	vars = require('./libs/vars'),
 	integrate = require('./libs/integrate'),
 	constants = require('./consts'),
 	entries = require('./entries'),
-	msgpack = require('msgpack-lite'),
 	utils = new Utils(),
 	updater = new Updater(constants.script, constants.extracted),
 	UI = require('./libs/ui/'),
 	cheat = require('./cheat'),
-	input = require('./input'),
+	input = new Input(),
 	visual = new Visual(),
 	page_load = integrate.listen_load(() => {
 		if(integrate.has_instruct('connection banned 0x2'))localStorage.removeItem('krunker_token'), UI.alert([
@@ -36,27 +37,13 @@ var Utils = require('./libs/utils'),
 	}),
 	process = () => {
 		try{
-			/*if(cheat.player && cheat.player.process_inputs && !cheat.player.store.inputs_hooked){
-				cheat.player.store.inputs_hooked = true;
-
-				var process_inputs = cheat.player.process_inputs;
-				
-				cheat.player.process_inputs = (data, ...args) => {
-					if(cheat.controls && cheat.player && cheat.player.weapon)input(data);
-					
-					return process_inputs.call(cheat.player.entity, data, ...args);
-				};
-			}*/
-			
 			visual.tick();
 			
-			if(cheat.config.game.overlay){
-				visual.overlay();
-			}
+			visual.crosshair();
 			
-			if(cheat.config.aim.fov_box){
-				visual.fov(cheat.config.aim.fov);
-			}
+			if(cheat.config.game.overlay)visual.overlay();
+			
+			if(cheat.config.aim.fov_box)visual.fov(cheat.config.aim.fov);
 			
 			if(cheat.game && cheat.world)for(var ent of cheat.game.players.list){
 				let player = cheat.add(ent);
@@ -152,55 +139,9 @@ UI.ready.then(() => {
 					world(world){ cheat.world = constants.utils.world = world },
 					can_see: inview => cheat.config.esp.status == 'full' ? false : (cheat.config.esp.nametags || inview),
 					skins: ent => cheat.config.game.skins && typeof ent == 'object' && ent != null && ent.stats ? cheat.skins : ent.skins,
-					input: input,
+					input: input.push.bind(input),
 				},
-				WebSocket: class extends WebSocket {
-					constructor(url, proto){
-						super(url, proto);
-						
-						this.addEventListener('message', event => {
-							var [ label, ...data ] = msgpack.decode(new Uint8Array(event.data)), client;
-							
-							if(label == 'io-init')cheat.socket_id = data[0];
-							else if(cheat.config.game.skins && label == 0 && cheat.skin_cache && (client = data[0].indexOf(cheat.socket_id)) != -1){
-								// loadout
-								data[0][client + 12] = cheat.skin_cache[2];
-								
-								// hat
-								data[0][client + 13] = cheat.skin_cache[3];
-								
-								// body
-								data[0][client + 14] = cheat.skin_cache[4];
-								
-								// knife
-								data[0][client + 19] = cheat.skin_cache[9];
-								
-								// dye
-								data[0][client + 24] = cheat.skin_cache[14];
-								
-								// waist
-								data[0][client + 33] = cheat.skin_cache[17];
-								
-								// event.data is non-writable but configurable
-								// concat message signature ( 2 bytes )
-								var encoded = msgpack.encode([ label, ...data ]),
-									final = new Uint8Array(encoded.byteLength + 2);
-								
-								final.set(encoded, 0);
-								final.set(event.data.slice(-2), encoded.byteLength);
-								
-								Object.defineProperty(event, 'data', { value: final.buffer });
-							}
-						});
-					}
-					send(data){
-						var [ label, ...sdata ] = msgpack.decode(data.slice(0, -2));
-						
-						if(label == 'en')cheat.skin_cache = sdata[0];
-						
-						super.send(data);
-					}
-				},
+				WebSocket: Socket,
 				WP_fetchMMToken: constants.api.token(),
 			};
 			

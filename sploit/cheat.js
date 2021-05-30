@@ -21,7 +21,7 @@ exports.sorts = {
 	},
 };
 
-exports.add = entity => new Player(exports, utils, entity);
+exports.add = entity => entity[exports.hooked] || (entity[exports.hooked] = new Player(exports, utils, entity));
 
 exports.pick_target = () => exports.game.players.list.map(exports.add).filter(player => player.can_target).sort((ent_1, ent_2) => exports.sorts[exports.config.aim.target_sorting || 'dist2d'](ent_1, ent_2) * (ent_1.frustum ? 1 : 0.5))[0];
 

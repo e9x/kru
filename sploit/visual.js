@@ -209,7 +209,7 @@ class Visual {
 		this.ctx.lineWidth = 2.5;
 		this.ctx.textBaseline = 'top';
 		
-		this.draw_text(rect.right + 4, rect.top, font_size, [
+		var text = [
 			[
 				[ '#FB8', player.alias ],
 				[ '#FFF', player.clan ? ' [' + player.clan + ']' : '' ],
@@ -225,7 +225,30 @@ class Visual {
 				[ '#FFF', player.max_ammo ],
 				[ '#BBB', ']' ],
 			],
-		]);
+		]
+		
+		if(player.target)text.push([ [ '#00F', 'Target' ] ]);
+		
+		this.draw_text(rect.right + 4, rect.top, font_size, text);
+		
+		this.ctx.restore();
+	}
+	crosshair(){
+		this.ctx.save();
+		
+		this.ctx.translate(this.canvas.width / 2, this.canvas.height / 2);
+		
+		var size = 10;
+		
+		this.ctx.strokeStyle = '#0F0';
+		this.ctx.lineWidth = 1.5;
+		
+		this.ctx.beginPath();
+		this.ctx.moveTo(-size, 0);
+		this.ctx.lineTo(size, 0);
+		this.ctx.moveTo(0, -size);
+		this.ctx.lineTo(0, size);
+		this.ctx.stroke();
 		
 		this.ctx.restore();
 	}

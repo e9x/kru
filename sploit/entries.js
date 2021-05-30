@@ -251,7 +251,7 @@ exports.ui = cheat => ({
 		value: [{
 			name: 'GitHub',
 			type: 'function',
-			value: () => window.open(constants.github),
+			value: () => window.open(constants.github, '_blank'),
 		},{
 			name: 'Reset Settings',
 			type: 'function',
@@ -270,6 +270,6 @@ exports.ui = cheat => ({
 	},{
 		name: 'Discord',
 		type: 'function',
-		value: () => window.open(constants.discord),
+		value: () => window.open(constants.discord, '_blank'),
 	}],
 });

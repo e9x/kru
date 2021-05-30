@@ -11,19 +11,11 @@ class Player {
 	distance_to(point){
 		return Math.hypot(this.x - point.x, this.y - point.y, this.z - point.z)
 	}
-	get x(){ return this.entity.x || 0 }
-	get y(){ return this.entity.y || 0 }
-	get z(){ return this.entity.z || 0 }
-	get parts(){ return this.store.parts }
-	// cached cpu-heavy data such as world_pos or can_see
-	get store(){ return this.entity[Player.store] || (this.entity[Player.store] = {}) }
-	get can_see(){ return this.store.can_see }
-	get rect(){ return this.store.rect }
 	scale_rect(sx, sy){
 		var out = {},
 			horiz = [ 'y', 'height', 'top', 'bottom' ];
 		
-		for(var key in this.store.rect)out[key] = this.store.rect[key] / (horiz.includes(key) ? sy : sx);
+		for(var key in this.rect)out[key] = this.rect[key] / (horiz.includes(key) ? sy : sx);
 		
 		return out;
 	}
@@ -45,15 +37,8 @@ class Player {
 		
 		return ret;
 	}
-	get aim_point(){
-		var part = {...(this.store.parts[this.cheat.aim_part] || (console.error(this.cheat.aim_part, 'not registered'), part))};
-		
-		if(this.cheat.aim_part == 'head')part.y = this.y + this.height - (this.is_ai ? this.dat.mSize / 2 : this.jump_bob_y * 0.072)
-	
-		return part;
-	}
 	get can_target(){
-		return this.active && this.enemy && this.can_see && this.in_fov;
+		return this.active && this.can_see && this.enemy && this.in_fov;
 	}
 	get frustum(){
 		return this.active ? this.utils.contains_point(this) : false;
@@ -73,6 +58,9 @@ class Player {
 		
 		return '#' + hex.map(part_str).join('');
 	}
+	get x(){ return this.entity.x || 0 }
+	get y(){ return this.entity.y || 0 }
+	get z(){ return this.entity.z || 0 }
 	get ping(){ return this.entity.ping }
 	get jump_bob_y(){ return this.entity.jumpBobY }
 	get clan(){ return this.entity.clan }
@@ -83,6 +71,9 @@ class Player {
 	get risk(){ return this.entity.account && (this.entity.account.featured || this.entity.account.premiumT) || this.entity.level >= 30 }
 	get is_you(){ return this.entity[vars.isYou] }
 	get y_vel(){ return this.entity[vars.yVel] }
+	get target(){
+		return cheat.target && this.entity == cheat.target.entity;
+	}
 	get can_melee(){
 		return this.weapon.melee && this.cheat.target && this.cheat.target.active && this.distance_to(this.cheat.target) <= 18 || false;
 	}
@@ -110,14 +101,14 @@ class Player {
 	get crouch(){ return this.entity[vars.crouchVal] }
 	get box_scale(){
 		var view = this.utils.camera_world(),	
-			center = this.store.box.getCenter(),
+			center = this.box.getCenter(),
 			a = side => Math.min(1, (this.rect[side] / this.utils.canvas[side]) * 10);
 		
 		return [ a('width'), a('height') ];
 	}
 	get dist_scale(){
 		var view = this.utils.camera_world(),	
-			center = this.store.box.getCenter(),
+			center = this.box.getCenter(),
 			scale = Math.max(0.65, 1 - this.utils.getD3D(view.x, view.y, view.z, this.x, this.y, this.z) / 600);
 		
 		return [ scale, scale ];
@@ -128,7 +119,6 @@ class Player {
 	test_vec(vector, match){
 		return match.every((value, index) => vector[['x', 'y', 'z'][index]] == value);
 	}
-	get world_pos(){ return this.store.world_pos }
 	get obj(){ return this.is_ai ? target.enity.dat : this.entity[vars.objInstances] }
 	get recoil_y(){ return this.entity[vars.recoilAnimY] }
 	get has_ammo(){ return this.ammo || this.ammo == this.max_ammo }
@@ -146,7 +136,7 @@ class Player {
 	get weapon_auto(){ return !this.weapon.nAuto }
 	get weapon_rate(){ return this.weapon.rate + 25 }
 	get did_shoot(){ return this.entity[vars.didShoot] }
-	get shot(){ return (this.weapon_auto ? this.store.shot : this.did_shoot) || false }
+	get shot(){ return (this.weapon_auto ? this.auto_shot : this.did_shoot) || false }
 	get chest(){
 		return this.entity.lowerBody.children[0];
 	}
@@ -155,7 +145,7 @@ class Player {
 		return this.chest;
 	}
 	tick(){
-		var box = this.store.box = new this.utils.three.Box3();
+		var box = this.box = new this.utils.three.Box3();
 		
 		box.expandByObject(this.chest);
 		
@@ -202,7 +192,7 @@ class Player {
 			else if(td.y > bounds.max.y)bounds.max.y = td.y;
 		}
 		
-		this.store.rect = {
+		this.rect = {
 			x: bounds.center.x,
 			y: bounds.center.y,
 			left: bounds.min.x,
@@ -213,7 +203,7 @@ class Player {
 			height: bounds.max.y - bounds.min.y,
 		};
 		
-		this.store.parts = {};
+		this.parts = {};
 		
 		var head_size = 1.5,
 			chest_box = new this.utils.three.Box3().setFromObject(this.chest),
@@ -234,7 +224,7 @@ class Player {
 			};
 		
 		// parts centered
-		this.store.parts.torso = translate(this.chest, {
+		this.parts.torso = translate(this.chest, {
 			x: chest_pos.x,
 			y: chest_pos.y,
 			z: chest_pos.z,
@@ -243,18 +233,18 @@ class Player {
 			y: -head_size / 2,
 		});
 		
-		this.store.parts.head = translate(this.chest, {
+		this.parts.head = translate(this.chest, {
 			x: chest_pos.x,
 			y: chest_pos.y,
 			z: chest_pos.z,
 		}, {
-			y: this.store.parts.torso.height / 2,
+			y: this.parts.torso.height / 2,
 		});
 		
 		var leg_pos = this.leg[vars.getWorldPosition](),
 			leg_scale = this.leg.getWorldScale();
 		
-		this.store.parts.legs = translate(this.leg, {
+		this.parts.legs = translate(this.leg, {
 			x: leg_pos.x,
 			y: leg_pos.y,
 			z: leg_pos.z,
@@ -263,9 +253,19 @@ class Player {
 			y: -leg_scale.y / 2,
 		});
 		
-		this.store.world_pos = this.active ? this.obj[vars.getWorldPosition]() : { x: 0, y: 0, z: 0 };
+		this.aim_point = this.cheat.aim_part == 'head' ? {
+			x: this.x,
+			y: this.y + this.height - (this.is_ai ? this.dat.mSize / 2 : this.jump_bob_y * 0.072),
+			z: this.z,
+		} : (this.parts[this.cheat.aim_part] || (console.error(this.cheat.aim_part, 'not registered'), { x: 0, y: 0, z: 0 }));
 		
-		this.store.can_see = this.cheat.player && this.active && this.utils.obstructing(this.cheat.player, this.aim_point, this.cheat.player.weapon && this.cheat.player.weapon.pierce && this.cheat.config.aim.wallbangs) == null ? true : false;
+		this.world_pos = this.active ? this.obj[vars.getWorldPosition]() : { x: 0, y: 0, z: 0 };
+		
+		var camera_world = this.utils.camera_world();
+		
+		this.can_see = this.cheat.player && this.active &&
+			this.utils.obstructing(camera_world, this.aim_point, (!this.cheat.player || this.cheat.player.weapon && this.cheat.player.weapon.pierce) && this.cheat.config.aim.wallbangs)
+		== null ? true : false;
 	}
 	get process_inputs(){
 		return this.entity[vars.procInputs];
@@ -274,7 +274,5 @@ class Player {
 		return this.entity[vars.procInputs] = value;
 	}
 };
-
-Player.store = Symbol();
 
 module.exports = Player;
