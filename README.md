@@ -43,13 +43,14 @@ node index.js -once
 # GG Client
 
 [Source](https://github.com/skidlamer/gg_krunker_client)
+
 [Windows](https://mega.nz/file/CB8QyapR#82tdlwKjVz3xy0rSe9XdqOEEFGRmVeqDm-siySmaoSY)
 
 Run the client once then then go to your documents folder look for a folder named `KrunkerUserScripts`
 
 There is no specific format, all .js files will be loaded
 
-[https://hastebin.com/egapivejez.js](Nametags example)
+[Nametags example](https://hastebin.com/egapivejez.js)
 
 # Patcher
 Tool for injecting Sploit into Krunker clients
