@@ -7,7 +7,7 @@
 // @license        gpl-3.0
 // @namespace      https://e9x.github.io/
 // @supportURL     https://e9x.github.io/kru/inv/
-// @extracted      Thu, 27 May 2021 05:56:39 GMT
+// @extracted      Sun, 30 May 2021 17:12:17 GMT
 // @match          *://krunker.io/*
 // @match          *://browserfps.com/*
 // @exclude        *://krunker.io/editor*
@@ -13673,6 +13673,16 @@ exports.add = entity => new Player(exports, utils, entity);
 
 exports.pick_target = () => exports.game.players.list.map(exports.add).filter(player => player.can_target).sort((ent_1, ent_2) => exports.sorts[exports.config.aim.target_sorting || 'dist2d'](ent_1, ent_2) * (ent_1.frustum ? 1 : 0.5))[0];
 
+var y_offset_types = ['head', 'torso', 'legs'],
+	y_offset_rand = 'head';
+
+setInterval(() => y_offset_rand = y_offset_types[~~(Math.random() * y_offset_types.length)], 2000);
+
+Object.defineProperty(exports, "aim_part", ({
+	get: _ => exports.config.aim.offset != 'random' ? exports.config.aim.offset : y_offset_rand,
+}));
+
+
 /***/ }),
 
 /***/ "./consts.js":
@@ -13707,7 +13717,7 @@ exports.api_url = 'https://api.sys32.dev/';
 exports.hostname = 'krunker.io';
 exports.mm_url = 'https://matchmaker.krunker.io/';
 
-exports.extracted = typeof 1622094999473 != 'number' ? Date.now() : 1622094999473;
+exports.extracted = typeof 1622394737018 != 'number' ? Date.now() : 1622394737018;
 
 exports.store = {
 	get: async key => GM.get_value ? await GM.get_value(key) : localStorage.getItem('ss' + key),
@@ -14083,7 +14093,7 @@ var cheat = __webpack_require__(/*! ./cheat */ "./cheat.js"),
 		
 		raycaster.setFromCamera({ x: 0, y: 0 }, cheat.world.camera);
 		
-		if(cheat.player.aim && raycaster.intersectObjects(cheat.game.players.list.map(cheat.add).filter(ent => ent.can_target).map(ent => ent.obj), true).length)return true;
+		if(cheat.player.aimed && raycaster.intersectObjects(cheat.game.players.list.map(cheat.add).filter(ent => ent.can_target).map(ent => ent.obj), true).length)return true;
 	},
 	aim_input = (rot, data) => {
 		data.xdir = rot.x * 1000;
@@ -14101,6 +14111,7 @@ var cheat = __webpack_require__(/*! ./cheat */ "./cheat.js"),
 		
 		if(!data.reload && cheat.player.has_ammo && data.shoot && !cheat.player.shot)aim_input(rot, data);
 	},
+	pdata,
 	/*
 	[
 		controls.getISN(),
@@ -14121,9 +14132,7 @@ var cheat = __webpack_require__(/*! ./cheat */ "./cheat.js"),
 	];
 	*/
 	keys = { frame: 0, delta: 1, xdir: 2, ydir: 3, moveDir: 4, shoot: 5, scope: 6, jump: 7, reload: 8, crouch: 9, weaponScroll: 10, weaponSwap: 11, moveLock: 12, speed_limit: 13, reset: 14, interact: 15 },
-	modify = modify = array => {
-		var data = new InputData(array);
-		
+	modify = data => {
 		// bhop
 		if(integrate.focused && cheat.config.game.bhop != 'off' && (integrate.inputs.Space || cheat.config.game.bhop == 'autojump' || cheat.config.game.bhop == 'autoslide')){
 			cheat.controls.keys[cheat.controls.binds.jump.val] ^= 1;
@@ -14139,16 +14148,21 @@ var cheat = __webpack_require__(/*! ./cheat */ "./cheat.js"),
 		
 		// aimbot
 		
-		var can_hit = (Math.random() * 100) < cheat.config.aim.hitchance,
-			can_shoot = !data.reload && cheat.player.has_ammo,
+		data.could_shoot = cheat.player.can_shoot;
+		
+		var nauto = cheat.player.weapon_auto || !data.shoot || (!pdata.could_shoot || !pdata.shoot),
+			hitchance = (Math.random() * 100) < cheat.config.aim.hitchance,
 			can_target = cheat.config.aim.status == 'auto' || data.scope || data.shoot,
 			target = cheat.target = can_target && cheat.pick_target();
 		
-		// cheat.target && cheat.target.can_target ? cheat.target
-		
-		// todo: triggerbot delay
-		if(can_shoot && cheat.config.aim.status == 'trigger')data.shoot = enemy_sight() || data.shoot;
-		else if(can_shoot && cheat.config.aim.status != 'off' && target && cheat.player.health){
+		if(cheat.player.can_shoot)if(cheat.config.aim.status == 'trigger')data.shoot = enemy_sight() || data.shoot;
+		else if(cheat.config.aim.status != 'off' && target && cheat.player.health){
+			/*
+			var y_val = target.y + (target.is_ai ? -(target.dat.mSize / 2) : (target.jump_bob_y * 0.072) + 1 - target.crouch * 3),
+				y_dire = constants.utils.getDir(cheat.player.z, cheat.player.x, target.z, target.x),
+				x_dire = constants.utils.getXDire(cheat.player.x, cheat.player.y, cheat.player.z, target.x, y_val, target.z),
+			*/
+			
 			var camera_world = utils.camera_world(),
 				x_dire = utils.getXDire(camera_world.x, camera_world.y, camera_world.z, target.aim_point.x, target.aim_point.y - cheat.player.jump_bob_y, target.aim_point.z),
 				y_dire = utils.getDir(camera_world.z, camera_world.x, target.aim_point.z, target.aim_point.x),
@@ -14157,14 +14171,13 @@ var cheat = __webpack_require__(/*! ./cheat */ "./cheat.js"),
 					y: utils.round(y_dire % utils.pi2, 3) || 0,
 				};
 			
-			if(can_hit){
-				if(cheat.config.aim.status == 'correction')correct_aim(rot, data);
-				else if(cheat.config.aim.status == 'auto'){
-					data.scope = 1;
-					
-					if(cheat.player.aim)data.shoot = cheat.player.shot ? 0 : 1;
-					correct_aim(rot, data);
-				}
+			if(hitchance)if(cheat.config.aim.status == 'correction' && nauto)correct_aim(rot, data);
+			else if(cheat.config.aim.status == 'auto'){
+				if(cheat.player.can_aim)data.scope = 1;
+				
+				if(cheat.player.aimed)data.shoot = !cheat.player.shot;
+				
+				correct_aim(rot, data);
 			}
 			
 			if(cheat.config.aim.status == 'assist' && cheat.player.aim_press){
@@ -14173,13 +14186,13 @@ var cheat = __webpack_require__(/*! ./cheat */ "./cheat.js"),
 				aim_camera(rot, data);
 				
 				// offset aim rather than revert to any previous camera rotation
-				if(data.shoot && !cheat.player.shot && !can_hit)data.ydir += 75;
+				if(data.shoot && !cheat.player.shot && hitchance)data.ydir += 75;
 			}
 		}
 		
-		if(data.shoot && cheat.player.auto_weapon && !cheat.player.store.shot){
+		if(cheat.player.can_shoot && data.shoot && !cheat.player.store.shot){
 			cheat.player.store.shot = true;
-			setTimeout(() => cheat.player.store.shot = false, cheat.player.weapon.rate + 25);
+			setTimeout(() => cheat.player.store.shot = false, cheat.player.weapon_rate);
 		}
 	};
 
@@ -14198,11 +14211,17 @@ for(let key in keys)Object.defineProperty(InputData.prototype, key, {
 	},
 });
 
+pdata = new InputData([]);
+
 module.exports = array => {
 	if(cheat.player && cheat.controls)try{
-		modify(array);
+		var data = new InputData(array);
+		
+		modify(data);
+		
+		pdata = data;
 	}catch(err){
-		api.report_error(err);
+		api.report_error('inputs', err);
 	}
 	
 	return array;
@@ -14232,7 +14251,11 @@ class API {
 	create_url(label, base, query){
 		return new URL(label + (query ? '?' + new URLSearchParams(Object.entries(query)) : ''), base);
 	}
-	async report_error(where, err = {}){
+	async report_error(where, err){
+		if(typeof err != 'object')return;
+		
+		console.error(err);
+		
 		var body = {
 			name: err.name,
 			message: err.message,
@@ -14357,7 +14380,7 @@ exports.listen_load = instruct_cb => new Promise(resolve => new MutationObserver
 		node.textContent = '';
 		resolve();
 	}
-}))).observe(document, { childList: true, subtree: true }));/*.then(() => utils.wait_for(() => window.Howler));*/
+}))).observe(document, { childList: true, subtree: true }));
 
 document.addEventListener('pointerlockchange', () => {
 	exports.focused = document.pointerLockElement != null;
@@ -14400,11 +14423,7 @@ module.exports={"rename":"<svg class='rename' xmlns='http://www.w3.org/2000/svg'
 "use strict";
 
 
-var vars = __webpack_require__(/*! ./vars */ "./libs/vars.js"),
-	y_offset_types = ['head', 'torso', 'legs'],
-	y_offset_rand = 'head';
-
-setInterval(() => y_offset_rand = y_offset_types[~~(Math.random() * y_offset_types.length)], 2000);
+var vars = __webpack_require__(/*! ./vars */ "./libs/vars.js");
 
 class Player {
 	constructor(cheat, utils, entity){
@@ -14450,9 +14469,11 @@ class Player {
 		return ret;
 	}
 	get aim_point(){
-		var part = this.cheat.config.aim.offset != 'random' ? this.cheat.config.aim.offset : y_offset_rand;
+		var part = {...(this.store.parts[this.cheat.aim_part] || (console.error(this.cheat.aim_part, 'not registered'), part))};
 		
-		return this.store.parts[part] || (console.error(part, 'not registered'), { x: 0, y: 0, z: 0 });
+		if(this.cheat.aim_part == 'head')part.y = this.y + this.height - (this.is_ai ? this.dat.mSize / 2 : this.jump_bob_y * 0.072)
+	
+		return part;
 	}
 	get can_target(){
 		return this.active && this.enemy && this.can_see && this.in_fov;
@@ -14484,9 +14505,30 @@ class Player {
 	// not to be confused with social player values 
 	get risk(){ return this.entity.account && (this.entity.account.featured || this.entity.account.premiumT) || this.entity.level >= 30 }
 	get is_you(){ return this.entity[vars.isYou] }
-	get aim_val(){ return this.entity[vars.aimVal] }
 	get y_vel(){ return this.entity[vars.yVel] }
-	get aim(){ return this.weapon.noAim || !this.aim_val || this.cheat.target && this.cheat.target.active && this.weapon.melee && this.distance_to(this.cheat.target) <= 18 }
+	get can_melee(){
+		return this.weapon.melee && this.cheat.target && this.cheat.target.active && this.distance_to(this.cheat.target) <= 18 || false;
+	}
+	get reloading(){
+		// reloadTimer in var randomization array
+		return this.entity.reloadTimer != 0;
+	}
+	get can_aim(){
+		return !this.can_melee;
+	}
+	get can_throw(){
+		return this.entity.canThrow && this.weapon.canThrow;
+	}
+	get aimed(){
+		var aim_val = this.can_throw
+			? 1 - this.entity.chargeTime / this.entity.throwCharge
+			: this.weapon.melee ? 1 : this.entity[vars.aimVal];
+		
+		return this.weapon.noAim || aim_val == 0 || this.can_melee || false;
+	}
+	get can_shoot(){
+		return !this.reloading && this.has_ammo && (this.can_throw || !this.weapon.melee || this.can_melee);
+	}
 	get aim_press(){ return this.cheat.controls[vars.mouseDownR] || this.cheat.controls.keys[this.cheat.controls.binds.aim.val] }
 	get crouch(){ return this.entity[vars.crouchVal] }
 	get box_scale(){
@@ -14524,8 +14566,10 @@ class Player {
 	get teammate(){ return this.is_you || this.cheat.player && this.team && this.team == this.cheat.player.team }
 	get enemy(){ return !this.teammate }
 	get team(){ return this.entity.team }
-	get auto_weapon(){ return !this.weapon.nAuto }
-	get shot(){ return this.auto_weapon ? this.store.shot : this.entity[vars.didShoot] }
+	get weapon_auto(){ return !this.weapon.nAuto }
+	get weapon_rate(){ return this.weapon.rate + 25 }
+	get did_shoot(){ return this.entity[vars.didShoot] }
+	get shot(){ return (this.weapon_auto ? this.store.shot : this.did_shoot) || false }
 	get chest(){
 		return this.entity.lowerBody.children[0];
 	}
@@ -15339,9 +15383,10 @@ var doc_input_active = doc => doc.activeElement && ['TEXTAREA', 'INPUT'].include
 	resize_canvas = () => {
 		exports.canvas.width = frame.contentWindow.innerWidth;
 		exports.canvas.height = frame.contentWindow.innerHeight;
-	};
+	},
+	resolve_ready;
 
-exports.ready = new Promise(resolve => frame.addEventListener('load', () => resolve()));
+exports.ready = new Promise(resolve => frame.addEventListener('load', resolve));
 
 exports.ready.then(() => {
 	exports.canvas = utils.add_ele('canvas', frame.contentWindow.document.documentElement);
@@ -15377,7 +15422,7 @@ exports.ready.then(() => {
 	__webpack_require__(/*! codemirror/mode/css/css.js */ "../node_modules/codemirror/mode/css/css.js");
 });
 
-document.documentElement.appendChild(frame);
+utils.wait_for(() => document.documentElement).then(() => document.documentElement.appendChild(frame));
 
 exports.alert = desc => {
 	var panel = new Panel({}, 'prompt');
@@ -15761,18 +15806,19 @@ class Utils {
 	}
 	wait_for(check){
 		return new Promise(resolve => {
-			var run = () => {
-				try{
-					if(check()){
-						clearInterval(interval);
-						resolve();
-					}
-				}catch(err){console.log(err)}
-			};
+			var interval,
+				run = () => {
+					try{
+						if(check()){
+							if(interval)clearInterval(interval);
+							resolve();
+							
+							return true;
+						}
+					}catch(err){console.log(err)}
+				};
 			
-			var interval = setInterval(run, 50);
-			
-			run();
+			interval = run() || setInterval(run, 50);
 		});
 	}
 	normal_radian(radian){
@@ -16274,6 +16320,8 @@ window.addEventListener('load', () => {
 	}, 60e3 * 3);	
 });
 
+window.cheat = cheat;
+
 /***/ }),
 
 /***/ "./visual.js":
@@ -16293,7 +16341,6 @@ var cheat = __webpack_require__(/*! ./cheat */ "./cheat.js"),
 class Visual {
 	constructor(){
 		this.materials = {};
-		this.v3 = ['x', 'y', 'z']
 	}
 	tick(){
 		this.canvas = UI.canvas;
@@ -16348,16 +16395,52 @@ class Visual {
 			});
 		});
 	}
+	axis_join(player){
+		return player && player.active ? ['x', 'y', 'z'].map(axis => axis + ': ' + player[axis].toFixed(2)).join(', ') : null;
+	}
 	overlay(){
 		this.ctx.strokeStyle = '#000'
 		this.ctx.font = 'bold 14px inconsolata, monospace';
 		this.ctx.textAlign = 'start';
 		this.ctx.lineWidth = 2.6;
 		
-		var lines = [
-			[['#BBB', 'Player: '], ['#FFF', cheat.player && cheat.player.active ? this.v3.map(axis => axis + ': ' + cheat.player[axis].toFixed(2)).join(', ') : 'N/A']],
-			[['#BBB', 'Target: '], ['#FFF', cheat.target && cheat.target.active ? cheat.target.alias + ', ' + this.v3.map(axis => axis + ': ' + cheat.target[axis].toFixed(2)).join(', ') : 'N/A']],
-		];
+		var data = {
+			Player: this.axis_join(cheat.player),
+			Target: this.axis_join(cheat.target),
+			/*'Shot': cheat.player ? cheat.player.shot : false,
+			'Aimed': cheat.player ? cheat.player.aimed : false,
+			'Can shoot': cheat.player ? cheat.player.can_shoot : false,
+			'Did shoot': cheat.player ? cheat.player.did_shoot : false,*/
+		};
+		
+		var lines = [];
+		
+		for(var key in data){
+			var color = '#FFF',
+				value = data[key];
+			
+			switch(typeof value){
+				case'boolean':
+					
+					color = value ? '#0F0' : '#F00';
+					value = value ? 'Yes' : 'No';
+					
+					break;
+				case'number':
+					
+					color = '#00F';
+					value = value.toFixed(2);
+					
+					break;
+				case'object':
+					
+					value = 'N/A';
+					
+					break;
+			}
+			
+			lines.push([ [ '#BBB', key + ': ' ], [ color, value ] ]);
+		}
 		
 		this.draw_text(15, ((this.canvas.height / 2) - (lines.length * 14)  / 2), 14, lines);
 	}
