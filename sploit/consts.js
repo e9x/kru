@@ -4,7 +4,6 @@ var GM = {
 		get_value: typeof GM_getValue == 'function' && GM_getValue,
 		set_value: typeof GM_setValue == 'function' && GM_setValue,
 		request: typeof GM_xmlhttpRequest == 'function' && GM_xmlhttpRequest,
-		client_fetch: typeof GM_client_fetch == 'function' && GM_client_fetch,
 		fetch: window.fetch.bind(window),
 	},
 	API = require('./libs/api'),
@@ -17,7 +16,7 @@ exports.script = 'https://raw.githubusercontent.com/e9x/kru/master/sploit.user.j
 exports.github = 'https://github.com/e9x/kru';
 exports.discord = 'https://e9x.github.io/kru/invite';
 
-exports.krunker = (utils.is_host('krunker.io', location) || utils.is_host('browserfps.com', location)) && location.pathname == '/';
+exports.krunker = utils.is_host(location, 'krunker.io', 'browserfps.com') && location.pathname == '/';
 
 exports.api_url = 'https://api.sys32.dev/';
 exports.hostname = 'krunker.io';

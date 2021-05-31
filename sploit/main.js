@@ -39,7 +39,7 @@ var Utils = require('./libs/utils'),
 		try{
 			visual.tick();
 			
-			visual.crosshair();
+			// visual.crosshair();
 			
 			if(cheat.config.game.overlay)visual.overlay();
 			

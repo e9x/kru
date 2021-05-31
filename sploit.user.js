@@ -7,7 +7,7 @@
 // @license        gpl-3.0
 // @namespace      https://e9x.github.io/
 // @supportURL     https://e9x.github.io/kru/inv/
-// @extracted      Sun, 30 May 2021 17:12:17 GMT
+// @extracted      Mon, 31 May 2021 00:01:50 GMT
 // @match          *://krunker.io/*
 // @match          *://browserfps.com/*
 // @exclude        *://krunker.io/editor*
@@ -13669,7 +13669,7 @@ exports.sorts = {
 	},
 };
 
-exports.add = entity => new Player(exports, utils, entity);
+exports.add = entity => entity[exports.hooked] || (entity[exports.hooked] = new Player(exports, utils, entity));
 
 exports.pick_target = () => exports.game.players.list.map(exports.add).filter(player => player.can_target).sort((ent_1, ent_2) => exports.sorts[exports.config.aim.target_sorting || 'dist2d'](ent_1, ent_2) * (ent_1.frustum ? 1 : 0.5))[0];
 
@@ -13681,7 +13681,6 @@ setInterval(() => y_offset_rand = y_offset_types[~~(Math.random() * y_offset_typ
 Object.defineProperty(exports, "aim_part", ({
 	get: _ => exports.config.aim.offset != 'random' ? exports.config.aim.offset : y_offset_rand,
 }));
-
 
 /***/ }),
 
@@ -13698,7 +13697,6 @@ var GM = {
 		get_value: typeof GM_getValue == 'function' && GM_getValue,
 		set_value: typeof GM_setValue == 'function' && GM_setValue,
 		request: typeof GM_xmlhttpRequest == 'function' && GM_xmlhttpRequest,
-		client_fetch: typeof GM_client_fetch == 'function' && GM_client_fetch,
 		fetch: window.fetch.bind(window),
 	},
 	API = __webpack_require__(/*! ./libs/api */ "./libs/api.js"),
@@ -13711,13 +13709,13 @@ exports.script = 'https://raw.githubusercontent.com/e9x/kru/master/sploit.user.j
 exports.github = 'https://github.com/e9x/kru';
 exports.discord = 'https://e9x.github.io/kru/invite';
 
-exports.krunker = (utils.is_host('krunker.io', location) || utils.is_host('browserfps.com', location)) && location.pathname == '/';
+exports.krunker = utils.is_host(location, 'krunker.io', 'browserfps.com') && location.pathname == '/';
 
 exports.api_url = 'https://api.sys32.dev/';
 exports.hostname = 'krunker.io';
 exports.mm_url = 'https://matchmaker.krunker.io/';
 
-exports.extracted = typeof 1622394737018 != 'number' ? Date.now() : 1622394737018;
+exports.extracted = typeof 1622419310737 != 'number' ? Date.now() : 1622419310737;
 
 exports.store = {
 	get: async key => GM.get_value ? await GM.get_value(key) : localStorage.getItem('ss' + key),
@@ -14034,7 +14032,7 @@ exports.ui = cheat => ({
 		value: [{
 			name: 'GitHub',
 			type: 'function',
-			value: () => window.open(constants.github),
+			value: () => window.open(constants.github, '_blank'),
 		},{
 			name: 'Reset Settings',
 			type: 'function',
@@ -14053,7 +14051,7 @@ exports.ui = cheat => ({
 	},{
 		name: 'Discord',
 		type: 'function',
-		value: () => window.open(constants.discord),
+		value: () => window.open(constants.discord, '_blank'),
 	}],
 });
 
@@ -14072,8 +14070,78 @@ var cheat = __webpack_require__(/*! ./cheat */ "./cheat.js"),
 	integrate = __webpack_require__(/*! ./libs/integrate */ "./libs/integrate.js"),
 	Player = __webpack_require__(/*! ./libs/player */ "./libs/player.js"),
 	{ api, utils } = __webpack_require__(/*! ./consts */ "./consts.js"),
-	smooth = target	=> {
-		var aj = 17,
+	pdata = {};
+
+class InputData {
+	constructor(array){
+		this.array = array;
+	}
+};
+
+for(let prop in vars.keys){
+	let key = vars.keys[prop];
+	
+	Object.defineProperty(InputData.prototype, prop, {
+		get(){
+			return this.array[key];
+		},
+		set(value){
+			return this.array[key] = typeof value == 'boolean' ? +value : value;
+		},
+	});
+}
+
+class Input {
+	push(array){
+		if(cheat.player && cheat.controls)try{
+			var data = new InputData(array);
+			
+			this.modify(data);
+			
+			pdata = data;
+		}catch(err){
+			api.report_error('input', err);
+		}
+		
+		return array;
+	}
+	aim_input(rot, data){
+		data.xdir = rot.x * 1000;
+		data.ydir = rot.y * 1000;
+	}
+	aim_camera(rot, data){
+		// updating camera will make a difference next tick, update current tick with aim_input
+		cheat.controls[vars.pchObjc].rotation.x = rot.x;
+		cheat.controls.object.rotation.y = rot.y;
+		
+		this.aim_input(rot, data);
+	}
+	correct_aim(rot, data){
+		if(data.shoot)data.shoot = !cheat.player.shot;
+		
+		if(!data.reload && cheat.player.has_ammo && data.shoot && !cheat.player.shot)this.aim_input(rot, data);
+	}
+	enemy_sight(){
+		if(cheat.player.shot)return;
+		
+		var raycaster = new cheat.three.Raycaster();
+		
+		raycaster.setFromCamera({ x: 0, y: 0 }, cheat.world.camera);
+		
+		if(cheat.player.aimed && raycaster.intersectObjects(cheat.game.players.list.map(cheat.add).filter(ent => ent.can_target).map(ent => ent.obj), true).length)return true;
+	}
+	calc_rot(target){
+		var camera_world = utils.camera_world(),
+			x_dire = utils.getXDire(camera_world.x, camera_world.y, camera_world.z, target.aim_point.x, target.aim_point.y - cheat.player.jump_bob_y, target.aim_point.z),
+			y_dire = utils.getDir(camera_world.z, camera_world.x, target.aim_point.z, target.aim_point.x);
+		
+		return {
+			x: utils.round(Math.max(-utils.halfpi, Math.min(utils.halfpi, x_dire - (cheat.player.entity.landBobY * 0.1) - cheat.player.recoil_y * 0.27)) % utils.pi2, 3) || 0,
+			y: utils.round(y_dire % utils.pi2, 3) || 0,
+		};
+	}
+	smooth(target){
+		var mov = 17,
 			// default 0.0022
 			div = 10000,
 			turn = (50 - cheat.config.aim.smooth) / div,
@@ -14082,57 +14150,11 @@ var cheat = __webpack_require__(/*! ./cheat */ "./cheat.js"),
 			y_ang = utils.getAngleDst(cheat.controls.object.rotation.y, target.yD);
 		
 		return {
-			y: cheat.controls.object.rotation.y + y_ang * aj * turn,
-			x: cheat.controls[vars.pchObjc].rotation.x + x_ang * aj * turn,
+			y: cheat.controls.object.rotation.y + y_ang * mov * turn,
+			x: cheat.controls[vars.pchObjc].rotation.x + x_ang * mov * turn,
 		};
-	},
-	enemy_sight = () => {
-		if(cheat.player.shot)return;
-		
-		var raycaster = new cheat.three.Raycaster();
-		
-		raycaster.setFromCamera({ x: 0, y: 0 }, cheat.world.camera);
-		
-		if(cheat.player.aimed && raycaster.intersectObjects(cheat.game.players.list.map(cheat.add).filter(ent => ent.can_target).map(ent => ent.obj), true).length)return true;
-	},
-	aim_input = (rot, data) => {
-		data.xdir = rot.x * 1000;
-		data.ydir = rot.y * 1000;
-	},
-	aim_camera = (rot, data) => {
-		// updating camera will make a difference next tick, update current tick with aim_input
-		cheat.controls[vars.pchObjc].rotation.x = rot.x;
-		cheat.controls.object.rotation.y = rot.y;
-		
-		aim_input(rot, data);
-	},
-	correct_aim = (rot, data) => {
-		if(data.shoot)data.shoot = !cheat.player.shot;
-		
-		if(!data.reload && cheat.player.has_ammo && data.shoot && !cheat.player.shot)aim_input(rot, data);
-	},
-	pdata,
-	/*
-	[
-		controls.getISN(),
-		Math.round(delta * game.config.deltaMlt),
-		Math.round(1000 * controls.yDr.round(3)),
-		Math.round(1000 * xDr.round(3)),
-		game.moveLock ? -1 : config.movDirs.indexOf(controls.moveDir),
-		controls.mouseDownL || controls.keys[controls.binds.shoot.val] ? 1 : 0,
-		controls.mouseDownR || controls.keys[controls.binds.aim.val] ? 1 : 0,
-		!Q.moveLock && controls.keys[controls.binds.jump.val] ? 1 : 0,
-		controls.keys[controls.binds.reload.val] ? 1 : 0,
-		controls.keys[controls.binds.crouch.val] ? 1 : 0,
-		controls.scrollToSwap ? controls.scrollDelta * ue.tmp.scrollDir : 0,
-		controls.wSwap,
-		1 - controls.speedLmt.round(1),
-		controls.keys[controls.binds.reset.val] ? 1 : 0,
-		controls.keys[controls.binds.interact.val] ? 1 : 0
-	];
-	*/
-	keys = { frame: 0, delta: 1, xdir: 2, ydir: 3, moveDir: 4, shoot: 5, scope: 6, jump: 7, reload: 8, crouch: 9, weaponScroll: 10, weaponSwap: 11, moveLock: 12, speed_limit: 13, reset: 14, interact: 15 },
-	modify = data => {
+	}
+	modify(data){
 		// bhop
 		if(integrate.focused && cheat.config.game.bhop != 'off' && (integrate.inputs.Space || cheat.config.game.bhop == 'autojump' || cheat.config.game.bhop == 'autoslide')){
 			cheat.controls.keys[cheat.controls.binds.jump.val] ^= 1;
@@ -14146,86 +14168,45 @@ var cheat = __webpack_require__(/*! ./cheat */ "./cheat.js"),
 		
 		// TODO: target once on aim
 		
-		// aimbot
-		
 		data.could_shoot = cheat.player.can_shoot;
 		
 		var nauto = cheat.player.weapon_auto || !data.shoot || (!pdata.could_shoot || !pdata.shoot),
 			hitchance = (Math.random() * 100) < cheat.config.aim.hitchance,
-			can_target = cheat.config.aim.status == 'auto' || data.scope || data.shoot,
-			target = cheat.target = can_target && cheat.pick_target();
+			can_target = cheat.config.aim.status == 'auto' || data.scope || data.shoot;
 		
-		if(cheat.player.can_shoot)if(cheat.config.aim.status == 'trigger')data.shoot = enemy_sight() || data.shoot;
-		else if(cheat.config.aim.status != 'off' && target && cheat.player.health){
-			/*
-			var y_val = target.y + (target.is_ai ? -(target.dat.mSize / 2) : (target.jump_bob_y * 0.072) + 1 - target.crouch * 3),
-				y_dire = constants.utils.getDir(cheat.player.z, cheat.player.x, target.z, target.x),
-				x_dire = constants.utils.getXDire(cheat.player.x, cheat.player.y, cheat.player.z, target.x, y_val, target.z),
-			*/
+		if(can_target)cheat.target = cheat.pick_target();
+		
+		if(cheat.player.can_shoot)if(cheat.config.aim.status == 'trigger')data.shoot = this.enemy_sight() || data.shoot;
+		else if(cheat.config.aim.status != 'off' && cheat.target && cheat.player.health){
+			var rot = this.calc_rot(cheat.target);
 			
-			var camera_world = utils.camera_world(),
-				x_dire = utils.getXDire(camera_world.x, camera_world.y, camera_world.z, target.aim_point.x, target.aim_point.y - cheat.player.jump_bob_y, target.aim_point.z),
-				y_dire = utils.getDir(camera_world.z, camera_world.x, target.aim_point.z, target.aim_point.x),
-				rot = {
-					x: utils.round(Math.max(-utils.halfpi, Math.min(utils.halfpi, x_dire - (cheat.player.entity.landBobY * 0.1) - cheat.player.recoil_y * 0.27)) % utils.pi2, 3) || 0,
-					y: utils.round(y_dire % utils.pi2, 3) || 0,
-				};
-			
-			if(hitchance)if(cheat.config.aim.status == 'correction' && nauto)correct_aim(rot, data);
+			if(hitchance)if(cheat.config.aim.status == 'correction' && nauto)this.correct_aim(rot, data);
 			else if(cheat.config.aim.status == 'auto'){
 				if(cheat.player.can_aim)data.scope = 1;
 				
 				if(cheat.player.aimed)data.shoot = !cheat.player.shot;
 				
-				correct_aim(rot, data);
+				this.correct_aim(rot, data);
 			}
 			
 			if(cheat.config.aim.status == 'assist' && cheat.player.aim_press){
-				if(cheat.config.aim.smooth)rot = smooth({ xD: rot.x, yD: rot.y });
+				if(cheat.config.aim.smooth)rot = this.smooth({ xD: rot.x, yD: rot.y });
 				
-				aim_camera(rot, data);
+				this.aim_camera(rot, data);
 				
 				// offset aim rather than revert to any previous camera rotation
-				if(data.shoot && !cheat.player.shot && hitchance)data.ydir += 75;
+				// if(data.shoot && !cheat.player.shot && hitchance)data.ydir += 75;
 			}
 		}
 		
-		if(cheat.player.can_shoot && data.shoot && !cheat.player.store.shot){
-			cheat.player.store.shot = true;
-			setTimeout(() => cheat.player.store.shot = false, cheat.player.weapon_rate);
+		if(cheat.player.can_shoot && data.shoot && !cheat.player.auto_shot){
+			cheat.player.auto_shot = true;
+			setTimeout(() => cheat.player.auto_shot = false, cheat.player.weapon_rate);
 		}
-	};
-
-class InputData {
-	constructor(array){
-		this.array = array;
 	}
-}
-
-for(let key in keys)Object.defineProperty(InputData.prototype, key, {
-	get(){
-		return this.array[keys[key]];
-	},
-	set(value){
-		return this.array[keys[key]] = typeof value == 'boolean' ? +value : value;
-	},
-});
-
-pdata = new InputData([]);
-
-module.exports = array => {
-	if(cheat.player && cheat.controls)try{
-		var data = new InputData(array);
-		
-		modify(data);
-		
-		pdata = data;
-	}catch(err){
-		api.report_error('inputs', err);
-	}
-	
-	return array;
 };
+
+module.exports = Input;
 
 /***/ }),
 
@@ -14254,8 +14235,6 @@ class API {
 	async report_error(where, err){
 		if(typeof err != 'object')return;
 		
-		console.error(err);
-		
 		var body = {
 			name: err.name,
 			message: err.message,
@@ -14264,6 +14243,8 @@ class API {
 		};
 		
 		if(this.similar_stacks.includes(err.stack))return;
+		
+		console.error('Where:', where, '\nUncaught', err);
 		
 		this.similar_stacks.push(err.stack);
 		
@@ -14434,19 +14415,11 @@ class Player {
 	distance_to(point){
 		return Math.hypot(this.x - point.x, this.y - point.y, this.z - point.z)
 	}
-	get x(){ return this.entity.x || 0 }
-	get y(){ return this.entity.y || 0 }
-	get z(){ return this.entity.z || 0 }
-	get parts(){ return this.store.parts }
-	// cached cpu-heavy data such as world_pos or can_see
-	get store(){ return this.entity[Player.store] || (this.entity[Player.store] = {}) }
-	get can_see(){ return this.store.can_see }
-	get rect(){ return this.store.rect }
 	scale_rect(sx, sy){
 		var out = {},
 			horiz = [ 'y', 'height', 'top', 'bottom' ];
 		
-		for(var key in this.store.rect)out[key] = this.store.rect[key] / (horiz.includes(key) ? sy : sx);
+		for(var key in this.rect)out[key] = this.rect[key] / (horiz.includes(key) ? sy : sx);
 		
 		return out;
 	}
@@ -14468,15 +14441,8 @@ class Player {
 		
 		return ret;
 	}
-	get aim_point(){
-		var part = {...(this.store.parts[this.cheat.aim_part] || (console.error(this.cheat.aim_part, 'not registered'), part))};
-		
-		if(this.cheat.aim_part == 'head')part.y = this.y + this.height - (this.is_ai ? this.dat.mSize / 2 : this.jump_bob_y * 0.072)
-	
-		return part;
-	}
 	get can_target(){
-		return this.active && this.enemy && this.can_see && this.in_fov;
+		return this.active && this.can_see && this.enemy && this.in_fov;
 	}
 	get frustum(){
 		return this.active ? this.utils.contains_point(this) : false;
@@ -14496,6 +14462,9 @@ class Player {
 		
 		return '#' + hex.map(part_str).join('');
 	}
+	get x(){ return this.entity.x || 0 }
+	get y(){ return this.entity.y || 0 }
+	get z(){ return this.entity.z || 0 }
 	get ping(){ return this.entity.ping }
 	get jump_bob_y(){ return this.entity.jumpBobY }
 	get clan(){ return this.entity.clan }
@@ -14506,6 +14475,9 @@ class Player {
 	get risk(){ return this.entity.account && (this.entity.account.featured || this.entity.account.premiumT) || this.entity.level >= 30 }
 	get is_you(){ return this.entity[vars.isYou] }
 	get y_vel(){ return this.entity[vars.yVel] }
+	get target(){
+		return cheat.target && this.entity == cheat.target.entity;
+	}
 	get can_melee(){
 		return this.weapon.melee && this.cheat.target && this.cheat.target.active && this.distance_to(this.cheat.target) <= 18 || false;
 	}
@@ -14533,14 +14505,14 @@ class Player {
 	get crouch(){ return this.entity[vars.crouchVal] }
 	get box_scale(){
 		var view = this.utils.camera_world(),	
-			center = this.store.box.getCenter(),
+			center = this.box.getCenter(),
 			a = side => Math.min(1, (this.rect[side] / this.utils.canvas[side]) * 10);
 		
 		return [ a('width'), a('height') ];
 	}
 	get dist_scale(){
 		var view = this.utils.camera_world(),	
-			center = this.store.box.getCenter(),
+			center = this.box.getCenter(),
 			scale = Math.max(0.65, 1 - this.utils.getD3D(view.x, view.y, view.z, this.x, this.y, this.z) / 600);
 		
 		return [ scale, scale ];
@@ -14551,7 +14523,6 @@ class Player {
 	test_vec(vector, match){
 		return match.every((value, index) => vector[['x', 'y', 'z'][index]] == value);
 	}
-	get world_pos(){ return this.store.world_pos }
 	get obj(){ return this.is_ai ? target.enity.dat : this.entity[vars.objInstances] }
 	get recoil_y(){ return this.entity[vars.recoilAnimY] }
 	get has_ammo(){ return this.ammo || this.ammo == this.max_ammo }
@@ -14569,7 +14540,7 @@ class Player {
 	get weapon_auto(){ return !this.weapon.nAuto }
 	get weapon_rate(){ return this.weapon.rate + 25 }
 	get did_shoot(){ return this.entity[vars.didShoot] }
-	get shot(){ return (this.weapon_auto ? this.store.shot : this.did_shoot) || false }
+	get shot(){ return (this.weapon_auto ? this.auto_shot : this.did_shoot) || false }
 	get chest(){
 		return this.entity.lowerBody.children[0];
 	}
@@ -14578,7 +14549,7 @@ class Player {
 		return this.chest;
 	}
 	tick(){
-		var box = this.store.box = new this.utils.three.Box3();
+		var box = this.box = new this.utils.three.Box3();
 		
 		box.expandByObject(this.chest);
 		
@@ -14625,7 +14596,7 @@ class Player {
 			else if(td.y > bounds.max.y)bounds.max.y = td.y;
 		}
 		
-		this.store.rect = {
+		this.rect = {
 			x: bounds.center.x,
 			y: bounds.center.y,
 			left: bounds.min.x,
@@ -14636,7 +14607,7 @@ class Player {
 			height: bounds.max.y - bounds.min.y,
 		};
 		
-		this.store.parts = {};
+		this.parts = {};
 		
 		var head_size = 1.5,
 			chest_box = new this.utils.three.Box3().setFromObject(this.chest),
@@ -14657,7 +14628,7 @@ class Player {
 			};
 		
 		// parts centered
-		this.store.parts.torso = translate(this.chest, {
+		this.parts.torso = translate(this.chest, {
 			x: chest_pos.x,
 			y: chest_pos.y,
 			z: chest_pos.z,
@@ -14666,18 +14637,18 @@ class Player {
 			y: -head_size / 2,
 		});
 		
-		this.store.parts.head = translate(this.chest, {
+		this.parts.head = translate(this.chest, {
 			x: chest_pos.x,
 			y: chest_pos.y,
 			z: chest_pos.z,
 		}, {
-			y: this.store.parts.torso.height / 2,
+			y: this.parts.torso.height / 2,
 		});
 		
 		var leg_pos = this.leg[vars.getWorldPosition](),
 			leg_scale = this.leg.getWorldScale();
 		
-		this.store.parts.legs = translate(this.leg, {
+		this.parts.legs = translate(this.leg, {
 			x: leg_pos.x,
 			y: leg_pos.y,
 			z: leg_pos.z,
@@ -14686,9 +14657,19 @@ class Player {
 			y: -leg_scale.y / 2,
 		});
 		
-		this.store.world_pos = this.active ? this.obj[vars.getWorldPosition]() : { x: 0, y: 0, z: 0 };
+		this.aim_point = this.cheat.aim_part == 'head' ? {
+			x: this.x,
+			y: this.y + this.height - (this.is_ai ? this.dat.mSize / 2 : this.jump_bob_y * 0.072),
+			z: this.z,
+		} : (this.parts[this.cheat.aim_part] || (console.error(this.cheat.aim_part, 'not registered'), { x: 0, y: 0, z: 0 }));
 		
-		this.store.can_see = this.cheat.player && this.active && this.utils.obstructing(this.cheat.player, this.aim_point, this.cheat.player.weapon && this.cheat.player.weapon.pierce && this.cheat.config.aim.wallbangs) == null ? true : false;
+		this.world_pos = this.active ? this.obj[vars.getWorldPosition]() : { x: 0, y: 0, z: 0 };
+		
+		var camera_world = this.utils.camera_world();
+		
+		this.can_see = this.cheat.player && this.active &&
+			this.utils.obstructing(camera_world, this.aim_point, (!this.cheat.player || this.cheat.player.weapon && this.cheat.player.weapon.pierce) && this.cheat.config.aim.wallbangs)
+		== null ? true : false;
 	}
 	get process_inputs(){
 		return this.entity[vars.procInputs];
@@ -14697,8 +14678,6 @@ class Player {
 		return this.entity[vars.procInputs] = value;
 	}
 };
-
-Player.store = Symbol();
 
 module.exports = Player;
 
@@ -15801,8 +15780,8 @@ class Utils {
 	round(n, r){
 		return Math.round(n * Math.pow(10, r)) / Math.pow(10, r);
 	}
-	is_host(host, url){
-		return url.hostname == host || url.hostname.endsWith('.' + host);
+	is_host(url, ...hosts){
+		return hosts.some(host => url.hostname == host || url.hostname.endsWith('.' + host));
 	}
 	wait_for(check){
 		return new Promise(resolve => {
@@ -16090,6 +16069,29 @@ exports.patch = source => {
 
 exports.key = key;
 
+// Input keys
+/*
+[
+	controls.getISN(),
+	Math.round(delta * game.config.deltaMlt),
+	Math.round(1000 * controls.yDr.round(3)),
+	Math.round(1000 * xDr.round(3)),
+	game.moveLock ? -1 : config.movDirs.indexOf(controls.moveDir),
+	controls.mouseDownL || controls.keys[controls.binds.shoot.val] ? 1 : 0,
+	controls.mouseDownR || controls.keys[controls.binds.aim.val] ? 1 : 0,
+	!Q.moveLock && controls.keys[controls.binds.jump.val] ? 1 : 0,
+	controls.keys[controls.binds.reload.val] ? 1 : 0,
+	controls.keys[controls.binds.crouch.val] ? 1 : 0,
+	controls.scrollToSwap ? controls.scrollDelta * ue.tmp.scrollDir : 0,
+	controls.wSwap,
+	1 - controls.speedLmt.round(1),
+	controls.keys[controls.binds.reset.val] ? 1 : 0,
+	controls.keys[controls.binds.interact.val] ? 1 : 0
+];
+*/
+
+exports.keys = { frame: 0, delta: 1, xdir: 2, ydir: 3, moveDir: 4, shoot: 5, scope: 6, jump: 7, reload: 8, crouch: 9, weaponScroll: 10, weaponSwap: 11, moveLock: 12, speed_limit: 13, reset: 14, interact: 15 };
+
 /***/ }),
 
 /***/ "./main.js":
@@ -16103,16 +16105,17 @@ exports.key = key;
 var Utils = __webpack_require__(/*! ./libs/utils */ "./libs/utils.js"),
 	Updater = __webpack_require__(/*! ./libs/updater */ "./libs/updater.js"),
 	Visual = __webpack_require__(/*! ./visual */ "./visual.js"),
+	Input = __webpack_require__(/*! ./input */ "./input.js"),
+	Socket = __webpack_require__(/*! ./socket */ "./socket.js"),
 	vars = __webpack_require__(/*! ./libs/vars */ "./libs/vars.js"),
 	integrate = __webpack_require__(/*! ./libs/integrate */ "./libs/integrate.js"),
 	constants = __webpack_require__(/*! ./consts */ "./consts.js"),
 	entries = __webpack_require__(/*! ./entries */ "./entries.js"),
-	msgpack = __webpack_require__(/*! msgpack-lite */ "../node_modules/msgpack-lite/lib/browser.js"),
 	utils = new Utils(),
 	updater = new Updater(constants.script, constants.extracted),
 	UI = __webpack_require__(/*! ./libs/ui/ */ "./libs/ui/index.js"),
 	cheat = __webpack_require__(/*! ./cheat */ "./cheat.js"),
-	input = __webpack_require__(/*! ./input */ "./input.js"),
+	input = new Input(),
 	visual = new Visual(),
 	page_load = integrate.listen_load(() => {
 		if(integrate.has_instruct('connection banned 0x2'))localStorage.removeItem('krunker_token'), UI.alert([
@@ -16137,27 +16140,13 @@ var Utils = __webpack_require__(/*! ./libs/utils */ "./libs/utils.js"),
 	}),
 	process = () => {
 		try{
-			/*if(cheat.player && cheat.player.process_inputs && !cheat.player.store.inputs_hooked){
-				cheat.player.store.inputs_hooked = true;
-
-				var process_inputs = cheat.player.process_inputs;
-				
-				cheat.player.process_inputs = (data, ...args) => {
-					if(cheat.controls && cheat.player && cheat.player.weapon)input(data);
-					
-					return process_inputs.call(cheat.player.entity, data, ...args);
-				};
-			}*/
-			
 			visual.tick();
 			
-			if(cheat.config.game.overlay){
-				visual.overlay();
-			}
+			// visual.crosshair();
 			
-			if(cheat.config.aim.fov_box){
-				visual.fov(cheat.config.aim.fov);
-			}
+			if(cheat.config.game.overlay)visual.overlay();
+			
+			if(cheat.config.aim.fov_box)visual.fov(cheat.config.aim.fov);
 			
 			if(cheat.game && cheat.world)for(var ent of cheat.game.players.list){
 				let player = cheat.add(ent);
@@ -16253,55 +16242,9 @@ UI.ready.then(() => {
 					world(world){ cheat.world = constants.utils.world = world },
 					can_see: inview => cheat.config.esp.status == 'full' ? false : (cheat.config.esp.nametags || inview),
 					skins: ent => cheat.config.game.skins && typeof ent == 'object' && ent != null && ent.stats ? cheat.skins : ent.skins,
-					input: input,
+					input: input.push.bind(input),
 				},
-				WebSocket: class extends WebSocket {
-					constructor(url, proto){
-						super(url, proto);
-						
-						this.addEventListener('message', event => {
-							var [ label, ...data ] = msgpack.decode(new Uint8Array(event.data)), client;
-							
-							if(label == 'io-init')cheat.socket_id = data[0];
-							else if(cheat.config.game.skins && label == 0 && cheat.skin_cache && (client = data[0].indexOf(cheat.socket_id)) != -1){
-								// loadout
-								data[0][client + 12] = cheat.skin_cache[2];
-								
-								// hat
-								data[0][client + 13] = cheat.skin_cache[3];
-								
-								// body
-								data[0][client + 14] = cheat.skin_cache[4];
-								
-								// knife
-								data[0][client + 19] = cheat.skin_cache[9];
-								
-								// dye
-								data[0][client + 24] = cheat.skin_cache[14];
-								
-								// waist
-								data[0][client + 33] = cheat.skin_cache[17];
-								
-								// event.data is non-writable but configurable
-								// concat message signature ( 2 bytes )
-								var encoded = msgpack.encode([ label, ...data ]),
-									final = new Uint8Array(encoded.byteLength + 2);
-								
-								final.set(encoded, 0);
-								final.set(event.data.slice(-2), encoded.byteLength);
-								
-								Object.defineProperty(event, 'data', { value: final.buffer });
-							}
-						});
-					}
-					send(data){
-						var [ label, ...sdata ] = msgpack.decode(data.slice(0, -2));
-						
-						if(label == 'en')cheat.skin_cache = sdata[0];
-						
-						super.send(data);
-					}
-				},
+				WebSocket: Socket,
 				WP_fetchMMToken: constants.api.token(),
 			};
 			
@@ -16321,6 +16264,72 @@ window.addEventListener('load', () => {
 });
 
 window.cheat = cheat;
+
+/***/ }),
+
+/***/ "./socket.js":
+/*!*******************!*\
+  !*** ./socket.js ***!
+  \*******************/
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+
+"use strict";
+
+
+var msgpack = __webpack_require__(/*! msgpack-lite */ "../node_modules/msgpack-lite/lib/browser.js"),
+	cheat = __webpack_require__(/*! ./cheat */ "./cheat.js"),
+	stores = new Map(),
+	retrieve_store = socket => (!stores.has(socket) && stores.set(socket, {}), stores.get(socket));
+
+class Socket extends WebSocket {
+	constructor(url, proto){
+		var store = retrieve_store(super(url, proto));
+		
+		this.addEventListener('message', event => {
+			var [ label, ...data ] = msgpack.decode(new Uint8Array(event.data)), client;
+			
+			if(label == 'io-init')store.socket_id = data[0];
+			else if(cheat.config.game.skins && label == 0 && store.skin_cache && (client = data[0].indexOf(store.socket_id)) != -1){
+				// loadout
+				data[0][client + 12] = store.skin_cache[2];
+				
+				// hat
+				data[0][client + 13] = store.skin_cache[3];
+				
+				// body
+				data[0][client + 14] = store.skin_cache[4];
+				
+				// knife
+				data[0][client + 19] = store.skin_cache[9];
+				
+				// dye
+				data[0][client + 24] = store.skin_cache[14];
+				
+				// waist
+				data[0][client + 33] = store.skin_cache[17];
+				
+				// event.data is non-writable but configurable
+				// concat message signature ( 2 bytes )
+				var encoded = msgpack.encode([ label, ...data ]),
+					final = new Uint8Array(encoded.byteLength + 2);
+				
+				final.set(encoded, 0);
+				final.set(event.data.slice(-2), encoded.byteLength);
+				
+				Object.defineProperty(event, 'data', { value: final.buffer });
+			}
+		});
+	}
+	send(data){
+		var [ label, ...sdata ] = msgpack.decode(data.slice(0, -2));
+		
+		if(label == 'en')retrieve_store(this).skin_cache = sdata[0];
+		
+		super.send(data);
+	}
+};
+
+module.exports = Socket;
 
 /***/ }),
 
@@ -16542,7 +16551,7 @@ class Visual {
 		this.ctx.lineWidth = 2.5;
 		this.ctx.textBaseline = 'top';
 		
-		this.draw_text(rect.right + 4, rect.top, font_size, [
+		var text = [
 			[
 				[ '#FB8', player.alias ],
 				[ '#FFF', player.clan ? ' [' + player.clan + ']' : '' ],
@@ -16558,7 +16567,30 @@ class Visual {
 				[ '#FFF', player.max_ammo ],
 				[ '#BBB', ']' ],
 			],
-		]);
+		]
+		
+		if(player.target)text.push([ [ '#00F', 'Target' ] ]);
+		
+		this.draw_text(rect.right + 4, rect.top, font_size, text);
+		
+		this.ctx.restore();
+	}
+	crosshair(){
+		this.ctx.save();
+		
+		this.ctx.translate(this.canvas.width / 2, this.canvas.height / 2);
+		
+		var size = 10;
+		
+		this.ctx.strokeStyle = '#0F0';
+		this.ctx.lineWidth = 1.5;
+		
+		this.ctx.beginPath();
+		this.ctx.moveTo(-size, 0);
+		this.ctx.lineTo(size, 0);
+		this.ctx.moveTo(0, -size);
+		this.ctx.lineTo(0, size);
+		this.ctx.stroke();
 		
 		this.ctx.restore();
 	}

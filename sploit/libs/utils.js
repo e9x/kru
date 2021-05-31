@@ -20,8 +20,8 @@ class Utils {
 	round(n, r){
 		return Math.round(n * Math.pow(10, r)) / Math.pow(10, r);
 	}
-	is_host(host, url){
-		return url.hostname == host || url.hostname.endsWith('.' + host);
+	is_host(url, ...hosts){
+		return hosts.some(host => url.hostname == host || url.hostname.endsWith('.' + host));
 	}
 	wait_for(check){
 		return new Promise(resolve => {
