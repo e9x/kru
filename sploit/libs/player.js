@@ -72,7 +72,7 @@ class Player {
 	get is_you(){ return this.entity[vars.isYou] }
 	get y_vel(){ return this.entity[vars.yVel] }
 	get target(){
-		return cheat.target && this.entity == cheat.target.entity;
+		return this.cheat.target && this.entity == this.cheat.target.entity;
 	}
 	get can_melee(){
 		return this.weapon.melee && this.cheat.target && this.cheat.target.active && this.distance_to(this.cheat.target) <= 18 || false;
