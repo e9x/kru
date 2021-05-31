@@ -144,7 +144,7 @@ var vm = require('vm'),
 
 // COMMAND LINE SWITCHES
 
-electron.app.commandLine.appendSwitch('disable-frame-rate-limit');
+// electron.app.commandLine.appendSwitch('disable-frame-rate-limit');
 
 electron.app.on('ready', () => {
 	// ADBLOCK

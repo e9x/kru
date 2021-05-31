@@ -67,8 +67,7 @@ class Player {
 	get alias(){ return this.entity.alias }
 	get weapon(){ return this.entity.weapon }
 	get can_slide(){ return this.entity.canSlide }
-	// not to be confused with social player values 
-	get risk(){ return this.entity.account && (this.entity.account.featured || this.entity.account.premiumT) || this.entity.level >= 30 }
+	get risk(){ return this.entity.level >= 30 || this.entity.account && (this.entity.account.featured || this.entity.account.premiumT) }
 	get is_you(){ return this.entity[vars.isYou] }
 	get y_vel(){ return this.entity[vars.yVel] }
 	get target(){
@@ -119,7 +118,7 @@ class Player {
 	test_vec(vector, match){
 		return match.every((value, index) => vector[['x', 'y', 'z'][index]] == value);
 	}
-	get obj(){ return this.is_ai ? target.enity.dat : this.entity[vars.objInstances] }
+	get obj(){ return this.is_ai ? this.enity.dat : this.entity[vars.objInstances] }
 	get recoil_y(){ return this.entity[vars.recoilAnimY] }
 	get has_ammo(){ return this.ammo || this.ammo == this.max_ammo }
 	get ammo(){ return this.entity[vars.ammos][this.entity[vars.weaponIndex]] || 0 }
@@ -134,9 +133,9 @@ class Player {
 	get enemy(){ return !this.teammate }
 	get team(){ return this.entity.team }
 	get weapon_auto(){ return !this.weapon.nAuto }
-	get weapon_rate(){ return this.weapon.rate + 25 }
+	get weapon_rate(){ return this.weapon.rate + 5 }
 	get did_shoot(){ return this.entity[vars.didShoot] }
-	get shot(){ return (this.weapon_auto ? this.auto_shot : this.did_shoot) || false }
+	get shot(){ return this.weapon_auto ? this.auto_shot : this.did_shoot }
 	get chest(){
 		return this.entity.lowerBody.children[0];
 	}
@@ -203,8 +202,6 @@ class Player {
 			height: bounds.max.y - bounds.min.y,
 		};
 		
-		this.parts = {};
-		
 		var head_size = 1.5,
 			chest_box = new this.utils.three.Box3().setFromObject(this.chest),
 			chest_size = chest_box.getSize(),
@@ -222,6 +219,8 @@ class Player {
 				
 				return input;
 			};
+		
+		this.parts = {};
 		
 		// parts centered
 		this.parts.torso = translate(this.chest, {
@@ -263,15 +262,9 @@ class Player {
 		
 		var camera_world = this.utils.camera_world();
 		
-		this.can_see = this.cheat.player && this.active &&
+		this.can_see = this.cheat.player &&
 			this.utils.obstructing(camera_world, this.aim_point, (!this.cheat.player || this.cheat.player.weapon && this.cheat.player.weapon.pierce) && this.cheat.config.aim.wallbangs)
 		== null ? true : false;
-	}
-	get process_inputs(){
-		return this.entity[vars.procInputs];
-	}
-	set process_inputs(value){
-		return this.entity[vars.procInputs] = value;
 	}
 };
 
