@@ -1184,7 +1184,7 @@ class Main {
 			commandline:{regex: /Object\.defineProperty\(console.*?\),/, patch: ""},
 		});
 		
-		new Function("WP_fetchMMToken", "Module", this.hash, patched)(tokenPromise, { csv: async () => 0 }, this);
+		new Function("WP_fetchMMToken", this.hash, patched)(tokenPromise, this);
 	}
 
 	mainCustomRule(action, rule) {
