@@ -1,16 +1,16 @@
 'use strict';
-var cheat = require('./cheat'),
-	vars = require('./libs/vars'),
+var vars = require('./libs/vars'),
 	integrate = require('./libs/integrate'),
 	Player = require('./libs/player'),
-	{ api, utils } = require('./consts'),
-	pdata = {};
+	{ cheat, api, utils } = require('./consts');
 
 class InputData {
 	constructor(array){
 		this.array = array;
 	}
 };
+
+InputData.previous = {};
 
 for(let prop in vars.keys){
 	let key = vars.keys[prop];
@@ -32,7 +32,7 @@ class Input {
 			
 			this.modify(data);
 			
-			pdata = data;
+			InputData.previous = data;
 		}catch(err){
 			api.report_error('input', err);
 		}
@@ -104,7 +104,7 @@ class Input {
 		
 		data.could_shoot = cheat.player.can_shoot;
 		
-		var nauto = cheat.player.weapon_auto || !data.shoot || (!pdata.could_shoot || !pdata.shoot),
+		var nauto = cheat.player.weapon_auto || !data.shoot || (!InputData.previous.could_shoot || !InputData.previous.shoot),
 			hitchance = (Math.random() * 100) < cheat.config.aim.hitchance,
 			can_target = cheat.config.aim.status == 'auto' || data.scope || data.shoot;
 		

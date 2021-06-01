@@ -86,6 +86,7 @@ var vm = require('vm'),
 			return this.game || (this.game = init_window({
 				width: '70%',
 				height: '70%',
+				title: 'Sploit',
 				webPreferences: {
 					contextIsolation: false,
 					preload: path.join(__dirname, 'preload.js'),

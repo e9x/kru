@@ -7,8 +7,12 @@ var GM = {
 		fetch: window.fetch.bind(window),
 	},
 	API = require('./libs/api'),
+	Cheat = require('./cheat'),
 	Utils = require('./libs/utils'),
-	utils = new Utils();
+	utils = new Utils(),
+	cheat = new Cheat(utils);
+
+exports.cheat = cheat;
 
 exports.utils = utils;
 

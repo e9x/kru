@@ -3,6 +3,7 @@ var Utils = require('./libs/utils'),
 	Updater = require('./libs/updater'),
 	Visual = require('./visual'),
 	Input = require('./input'),
+	UI = require('./libs/ui/'),
 	Socket = require('./socket'),
 	vars = require('./libs/vars'),
 	integrate = require('./libs/integrate'),
@@ -10,10 +11,10 @@ var Utils = require('./libs/utils'),
 	entries = require('./entries'),
 	utils = new Utils(),
 	updater = new Updater(constants.script, constants.extracted),
-	UI = require('./libs/ui/'),
-	cheat = require('./cheat'),
 	input = new Input(),
 	visual = new Visual(),
+	cheat = constants.cheat,
+	api = constants.api,
 	page_load = integrate.listen_load(() => {
 		if(integrate.has_instruct('connection banned 0x2'))localStorage.removeItem('krunker_token'), UI.alert([
 			`<p>You were IP banned, Sploit has signed you out.\nSpoof your IP to bypass this ban with one of the following:</p>`,
@@ -75,7 +76,7 @@ var Utils = require('./libs/utils'),
 				}
 			};
 		}catch(err){
-			constants.api.report_error('frame', err);
+			api.report_error('frame', err);
 		}
 		
 		utils.request_frame(process);
@@ -113,12 +114,12 @@ UI.ready.then(() => {
 			},
 		});
 		
-		constants.api.source().then(krunker => {
+		api.source().then(krunker => {
 			process();
 			
 			krunker = vars.patch(krunker);
 			
-			constants.api.media('sploit',cheat,constants);
+			api.media('sploit',cheat,constants);
 			
 			var args = {
 				[ vars.key ]: {
@@ -142,7 +143,7 @@ UI.ready.then(() => {
 					input: input.push.bind(input),
 				},
 				WebSocket: Socket,
-				WP_fetchMMToken: constants.api.token(),
+				WP_fetchMMToken: api.token(),
 			};
 			
 			args.WP_fetchMMToken.then(() => {
@@ -159,5 +160,3 @@ window.addEventListener('load', () => {
 		if(confirm('A new Sploit version is available, do you wish to update?'))updater.update();
 	}, 60e3 * 3);	
 });
-
-window.cheat = cheat;

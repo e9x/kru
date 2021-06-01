@@ -1,9 +1,8 @@
 'use strict';
 
-var cheat = require('./cheat'),
-	UI = require('./libs/ui/'),
+var UI = require('./libs/ui/'),
 	vars = require('./libs/vars'),
-	{ utils } = require('./consts');
+	{ utils, cheat } = require('./consts');
 
 class Visual {
 	constructor(){

@@ -31,7 +31,7 @@ var fs = require('fs'),
 				'__filename',
 				'__dirname',
 			]
-		).function.call(mod.exports, mod.exports, custom_require(func, mod.path, loaders, cache), mod, mod.path, resolved);
+		).function.call(mod.exports, mod.exports, custom_require(func, mod.path, loaders, cache), mod, resolved, mod.path);
 		
 		return mod.exports;
 	}, {
@@ -41,7 +41,7 @@ var fs = require('fs'),
 		loaders: loaders,
 	});
 
-custom_require(window.Function, path.join(__dirname, '..', 'sploit'), {
+custom_require(window.Function, path.join(__dirname, '..', 'junker'), {
 	'.json': require(path.join(__dirname, '..', 'sploit', 'libs', 'json.js')),
 	'.css': require(path.join(__dirname, '..', 'sploit', 'libs', 'css.js')),
 }, {})('.');

@@ -1,7 +1,7 @@
 'use strict';
 
 var msgpack = require('msgpack-lite'),
-	cheat = require('./cheat'),
+	{ cheat } = require('./consts'),
 	stores = new Map(),
 	retrieve_store = socket => (!stores.has(socket) && stores.set(socket, {}), stores.get(socket));
 

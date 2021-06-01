@@ -3,9 +3,9 @@
 var vars = require('./vars');
 
 class Player {
-	constructor(cheat, utils, entity){
+	constructor(cheat, entity){
 		this.cheat = cheat;
-		this.utils = utils;
+		this.utils = this.cheat.utils;
 		this.entity = typeof entity == 'object' && entity != null ? entity : {};
 	}
 	distance_to(point){
@@ -137,7 +137,7 @@ class Player {
 	get did_shoot(){ return this.entity[vars.didShoot] }
 	get shot(){ return this.weapon_auto ? this.auto_shot : this.did_shoot }
 	get chest(){
-		return this.entity.lowerBody.children[0];
+		return this.entity.lowerBody ? this.entity.lowerBody.children[0] : null;
 	}
 	get leg(){
 		for(var mesh of this.entity.legMeshes)if(mesh.visible)return mesh;

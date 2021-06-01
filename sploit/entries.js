@@ -1,3 +1,5 @@
+'use strict';
+
 var clone_obj = obj => JSON.parse(JSON.stringify(obj)),
 	assign_deep = (target, ...objects) => {
 		for(var ind in objects)for(var key in objects[ind]){
@@ -263,9 +265,6 @@ exports.ui = cheat => ({
 				cheat.ui.update();
 			},
 			bind: 'binds.reset',
-		},{
-			name: `Huge thanks to KPal#1311 from [KPal Hub](https://discord.gg/8McHhwg) for providing Krunker's source`,
-			type: 'text',
 		}],
 	},{
 		name: 'Discord',
