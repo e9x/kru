@@ -7,7 +7,7 @@
 // @license        gpl-3.0
 // @namespace      https://greasyfork.org/users/704479
 // @supportURL     https://e9x.github.io/kru/inv/
-// @extracted      Tue, 01 Jun 2021 22:48:56 GMT
+// @extracted      Tue, 01 Jun 2021 22:52:34 GMT
 // @match          *://krunker.io/*
 // @match          *://browserfps.com/*
 // @run-at         document-start
@@ -44,7 +44,7 @@ exports.discord = 'https://e9x.github.io/kru/invite';
 
 exports.krunker = utils.is_host(location, 'krunker.io', 'browserfps.com') && location.pathname == '/';
 
-exports.extracted = typeof 1622587736751 != 'number' ? Date.now() : 1622587736751;
+exports.extracted = typeof 1622587954101 != 'number' ? Date.now() : 1622587954101;
 
 exports.api_url = 'https://api.sys32.dev/';
 exports.hostname = 'krunker.io';
@@ -2232,8 +2232,6 @@ if(__webpack_require__(/*! ./consts */ "./consts.js").krunker){
 			if(confirm('A new Junker version is available, do you wish to update?'))updater.update();
 		}, 60e3 * 3);	
 	});
-	
-	window.main = main;
 }
 })();
 
