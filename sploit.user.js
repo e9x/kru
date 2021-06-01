@@ -7,13 +7,9 @@
 // @license        gpl-3.0
 // @namespace      https://e9x.github.io/
 // @supportURL     https://e9x.github.io/kru/inv/
-// @extracted      Mon, 31 May 2021 00:01:50 GMT
+// @extracted      Tue, 01 Jun 2021 22:48:34 GMT
 // @match          *://krunker.io/*
 // @match          *://browserfps.com/*
-// @exclude        *://krunker.io/editor*
-// @exclude        *://krunker.io/social*
-// @exclude        *://browserfps.com/editor*
-// @exclude        *://browserfps.com/social*
 // @run-at         document-start
 // @connect        sys32.dev
 // @connect        githubusercontent.com
@@ -13643,44 +13639,51 @@ function write0(type) {
 /*!******************!*\
   !*** ./cheat.js ***!
   \******************/
-/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 "use strict";
 
-var API = __webpack_require__(/*! ./libs/api */ "./libs/api.js"),
-	{ api, mm_url, api_url, utils } = __webpack_require__(/*! ./consts */ "./consts.js"),
-	vars = __webpack_require__(/*! ./libs/vars */ "./libs/vars.js"),
+var vars = __webpack_require__(/*! ./libs/vars */ "./libs/vars.js"),
 	Player = __webpack_require__(/*! ./libs/player */ "./libs/player.js");
 
-exports.hooked = Symbol();
-exports.config = {};
-exports.skins = [...Array(5000)].map((e, i) => ({ ind: i, cnt: 1 }));
-exports.socket_id = 0;
+class Cheat {
+	constructor(utils){
+		this.utils = utils;
+		this.hooked = Symbol();
+		this.config = {};
+		this.skins = [...Array(5000)].map((e, i) => ({ ind: i, cnt: 1 }));
+		this.socket_id = 0;
+		
+		this.sorts = {
+			dist3d: (ent_1, ent_2) => {
+				return ent_1.distance_camera - ent_2.distance_camera;
+			},
+			dist2d: (ent_1, ent_2) => {
+				return this.utils.dist_center(ent_1.rect) - this.utils.dist_center(ent_2.rect);
+			},
+			hp: (ent_1, ent_2) => {
+				return ent_1.health - ent_2.health;
+			},
+		};
+		
+		this.y_offset_types = ['head', 'torso', 'legs'];
+		
+		this.y_offset_rand = 'head';
 
-exports.sorts = {
-	dist3d(ent_1, ent_2){
-		return ent_1.distance_camera - ent_2.distance_camera;
-	},
-	dist2d(ent_1, ent_2){
-		return utils.dist_center(ent_1.rect) - utils.dist_center(ent_2.rect);
-	},
-	hp(ent_1, ent_2){
-		return ent_1.health - ent_2.health;
-	},
+		setInterval(() => this.y_offset_rand = this.y_offset_types[~~(Math.random() * this.y_offset_types.length)], 2000);
+	}
+	add(entity){
+		return entity[this.hooked] || (entity[this.hooked] = new Player(this, entity));
+	}
+	pick_target(){
+		return this.game.players.list.map(ent => this.add(ent)).filter(player => player.can_target).sort((ent_1, ent_2) => this.sorts[this.config.aim.target_sorting || 'dist2d'](ent_1, ent_2) * (ent_1.frustum ? 1 : 0.5))[0]
+	}
+	get aim_part(){
+		return this.config.aim.offset != 'random' ? this.config.aim.offset : this.y_offset_rand;
+	}
 };
 
-exports.add = entity => entity[exports.hooked] || (entity[exports.hooked] = new Player(exports, utils, entity));
-
-exports.pick_target = () => exports.game.players.list.map(exports.add).filter(player => player.can_target).sort((ent_1, ent_2) => exports.sorts[exports.config.aim.target_sorting || 'dist2d'](ent_1, ent_2) * (ent_1.frustum ? 1 : 0.5))[0];
-
-var y_offset_types = ['head', 'torso', 'legs'],
-	y_offset_rand = 'head';
-
-setInterval(() => y_offset_rand = y_offset_types[~~(Math.random() * y_offset_types.length)], 2000);
-
-Object.defineProperty(exports, "aim_part", ({
-	get: _ => exports.config.aim.offset != 'random' ? exports.config.aim.offset : y_offset_rand,
-}));
+module.exports = Cheat;
 
 /***/ }),
 
@@ -13700,8 +13703,12 @@ var GM = {
 		fetch: window.fetch.bind(window),
 	},
 	API = __webpack_require__(/*! ./libs/api */ "./libs/api.js"),
+	Cheat = __webpack_require__(/*! ./cheat */ "./cheat.js"),
 	Utils = __webpack_require__(/*! ./libs/utils */ "./libs/utils.js"),
-	utils = new Utils();
+	utils = new Utils(),
+	cheat = new Cheat(utils);
+
+exports.cheat = cheat;
 
 exports.utils = utils;
 
@@ -13715,7 +13722,7 @@ exports.api_url = 'https://api.sys32.dev/';
 exports.hostname = 'krunker.io';
 exports.mm_url = 'https://matchmaker.krunker.io/';
 
-exports.extracted = typeof 1622419310737 != 'number' ? Date.now() : 1622419310737;
+exports.extracted = typeof 1622587714351 != 'number' ? Date.now() : 1622587714351;
 
 exports.store = {
 	get: async key => GM.get_value ? await GM.get_value(key) : localStorage.getItem('ss' + key),
@@ -13779,6 +13786,9 @@ exports.api = new API(exports.mm_url, exports.api_url);
   \********************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
+"use strict";
+
+
 var clone_obj = obj => JSON.parse(JSON.stringify(obj)),
 	assign_deep = (target, ...objects) => {
 		for(var ind in objects)for(var key in objects[ind]){
@@ -13788,7 +13798,7 @@ var clone_obj = obj => JSON.parse(JSON.stringify(obj)),
 		
 		return target;
 	},
-	constants = __webpack_require__(/*! ./consts.js */ "./consts.js"),
+	{ api, utils, cheat, store, discord, github } = __webpack_require__(/*! ./consts.js */ "./consts.js"),
 	spackage = __webpack_require__(/*! ../package.json */ "../package.json");
 
 exports.base_config = {
@@ -13829,13 +13839,13 @@ exports.base_config = {
 	},
 };
 
-exports.ui = cheat => ({
+exports.ui = {
 	version: spackage.version,
 	title: 'Sploit',
-	store: constants.store,
+	store: store,
 	config: {
-		save: () => constants.store.set('config', JSON.stringify(cheat.config)),
-		load: () => constants.store.get('config').then(config => {
+		save: () => store.set('config', JSON.stringify(cheat.config)),
+		load: () => store.get('config').then(config => {
 			var parsed = {};
 			try{ parsed = JSON.parse(config || '{}') }catch(err){ console.error(err, config) }
 			
@@ -14032,7 +14042,17 @@ exports.ui = cheat => ({
 		value: [{
 			name: 'GitHub',
 			type: 'function',
-			value: () => window.open(constants.github, '_blank'),
+			value: () => window.open(github, '_blank'),
+		},{
+			name: 'Save Krunker script',
+			type: 'function',
+			value(){
+				var link = utils.add_ele('a', document.documentElement, { href: api.api_url(1, 'source' , { download: true }) });
+				
+				link.click();
+				
+				link.remove();
+			},
 		},{
 			name: 'Reset Settings',
 			type: 'function',
@@ -14040,20 +14060,17 @@ exports.ui = cheat => ({
 				for(var ind in cheat.css_editor.tabs.length)await cheat.css_editor.tabs[ind].remove();
 				
 				// reset everything but sliders
-				await constants.store.set('config', JSON.stringify(assign_deep(cheat.config, clone_obj(exports.base_config)), (prop, value) => typeof value == 'number' ? void'' : value));
+				await store.set('config', JSON.stringify(assign_deep(cheat.config, clone_obj(exports.base_config)), (prop, value) => typeof value == 'number' ? void'' : value));
 				cheat.ui.update();
 			},
 			bind: 'binds.reset',
-		},{
-			name: `Huge thanks to KPal#1311 from [KPal Hub](https://discord.gg/8McHhwg) for providing Krunker's source`,
-			type: 'text',
 		}],
 	},{
 		name: 'Discord',
 		type: 'function',
-		value: () => window.open(constants.discord, '_blank'),
+		value: () => window.open(discord, '_blank'),
 	}],
-});
+};
 
 /***/ }),
 
@@ -14065,18 +14082,18 @@ exports.ui = cheat => ({
 
 "use strict";
 
-var cheat = __webpack_require__(/*! ./cheat */ "./cheat.js"),
-	vars = __webpack_require__(/*! ./libs/vars */ "./libs/vars.js"),
+var vars = __webpack_require__(/*! ./libs/vars */ "./libs/vars.js"),
 	integrate = __webpack_require__(/*! ./libs/integrate */ "./libs/integrate.js"),
 	Player = __webpack_require__(/*! ./libs/player */ "./libs/player.js"),
-	{ api, utils } = __webpack_require__(/*! ./consts */ "./consts.js"),
-	pdata = {};
+	{ cheat, api, utils } = __webpack_require__(/*! ./consts */ "./consts.js");
 
 class InputData {
 	constructor(array){
 		this.array = array;
 	}
 };
+
+InputData.previous = {};
 
 for(let prop in vars.keys){
 	let key = vars.keys[prop];
@@ -14098,7 +14115,7 @@ class Input {
 			
 			this.modify(data);
 			
-			pdata = data;
+			InputData.previous = data;
 		}catch(err){
 			api.report_error('input', err);
 		}
@@ -14170,7 +14187,7 @@ class Input {
 		
 		data.could_shoot = cheat.player.can_shoot;
 		
-		var nauto = cheat.player.weapon_auto || !data.shoot || (!pdata.could_shoot || !pdata.shoot),
+		var nauto = cheat.player.weapon_auto || !data.shoot || (!InputData.previous.could_shoot || !InputData.previous.shoot),
 			hitchance = (Math.random() * 100) < cheat.config.aim.hitchance,
 			can_target = cheat.config.aim.status == 'auto' || data.scope || data.shoot;
 		
@@ -14407,9 +14424,9 @@ module.exports={"rename":"<svg class='rename' xmlns='http://www.w3.org/2000/svg'
 var vars = __webpack_require__(/*! ./vars */ "./libs/vars.js");
 
 class Player {
-	constructor(cheat, utils, entity){
+	constructor(cheat, entity){
 		this.cheat = cheat;
-		this.utils = utils;
+		this.utils = this.cheat.utils;
 		this.entity = typeof entity == 'object' && entity != null ? entity : {};
 	}
 	distance_to(point){
@@ -14471,12 +14488,11 @@ class Player {
 	get alias(){ return this.entity.alias }
 	get weapon(){ return this.entity.weapon }
 	get can_slide(){ return this.entity.canSlide }
-	// not to be confused with social player values 
-	get risk(){ return this.entity.account && (this.entity.account.featured || this.entity.account.premiumT) || this.entity.level >= 30 }
+	get risk(){ return this.entity.level >= 30 || this.entity.account && (this.entity.account.featured || this.entity.account.premiumT) }
 	get is_you(){ return this.entity[vars.isYou] }
 	get y_vel(){ return this.entity[vars.yVel] }
 	get target(){
-		return cheat.target && this.entity == cheat.target.entity;
+		return this.cheat.target && this.entity == this.cheat.target.entity;
 	}
 	get can_melee(){
 		return this.weapon.melee && this.cheat.target && this.cheat.target.active && this.distance_to(this.cheat.target) <= 18 || false;
@@ -14523,7 +14539,7 @@ class Player {
 	test_vec(vector, match){
 		return match.every((value, index) => vector[['x', 'y', 'z'][index]] == value);
 	}
-	get obj(){ return this.is_ai ? target.enity.dat : this.entity[vars.objInstances] }
+	get obj(){ return this.is_ai ? this.enity.dat : this.entity[vars.objInstances] }
 	get recoil_y(){ return this.entity[vars.recoilAnimY] }
 	get has_ammo(){ return this.ammo || this.ammo == this.max_ammo }
 	get ammo(){ return this.entity[vars.ammos][this.entity[vars.weaponIndex]] || 0 }
@@ -14538,11 +14554,11 @@ class Player {
 	get enemy(){ return !this.teammate }
 	get team(){ return this.entity.team }
 	get weapon_auto(){ return !this.weapon.nAuto }
-	get weapon_rate(){ return this.weapon.rate + 25 }
+	get weapon_rate(){ return this.weapon.rate + 5 }
 	get did_shoot(){ return this.entity[vars.didShoot] }
-	get shot(){ return (this.weapon_auto ? this.auto_shot : this.did_shoot) || false }
+	get shot(){ return this.weapon_auto ? this.auto_shot : this.did_shoot }
 	get chest(){
-		return this.entity.lowerBody.children[0];
+		return this.entity.lowerBody ? this.entity.lowerBody.children[0] : null;
 	}
 	get leg(){
 		for(var mesh of this.entity.legMeshes)if(mesh.visible)return mesh;
@@ -14607,8 +14623,6 @@ class Player {
 			height: bounds.max.y - bounds.min.y,
 		};
 		
-		this.parts = {};
-		
 		var head_size = 1.5,
 			chest_box = new this.utils.three.Box3().setFromObject(this.chest),
 			chest_size = chest_box.getSize(),
@@ -14626,6 +14640,8 @@ class Player {
 				
 				return input;
 			};
+		
+		this.parts = {};
 		
 		// parts centered
 		this.parts.torso = translate(this.chest, {
@@ -14667,15 +14683,9 @@ class Player {
 		
 		var camera_world = this.utils.camera_world();
 		
-		this.can_see = this.cheat.player && this.active &&
+		this.can_see = this.cheat.player &&
 			this.utils.obstructing(camera_world, this.aim_point, (!this.cheat.player || this.cheat.player.weapon && this.cheat.player.weapon.pierce) && this.cheat.config.aim.wallbangs)
 		== null ? true : false;
-	}
-	get process_inputs(){
-		return this.entity[vars.procInputs];
-	}
-	set process_inputs(value){
-		return this.entity[vars.procInputs] = value;
 	}
 };
 
@@ -16106,6 +16116,7 @@ var Utils = __webpack_require__(/*! ./libs/utils */ "./libs/utils.js"),
 	Updater = __webpack_require__(/*! ./libs/updater */ "./libs/updater.js"),
 	Visual = __webpack_require__(/*! ./visual */ "./visual.js"),
 	Input = __webpack_require__(/*! ./input */ "./input.js"),
+	UI = __webpack_require__(/*! ./libs/ui/ */ "./libs/ui/index.js"),
 	Socket = __webpack_require__(/*! ./socket */ "./socket.js"),
 	vars = __webpack_require__(/*! ./libs/vars */ "./libs/vars.js"),
 	integrate = __webpack_require__(/*! ./libs/integrate */ "./libs/integrate.js"),
@@ -16113,10 +16124,10 @@ var Utils = __webpack_require__(/*! ./libs/utils */ "./libs/utils.js"),
 	entries = __webpack_require__(/*! ./entries */ "./entries.js"),
 	utils = new Utils(),
 	updater = new Updater(constants.script, constants.extracted),
-	UI = __webpack_require__(/*! ./libs/ui/ */ "./libs/ui/index.js"),
-	cheat = __webpack_require__(/*! ./cheat */ "./cheat.js"),
 	input = new Input(),
 	visual = new Visual(),
+	cheat = constants.cheat,
+	api = constants.api,
 	page_load = integrate.listen_load(() => {
 		if(integrate.has_instruct('connection banned 0x2'))localStorage.removeItem('krunker_token'), UI.alert([
 			`<p>You were IP banned, Sploit has signed you out.\nSpoof your IP to bypass this ban with one of the following:</p>`,
@@ -16178,18 +16189,20 @@ var Utils = __webpack_require__(/*! ./libs/utils */ "./libs/utils.js"),
 				}
 			};
 		}catch(err){
-			constants.api.report_error('frame', err);
+			api.report_error('frame', err);
 		}
 		
 		utils.request_frame(process);
-	};
+	},
+	source = api.source(),
+	token = api.token();
 
 UI.ready.then(() => {
 	constants.utils.canvas = UI.canvas;
 	
-	cheat.ui = new UI.Config(entries.ui(cheat));
+	cheat.ui = new UI.Config(entries.ui);
 	
-	cheat.ui.update(true).then(() => {
+	cheat.ui.update(true).then(async () => {
 		// migrate
 		if(typeof cheat.config.aim.smooth == 'object')cheat.config.aim.smooth = cheat.config.aim.smooth.value;
 		if(typeof cheat.config.esp.walls == 'object')cheat.config.esp.walls = 100;
@@ -16216,54 +16229,52 @@ UI.ready.then(() => {
 			},
 		});
 		
-		constants.api.source().then(krunker => {
-			process();
-			
-			krunker = vars.patch(krunker);
-			
-			constants.api.media('sploit',cheat,constants);
-			
-			var args = {
-				[ vars.key ]: {
-					three(three){ cheat.three = constants.utils.three = three },
-					game(game){
-						cheat.game = constants.utils.game = game;
-						Object.defineProperty(game, 'controls', {
-							configurable: true,
-							set(value){
-								// delete definition
-								delete game.controls;
-								
-								return cheat.controls = game.controls = value;
-							},
-						});
-					},
-					socket(socket){ cheat.socket = socket },
-					world(world){ cheat.world = constants.utils.world = world },
-					can_see: inview => cheat.config.esp.status == 'full' ? false : (cheat.config.esp.nametags || inview),
-					skins: ent => cheat.config.game.skins && typeof ent == 'object' && ent != null && ent.stats ? cheat.skins : ent.skins,
-					input: input.push.bind(input),
+		process();
+		
+		var krunker = vars.patch(await source);
+		
+		api.media('sploit',cheat,constants);
+		
+		var args = {
+			[ vars.key ]: {
+				three(three){ cheat.three = constants.utils.three = three },
+				game(game){
+					cheat.game = constants.utils.game = game;
+					Object.defineProperty(game, 'controls', {
+						configurable: true,
+						set(value){
+							// delete definition
+							delete game.controls;
+							
+							return cheat.controls = game.controls = value;
+						},
+					});
 				},
-				WebSocket: Socket,
-				WP_fetchMMToken: constants.api.token(),
-			};
-			
-			args.WP_fetchMMToken.then(() => {
-				loading.hide();
-			});
-			
-			page_load.then(async () => new Function(...Object.keys(args), krunker)(...Object.values(args)));
+				socket(socket){ cheat.socket = socket },
+				world(world){ cheat.world = constants.utils.world = world },
+				can_see: inview => cheat.config.esp.status == 'full' ? false : (cheat.config.esp.nametags || inview),
+				skins: ent => cheat.config.game.skins && typeof ent == 'object' && ent != null && ent.stats ? cheat.skins : ent.skins,
+				input: input.push.bind(input),
+			},
+			WebSocket: Socket,
+			WP_fetchMMToken: token,
+		};
+		
+		args.WP_fetchMMToken.then(() => {
+			loading.hide();
 		});
+		
+		page_load.then(async () => new Function(...Object.keys(args), krunker)(...Object.values(args)));
 	});
 });
+
+// alerts shown prior to the window load event are cancelled
 
 window.addEventListener('load', () => {
 	updater.watch(() => {
 		if(confirm('A new Sploit version is available, do you wish to update?'))updater.update();
 	}, 60e3 * 3);	
 });
-
-window.cheat = cheat;
 
 /***/ }),
 
@@ -16277,7 +16288,7 @@ window.cheat = cheat;
 
 
 var msgpack = __webpack_require__(/*! msgpack-lite */ "../node_modules/msgpack-lite/lib/browser.js"),
-	cheat = __webpack_require__(/*! ./cheat */ "./cheat.js"),
+	{ cheat } = __webpack_require__(/*! ./consts */ "./consts.js"),
 	stores = new Map(),
 	retrieve_store = socket => (!stores.has(socket) && stores.set(socket, {}), stores.get(socket));
 
@@ -16342,10 +16353,9 @@ module.exports = Socket;
 "use strict";
 
 
-var cheat = __webpack_require__(/*! ./cheat */ "./cheat.js"),
-	UI = __webpack_require__(/*! ./libs/ui/ */ "./libs/ui/index.js"),
+var UI = __webpack_require__(/*! ./libs/ui/ */ "./libs/ui/index.js"),
 	vars = __webpack_require__(/*! ./libs/vars */ "./libs/vars.js"),
-	{ utils } = __webpack_require__(/*! ./consts */ "./consts.js");
+	{ utils, cheat } = __webpack_require__(/*! ./consts */ "./consts.js");
 
 class Visual {
 	constructor(){

@@ -1,4 +1,4 @@
-'use strict';
+ 'use strict';
 
 var main,
 	scripts,
@@ -67,6 +67,29 @@ class Main {
 		});
 	}
 	onInput(input) {
+		/*var camera = this.renderer && this.renderer.camera;
+		
+		if(camera && !camera.hooked){
+			camera.hooked = true;
+			
+			let prop = 'zoomVal',
+				defined = camera[prop];
+			
+			Object.defineProperty(camera, prop, {
+				get(){
+					return defined;
+				},
+				set(value){
+					if(isNaN(value)){
+						console.trace('NaN', value);
+						debugger;
+					}
+					
+					return defined = value;
+				},
+			});
+		}*/
+		
 		if (!this.settings || !utils.isDefined(this.me)) return input;
 		let isMelee = utils.isDefined(this.me.weapon.melee)&&this.me.weapon.melee||utils.isDefined(this.me.weapon.canThrow)&&this.me.weapon.canThrow;
 		let ammoLeft = this.me[this.vars.ammos][this.me[this.vars.weaponIndex]];
@@ -233,7 +256,7 @@ class Main {
 		let playerScale = (2 * this.consts.armScale + this.consts.chestWidth + this.consts.armInset) / 2
 		let worldPosition = this.renderer.camera[this.vars.getWorldPosition]();
 		let espVal = this.settings.renderESP.val;
-
+		
 		for (let iter = 0, length = this.game.players.list.length; iter < length; iter++) {
 			let player = this.game.players.list[iter];
 			if (!player || player[this.vars.isYou] || !player.active || !utils.isDefined(player[this.vars.objInstances]) ) {
@@ -582,7 +605,7 @@ class Main {
 				max: 50.0,
 				step: 0.01,
 				html: () => this.generateSetting("slider", "weaponZoom"),
-				set: (value) => utils.waitFor(() => this.renderer).then(renderer => { renderer.adsFovMlt = value })
+				set: (value) => utils.waitFor(() => this.renderer).then(renderer => { renderer.adsFovMlt = [ value ] })
 			},
 			weaponTrails: {
 				tab: "Weapon",
@@ -986,45 +1009,10 @@ class Main {
 
 			this.ctx = this.overlay.canvas.getContext('2d');
 			this.overlay.render = new Proxy(this.overlay.render, {
-				apply: function(target, that, args) {
-					return [target.apply(that, args), render.apply(that, args)]
+				apply: (target, that, args) => {
+					return [target.apply(that, args), this.overlayRender(args, ...args)]
 				}
-			})
-			function render(scale, game, controls, renderer, me) {
-				let width = main.overlay.canvas.width / scale;
-				let height = main.overlay.canvas.height / scale;
-				const renderArgs = [scale, game, controls, renderer, me];
-				
-				if (controls && typeof main.settings == "object" && main.settings.noInActivity.val) {
-					controls.idleTimer = 0;
-					if (utils.isDefined(main.config)) main.config.kickTimer = Infinity;
-				}
-				if (me) {
-					if (me.active && me.health) controls.update();
-					if (me.banned) Object.assign(me, {banned: false});
-					if (me.isHacker) Object.assign(me, {isHacker: 0});
-					if (me.kicked) Object.assign(me, {kicked: false});
-					if (me.kickedByVote) Object.assign(me, {kickedByVote: false});
-					me.account = Object.assign(me, {premiumT: true});
-					
-					["scale", "game", "controls", "renderer", "me"].forEach((item, index)=>{
-						main[item] = renderArgs[index];
-					});
-					main.ctx.save();
-					main.ctx.scale(scale, scale);
-					//main.ctx.clearRect(0, 0, width, height);
-					main.onRender();
-					main.ctx.restore();
-				}
-				if (utils.isType(main.settings, 'object')) {
-					if (main.settings.hasOwnProperty('autoActivateNuke') && main.settings.autoActivateNuke.val) {
-						if (main.me && Object.keys(main.me.streaks).length) main.wsSend("k", 0);
-					}
-					if (main.settings.hasOwnProperty('autoClick') && main.settings.autoClick.val) {
-						if (window.endUI.style.display == "none" && window.windowHolder.style.display == "none") controls.toggle(true);
-					}
-				}
-			}
+			});
 		}
 
 
@@ -1115,6 +1103,43 @@ class Main {
 			})
 		})
 	}
+	
+	overlayRender(renderArgs, scale, game, controls, renderer, me){
+		let width = this.overlay.canvas.width / scale;
+		let height = this.overlay.canvas.height / scale;
+		
+		if (controls && typeof this.settings == "object" && this.settings.noInActivity.val) {
+			controls.idleTimer = 0;
+			if (utils.isDefined(this.config)) this.config.kickTimer = Infinity;
+		}
+		if (me) {
+			if (me.active && me.health) controls.update();
+			if (me.banned) Object.assign(me, {banned: false});
+			if (me.isHacker) Object.assign(me, {isHacker: 0});
+			if (me.kicked) Object.assign(me, {kicked: false});
+			if (me.kickedByVote) Object.assign(me, {kickedByVote: false});
+			me.account = Object.assign(me, {premiumT: true});
+			
+			["scale", "game", "controls", "renderer", "me"].forEach((item, index)=>{
+				this[item] = renderArgs[index];
+			});
+			this.ctx.save();
+			this.ctx.scale(scale, scale);
+			// this.ctx.clearRect(0, 0, width, height);
+			this.onRender();
+			this.ctx.restore();
+		}
+		
+		if (utils.isType(this.settings, 'object')) {
+			if (this.settings.hasOwnProperty('autoActivateNuke') && this.settings.autoActivateNuke.val) {
+				if (this.me && Object.keys(this.me.streaks).length) this.wsSend("k", 0);
+			}
+			if (this.settings.hasOwnProperty('autoClick') && this.settings.autoClick.val) {
+				if (window.endUI.style.display == "none" && window.windowHolder.style.display == "none") controls.toggle(true);
+			}
+		}
+	}
+	
 	async gameLoad(source, tokenPromise){
 		this.gameJS = source;
 		
@@ -1147,7 +1172,7 @@ class Main {
 		
 		console.log(this.vars);
 		
-		new Function("WP_fetchMMToken", "Module", this.hash, utils.patchData(this.gameJS, {
+		var patched = utils.patchData(this.gameJS, {
 			exports: {regex: /(this\.\w+\.\w+\(this\)}},function\(\w+,\w+,(\w+)\){)/, patch: `$1 ${this.hash}.exports=$2.c; ${this.hash}.modules=$2.m;`},
 			inputs: {regex: /(\w+\.\w+\.\w+\?'\w+':'push'\]\()(\w+)\),/, patch: `$1${this.hash}.onInput($2)),`},
 			inView: {regex: /&&(\w+\.\w+)\){(if\(\(\w+=\w+\.\w+\.\w+\.\w+)/, patch: `){if(void 0!==${this.hash}.noNameTags||!$1&&void 0 == ${this.hash}.nameTags)continue;$2`},
@@ -1157,7 +1182,9 @@ class Main {
 			anticheat1:{regex: /&&\w+\(\),window\.utilities&&\(\w+\(null,null,null,!0\),\w+\(\)\)/, patch: ""},
 			anticheat3:{regex: /windows\.length>\d+.*?37/, patch: `37`},
 			commandline:{regex: /Object\.defineProperty\(console.*?\),/, patch: ""},
-		}))(tokenPromise, { csv: async () => 0 }, this);
+		});
+		
+		new Function("WP_fetchMMToken", "Module", this.hash, patched)(tokenPromise, { csv: async () => 0 }, this);
 	}
 
 	mainCustomRule(action, rule) {
@@ -1173,6 +1200,7 @@ class Main {
 			} else console.error(action + " not Implemented for mainCustomRule")
 		})
 	}
+	
 	displayStyle(el, val) {
 		utils.waitFor(() => window[el], 5e3).then(node => {
 			if (node) node.style.display = val ? "none" : "inherit";

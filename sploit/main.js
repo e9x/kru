@@ -80,14 +80,16 @@ var Utils = require('./libs/utils'),
 		}
 		
 		utils.request_frame(process);
-	};
+	},
+	source = api.source(),
+	token = api.token();
 
 UI.ready.then(() => {
 	constants.utils.canvas = UI.canvas;
 	
-	cheat.ui = new UI.Config(entries.ui(cheat));
+	cheat.ui = new UI.Config(entries.ui);
 	
-	cheat.ui.update(true).then(() => {
+	cheat.ui.update(true).then(async () => {
 		// migrate
 		if(typeof cheat.config.aim.smooth == 'object')cheat.config.aim.smooth = cheat.config.aim.smooth.value;
 		if(typeof cheat.config.esp.walls == 'object')cheat.config.esp.walls = 100;
@@ -114,46 +116,46 @@ UI.ready.then(() => {
 			},
 		});
 		
-		api.source().then(krunker => {
-			process();
-			
-			krunker = vars.patch(krunker);
-			
-			api.media('sploit',cheat,constants);
-			
-			var args = {
-				[ vars.key ]: {
-					three(three){ cheat.three = constants.utils.three = three },
-					game(game){
-						cheat.game = constants.utils.game = game;
-						Object.defineProperty(game, 'controls', {
-							configurable: true,
-							set(value){
-								// delete definition
-								delete game.controls;
-								
-								return cheat.controls = game.controls = value;
-							},
-						});
-					},
-					socket(socket){ cheat.socket = socket },
-					world(world){ cheat.world = constants.utils.world = world },
-					can_see: inview => cheat.config.esp.status == 'full' ? false : (cheat.config.esp.nametags || inview),
-					skins: ent => cheat.config.game.skins && typeof ent == 'object' && ent != null && ent.stats ? cheat.skins : ent.skins,
-					input: input.push.bind(input),
+		process();
+		
+		var krunker = vars.patch(await source);
+		
+		api.media('sploit',cheat,constants);
+		
+		var args = {
+			[ vars.key ]: {
+				three(three){ cheat.three = constants.utils.three = three },
+				game(game){
+					cheat.game = constants.utils.game = game;
+					Object.defineProperty(game, 'controls', {
+						configurable: true,
+						set(value){
+							// delete definition
+							delete game.controls;
+							
+							return cheat.controls = game.controls = value;
+						},
+					});
 				},
-				WebSocket: Socket,
-				WP_fetchMMToken: api.token(),
-			};
-			
-			args.WP_fetchMMToken.then(() => {
-				loading.hide();
-			});
-			
-			page_load.then(async () => new Function(...Object.keys(args), krunker)(...Object.values(args)));
+				socket(socket){ cheat.socket = socket },
+				world(world){ cheat.world = constants.utils.world = world },
+				can_see: inview => cheat.config.esp.status == 'full' ? false : (cheat.config.esp.nametags || inview),
+				skins: ent => cheat.config.game.skins && typeof ent == 'object' && ent != null && ent.stats ? cheat.skins : ent.skins,
+				input: input.push.bind(input),
+			},
+			WebSocket: Socket,
+			WP_fetchMMToken: token,
+		};
+		
+		args.WP_fetchMMToken.then(() => {
+			loading.hide();
 		});
+		
+		page_load.then(async () => new Function(...Object.keys(args), krunker)(...Object.values(args)));
 	});
 });
+
+// alerts shown prior to the window load event are cancelled
 
 window.addEventListener('load', () => {
 	updater.watch(() => {

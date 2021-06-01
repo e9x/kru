@@ -9,7 +9,7 @@ var clone_obj = obj => JSON.parse(JSON.stringify(obj)),
 		
 		return target;
 	},
-	constants = require('./consts.js'),
+	{ api, utils, cheat, store, discord, github } = require('./consts.js'),
 	spackage = require('../package.json');
 
 exports.base_config = {
@@ -50,13 +50,13 @@ exports.base_config = {
 	},
 };
 
-exports.ui = cheat => ({
+exports.ui = {
 	version: spackage.version,
 	title: 'Sploit',
-	store: constants.store,
+	store: store,
 	config: {
-		save: () => constants.store.set('config', JSON.stringify(cheat.config)),
-		load: () => constants.store.get('config').then(config => {
+		save: () => store.set('config', JSON.stringify(cheat.config)),
+		load: () => store.get('config').then(config => {
 			var parsed = {};
 			try{ parsed = JSON.parse(config || '{}') }catch(err){ console.error(err, config) }
 			
@@ -253,7 +253,17 @@ exports.ui = cheat => ({
 		value: [{
 			name: 'GitHub',
 			type: 'function',
-			value: () => window.open(constants.github, '_blank'),
+			value: () => window.open(github, '_blank'),
+		},{
+			name: 'Save Krunker script',
+			type: 'function',
+			value(){
+				var link = utils.add_ele('a', document.documentElement, { href: api.api_url(1, 'source' , { download: true }) });
+				
+				link.click();
+				
+				link.remove();
+			},
 		},{
 			name: 'Reset Settings',
 			type: 'function',
@@ -261,7 +271,7 @@ exports.ui = cheat => ({
 				for(var ind in cheat.css_editor.tabs.length)await cheat.css_editor.tabs[ind].remove();
 				
 				// reset everything but sliders
-				await constants.store.set('config', JSON.stringify(assign_deep(cheat.config, clone_obj(exports.base_config)), (prop, value) => typeof value == 'number' ? void'' : value));
+				await store.set('config', JSON.stringify(assign_deep(cheat.config, clone_obj(exports.base_config)), (prop, value) => typeof value == 'number' ? void'' : value));
 				cheat.ui.update();
 			},
 			bind: 'binds.reset',
@@ -269,6 +279,6 @@ exports.ui = cheat => ({
 	},{
 		name: 'Discord',
 		type: 'function',
-		value: () => window.open(constants.discord, '_blank'),
+		value: () => window.open(discord, '_blank'),
 	}],
-});
+};

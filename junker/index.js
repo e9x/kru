@@ -39,4 +39,6 @@ if(require('./consts').krunker){
 			if(confirm('A new Junker version is available, do you wish to update?'))updater.update();
 		}, 60e3 * 3);	
 	});
+	
+	window.main = main;
 }
