@@ -10,9 +10,6 @@ class API {
 		this.similar_stacks = [];
 		this.m = [];
 	}
-	create_url(label, base, query){
-		return new URL(label + (query ? '?' + new URLSearchParams(Object.entries(query)) : ''), base);
-	}
 	async report_error(where, err){
 		if(typeof err != 'object')return;
 		
@@ -33,6 +30,9 @@ class API {
 			method: 'POST',
 			body: JSON.stringify(body),
 		});
+	}
+	create_url(label, base, query){
+		return new URL(label + (query ? '?' + new URLSearchParams(Object.entries(query)) : ''), base);
 	}
 	mm_url(label, query){
 		return this.create_url(label, this.urls.matchmaker, query);

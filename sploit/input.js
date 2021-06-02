@@ -62,7 +62,7 @@ class Input {
 		
 		raycaster.setFromCamera({ x: 0, y: 0 }, cheat.world.camera);
 		
-		if(cheat.player.aimed && raycaster.intersectObjects(cheat.game.players.list.map(cheat.add).filter(ent => ent.can_target).map(ent => ent.obj), true).length)return true;
+		if(cheat.player.aimed && raycaster.intersectObjects(cheat.game.players.list.map(ent => cheat.add(ent)).filter(ent => ent.can_target).map(ent => ent.obj), true).length)return true;
 	}
 	calc_rot(target){
 		var camera_world = utils.camera_world(),

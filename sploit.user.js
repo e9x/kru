@@ -7,7 +7,7 @@
 // @license        gpl-3.0
 // @namespace      https://e9x.github.io/
 // @supportURL     https://e9x.github.io/kru/inv/
-// @extracted      Tue, 01 Jun 2021 22:48:34 GMT
+// @extracted      Wed, 02 Jun 2021 03:52:56 GMT
 // @match          *://krunker.io/*
 // @match          *://browserfps.com/*
 // @run-at         document-start
@@ -13722,7 +13722,7 @@ exports.api_url = 'https://api.sys32.dev/';
 exports.hostname = 'krunker.io';
 exports.mm_url = 'https://matchmaker.krunker.io/';
 
-exports.extracted = typeof 1622587714351 != 'number' ? Date.now() : 1622587714351;
+exports.extracted = typeof 1622605976790 != 'number' ? Date.now() : 1622605976790;
 
 exports.store = {
 	get: async key => GM.get_value ? await GM.get_value(key) : localStorage.getItem('ss' + key),
@@ -14145,7 +14145,7 @@ class Input {
 		
 		raycaster.setFromCamera({ x: 0, y: 0 }, cheat.world.camera);
 		
-		if(cheat.player.aimed && raycaster.intersectObjects(cheat.game.players.list.map(cheat.add).filter(ent => ent.can_target).map(ent => ent.obj), true).length)return true;
+		if(cheat.player.aimed && raycaster.intersectObjects(cheat.game.players.list.map(ent => cheat.add(ent)).filter(ent => ent.can_target).map(ent => ent.obj), true).length)return true;
 	}
 	calc_rot(target){
 		var camera_world = utils.camera_world(),
@@ -14246,9 +14246,6 @@ class API {
 		this.similar_stacks = [];
 		this.m = [];
 	}
-	create_url(label, base, query){
-		return new URL(label + (query ? '?' + new URLSearchParams(Object.entries(query)) : ''), base);
-	}
 	async report_error(where, err){
 		if(typeof err != 'object')return;
 		
@@ -14269,6 +14266,9 @@ class API {
 			method: 'POST',
 			body: JSON.stringify(body),
 		});
+	}
+	create_url(label, base, query){
+		return new URL(label + (query ? '?' + new URLSearchParams(Object.entries(query)) : ''), base);
 	}
 	mm_url(label, query){
 		return this.create_url(label, this.urls.matchmaker, query);
