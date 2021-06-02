@@ -7,7 +7,7 @@
 // @license        gpl-3.0
 // @namespace      https://greasyfork.org/users/704479
 // @supportURL     https://e9x.github.io/kru/inv/
-// @extracted      Tue, 01 Jun 2021 22:52:34 GMT
+// @extracted      Wed, 02 Jun 2021 04:38:52 GMT
 // @match          *://krunker.io/*
 // @match          *://browserfps.com/*
 // @run-at         document-start
@@ -44,7 +44,7 @@ exports.discord = 'https://e9x.github.io/kru/invite';
 
 exports.krunker = utils.is_host(location, 'krunker.io', 'browserfps.com') && location.pathname == '/';
 
-exports.extracted = typeof 1622587954101 != 'number' ? Date.now() : 1622587954101;
+exports.extracted = typeof 1622608732921 != 'number' ? Date.now() : 1622608732921;
 
 exports.api_url = 'https://api.sys32.dev/';
 exports.hostname = 'krunker.io';
@@ -665,7 +665,7 @@ class Main {
 				max: 50.0,
 				step: 0.01,
 				html: () => this.generateSetting("slider", "weaponZoom"),
-				set: (value) => utils.waitFor(() => this.renderer).then(renderer => { renderer.adsFovMlt = [ value ] })
+				set: (value) => utils.waitFor(() => this.renderer).then(renderer => { /*renderer.adsFovMlt = [ value ]*/ })
 			},
 			weaponTrails: {
 				tab: "Weapon",
@@ -1244,7 +1244,7 @@ class Main {
 			commandline:{regex: /Object\.defineProperty\(console.*?\),/, patch: ""},
 		});
 		
-		new Function("WP_fetchMMToken", "Module", this.hash, patched)(tokenPromise, { csv: async () => 0 }, this);
+		new Function("WP_fetchMMToken", this.hash, patched)(tokenPromise, this);
 	}
 
 	mainCustomRule(action, rule) {
@@ -1662,9 +1662,6 @@ class API {
 		this.similar_stacks = [];
 		this.m = [];
 	}
-	create_url(label, base, query){
-		return new URL(label + (query ? '?' + new URLSearchParams(Object.entries(query)) : ''), base);
-	}
 	async report_error(where, err){
 		if(typeof err != 'object')return;
 		
@@ -1685,6 +1682,9 @@ class API {
 			method: 'POST',
 			body: JSON.stringify(body),
 		});
+	}
+	create_url(label, base, query){
+		return new URL(label + (query ? '?' + new URLSearchParams(Object.entries(query)) : ''), base);
 	}
 	mm_url(label, query){
 		return this.create_url(label, this.urls.matchmaker, query);
