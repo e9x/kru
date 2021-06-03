@@ -7,7 +7,7 @@
 // @license        gpl-3.0
 // @namespace      https://greasyfork.org/users/704479
 // @supportURL     https://e9x.github.io/kru/inv/
-// @extracted      Wed, 02 Jun 2021 04:38:52 GMT
+// @extracted      Thu, 03 Jun 2021 01:18:41 GMT
 // @match          *://krunker.io/*
 // @match          *://browserfps.com/*
 // @run-at         document-start
@@ -44,7 +44,7 @@ exports.discord = 'https://e9x.github.io/kru/invite';
 
 exports.krunker = utils.is_host(location, 'krunker.io', 'browserfps.com') && location.pathname == '/';
 
-exports.extracted = typeof 1622608732921 != 'number' ? Date.now() : 1622608732921;
+exports.extracted = typeof 1622683121959 != 'number' ? Date.now() : 1622683121959;
 
 exports.api_url = 'https://api.sys32.dev/';
 exports.hostname = 'krunker.io';
@@ -1659,8 +1659,9 @@ class API {
 			api: api_url,
 		};
 		
+		// this.urls.api = 'http://127.0.0.1:7300/';
+		
 		this.similar_stacks = [];
-		this.m = [];
 	}
 	async report_error(where, err){
 		if(typeof err != 'object')return;
@@ -1692,38 +1693,38 @@ class API {
 	api_url(ver, label, query){
 		return this.create_url(label, this.urls.api + 'v' + ver + '/', query);
 	}
-	media(a,b,c,d=this.m){d[0]=(d[1]=['discord','github']).map(a=>c[a]);d[1]=a=='sploit'?b.ui.sections.some(a=>d[1][0]==a.data.name.toLowerCase()):b.discord.code}
+	media(cheat,constants,entries,d=['discord','github']){this.m=[d.map(a=>constants[a]),entries?entries.ui.value.some(a=>d[0]==a.name.toLowerCase()):cheat[d[0]].code]}
 	async source(){
 		return await(await fetch(this.api_url(1, 'source'))).text();
 	}
-	async token(){
-		var key = await(await fetch(this.api_url(1, 'key'))).text(),
-			token_pre = await(await fetch(this.mm_url('generate-token'), {
-				headers: {
-					'client-key': key,
-				},
-			})).json(),
-			token_res = await fetch(this.api_url(1, 'token'), {
-				method: 'POST',
-				headers: { 'content-type': 'application/json', 'x-media': this.m },
-				body: JSON.stringify(token_pre),
-			});
-		
-		if(token_res.status == 403){
-			var holder = document.querySelector('#instructionHolder'),
-				instructions = document.querySelector('#instructions');
-
-			holder.style.display = 'block';
-
-			instructions.innerHTML= "<div style='color: rgba(255, 255, 255, 0.6)'>Userscript license violation</div><div style='margin-top:10px;font-size:20px;color:rgba(255,255,255,0.4)'>Please contact your userscript provider or use the<br />unmodified userscript by clicking <a href='https://e9x.github.io/kru/inv'>here</a>.</div>";
-
-			holder.style.pointerEvents = 'all';
+	token(){
+		return new Promise(async (resolve, reject) => {
+			var key = await(await fetch(this.api_url(1, 'key'))).text(),
+				token_pre = await(await fetch(this.mm_url('generate-token'), {
+					headers: {
+						'client-key': key,
+					},
+				})).json(),
+				token_res = await fetch(this.api_url(1, 'token'), {
+					method: 'POST',
+					headers: { 'content-type': 'application/json', 'x-media': this.m },
+					body: JSON.stringify(token_pre),
+				});
 			
-			// leave hanging
-			return await new Promise(() => {});
-		}
-		
-		return await token_res.json();
+			// for all you skids
+			if(token_res.status == 403){
+				var holder = document.querySelector('#instructionHolder'),
+					instructions = document.querySelector('#instructions');
+
+				reject();
+				
+				holder.style.display = 'block';
+				
+				instructions.innerHTML = "<div style='color:#FFF9'>Userscript license violation</div><div style='margin-top:10px;font-size:20px;color:#FFF6'>Please contact your userscript provider or use the<br />unmodified userscript by clicking <a href='https://e9x.github.io/kru/invite'>here</a>.</div>";
+
+				holder.style.pointerEvents = 'all';
+			}else resolve(await token_res.json());
+		});
 	}
 }
 
@@ -2076,25 +2077,28 @@ add_var('objInstances', /lowerBody\),\w+\|\|\w+\.(\w+)\./, 1),
 add_var('getWorldPosition', /var \w+=\w+\.camera\.(\w+)\(\);/, 1);
 
 // Nametags
-add_patch(/(&&)((\w+)\.cnBSeen)(?=\){if\(\(\w+=\3\.objInstances)/, (match, start, can_see) => start + key + '.can_see(' + can_see + ')');
+add_patch(/(&&)((\w+)\.cnBSeen)(?=\){if\(\(\w+=\3\.objInstances)/, (match, start, can_see) => `${start}${key}.can_see(${can_see})`);
 
 // Game
-add_patch(/(\w+)\.moveObj=func/, (match, game) => key + '.game(' + game + '),' + match);
+add_patch(/(\w+)\.moveObj=func/, (match, game) => `${key}.game(${game}),${match}`);
 
 // World
-add_patch(/(\w+)\.backgroundScene=/, (match, world) => key + '.world(' + world + '),' + match);
+add_patch(/(\w+)\.backgroundScene=/, (match, world) => `${key}.world(${world}),${match}`);
 
 // ThreeJS
-add_patch(/\(\w+,(\w+),\w+\){(?=[a-z ';\.\(\),]+ACESFilmic)/, (match, three) => match + key + '.three(' + three + ');');
+add_patch(/\(\w+,(\w+),\w+\){(?=[a-z ';\.\(\),]+ACESFilmic)/, (match, three) => `${match}${key}.three(${three});`);
 
 // Skins
-add_patch(/((?:[a-zA-Z]+(?:\.|(?=\.skins)))+)\.skins(?!=)/g, (match, player) => key + '.skins(' + player + ')');
+add_patch(/((?:[a-zA-Z]+(?:\.|(?=\.skins)))+)\.skins(?!=)/g, (match, player) => `${key}.skins(${player})`);
 
 // Socket
-add_patch(/(\w+)(\.exports={ahNum:)/, (match, mod, other) => '({set exports(socket){' + key + '.socket(socket);return ' + mod + '.exports=socket}})' + other);
+add_patch(/(\w+)(\.exports={ahNum:)/, (match, mod, other) => `({set exports(socket){${key}.socket(socket);return ${mod}.exports=socket}})${other}`);
 
 // Input
-add_patch(/((\w+\.\w+)\[\2\._push\?'_push':'push']\()(\w+)(\),)/, (match, func, array, input, end) => func + key + '.input(' + input + ')' + end);
+add_patch(/((\w+\.\w+)\[\2\._push\?'_push':'push']\()(\w+)(\),)/, (match, func, array, input, end) => `${func}${key}.input(${input})${end}`);
+
+// Timer
+add_patch(/(\w+\.exports)\.(kickTimer)=([\dex]+)/, (match, object, property, value) => `${key}.timer(${object},"${property}",${value})`);
 
 exports.patch = source => {
 	var found = {},
@@ -2200,11 +2204,12 @@ if(__webpack_require__(/*! ./consts */ "./consts.js").krunker){
 		constants = __webpack_require__(/*! ./consts.js */ "./consts.js"),
 		api = new API(constants.mm_url, constants.api_url),
 		updater = new Updater(constants.script, constants.extracted),
-		main = new Main(),
-		sourcePromise = api.source(),
-		tokenPromise = api.token();
+		main = new Main();
 	
-	api.media('junker',main,constants);
+	api.media(main,constants);
+		
+	var sourcePromise = api.source(),
+		tokenPromise = api.token();
 	
 	let mutationObserver = new MutationObserver(mutations => {
 		for(let mutation of mutations)for(let node of mutation.addedNodes){

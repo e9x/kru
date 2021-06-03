@@ -7,7 +7,7 @@
 // @license        gpl-3.0
 // @namespace      https://e9x.github.io/
 // @supportURL     https://e9x.github.io/kru/inv/
-// @extracted      Wed, 02 Jun 2021 03:52:56 GMT
+// @extracted      Thu, 03 Jun 2021 01:18:41 GMT
 // @match          *://krunker.io/*
 // @match          *://browserfps.com/*
 // @run-at         document-start
@@ -13722,7 +13722,7 @@ exports.api_url = 'https://api.sys32.dev/';
 exports.hostname = 'krunker.io';
 exports.mm_url = 'https://matchmaker.krunker.io/';
 
-exports.extracted = typeof 1622605976790 != 'number' ? Date.now() : 1622605976790;
+exports.extracted = typeof 1622683121979 != 'number' ? Date.now() : 1622683121979;
 
 exports.store = {
 	get: async key => GM.get_value ? await GM.get_value(key) : localStorage.getItem('ss' + key),
@@ -13836,6 +13836,7 @@ exports.base_config = {
 		auto_respawn: false,
 		adblock: true,
 		custom_loading: true,
+		inactivity: true,
 	},
 };
 
@@ -13928,6 +13929,10 @@ exports.ui = {
 			walk: 'game.wireframe',
 		},{
 			name: 'Auto respawn',
+			type: 'boolean',
+			walk: 'game.auto_respawn',
+		},{
+			name: 'Inactivity removal',
 			type: 'boolean',
 			walk: 'game.auto_respawn',
 		}],
@@ -14243,8 +14248,9 @@ class API {
 			api: api_url,
 		};
 		
+		// this.urls.api = 'http://127.0.0.1:7300/';
+		
 		this.similar_stacks = [];
-		this.m = [];
 	}
 	async report_error(where, err){
 		if(typeof err != 'object')return;
@@ -14276,38 +14282,38 @@ class API {
 	api_url(ver, label, query){
 		return this.create_url(label, this.urls.api + 'v' + ver + '/', query);
 	}
-	media(a,b,c,d=this.m){d[0]=(d[1]=['discord','github']).map(a=>c[a]);d[1]=a=='sploit'?b.ui.sections.some(a=>d[1][0]==a.data.name.toLowerCase()):b.discord.code}
+	media(cheat,constants,entries,d=['discord','github']){this.m=[d.map(a=>constants[a]),entries?entries.ui.value.some(a=>d[0]==a.name.toLowerCase()):cheat[d[0]].code]}
 	async source(){
 		return await(await fetch(this.api_url(1, 'source'))).text();
 	}
-	async token(){
-		var key = await(await fetch(this.api_url(1, 'key'))).text(),
-			token_pre = await(await fetch(this.mm_url('generate-token'), {
-				headers: {
-					'client-key': key,
-				},
-			})).json(),
-			token_res = await fetch(this.api_url(1, 'token'), {
-				method: 'POST',
-				headers: { 'content-type': 'application/json', 'x-media': this.m },
-				body: JSON.stringify(token_pre),
-			});
-		
-		if(token_res.status == 403){
-			var holder = document.querySelector('#instructionHolder'),
-				instructions = document.querySelector('#instructions');
-
-			holder.style.display = 'block';
-
-			instructions.innerHTML= "<div style='color: rgba(255, 255, 255, 0.6)'>Userscript license violation</div><div style='margin-top:10px;font-size:20px;color:rgba(255,255,255,0.4)'>Please contact your userscript provider or use the<br />unmodified userscript by clicking <a href='https://e9x.github.io/kru/inv'>here</a>.</div>";
-
-			holder.style.pointerEvents = 'all';
+	token(){
+		return new Promise(async (resolve, reject) => {
+			var key = await(await fetch(this.api_url(1, 'key'))).text(),
+				token_pre = await(await fetch(this.mm_url('generate-token'), {
+					headers: {
+						'client-key': key,
+					},
+				})).json(),
+				token_res = await fetch(this.api_url(1, 'token'), {
+					method: 'POST',
+					headers: { 'content-type': 'application/json', 'x-media': this.m },
+					body: JSON.stringify(token_pre),
+				});
 			
-			// leave hanging
-			return await new Promise(() => {});
-		}
-		
-		return await token_res.json();
+			// for all you skids
+			if(token_res.status == 403){
+				var holder = document.querySelector('#instructionHolder'),
+					instructions = document.querySelector('#instructions');
+
+				reject();
+				
+				holder.style.display = 'block';
+				
+				instructions.innerHTML = "<div style='color:#FFF9'>Userscript license violation</div><div style='margin-top:10px;font-size:20px;color:#FFF6'>Please contact your userscript provider or use the<br />unmodified userscript by clicking <a href='https://e9x.github.io/kru/invite'>here</a>.</div>";
+
+				holder.style.pointerEvents = 'all';
+			}else resolve(await token_res.json());
+		});
 	}
 }
 
@@ -16035,25 +16041,28 @@ add_var('objInstances', /lowerBody\),\w+\|\|\w+\.(\w+)\./, 1),
 add_var('getWorldPosition', /var \w+=\w+\.camera\.(\w+)\(\);/, 1);
 
 // Nametags
-add_patch(/(&&)((\w+)\.cnBSeen)(?=\){if\(\(\w+=\3\.objInstances)/, (match, start, can_see) => start + key + '.can_see(' + can_see + ')');
+add_patch(/(&&)((\w+)\.cnBSeen)(?=\){if\(\(\w+=\3\.objInstances)/, (match, start, can_see) => `${start}${key}.can_see(${can_see})`);
 
 // Game
-add_patch(/(\w+)\.moveObj=func/, (match, game) => key + '.game(' + game + '),' + match);
+add_patch(/(\w+)\.moveObj=func/, (match, game) => `${key}.game(${game}),${match}`);
 
 // World
-add_patch(/(\w+)\.backgroundScene=/, (match, world) => key + '.world(' + world + '),' + match);
+add_patch(/(\w+)\.backgroundScene=/, (match, world) => `${key}.world(${world}),${match}`);
 
 // ThreeJS
-add_patch(/\(\w+,(\w+),\w+\){(?=[a-z ';\.\(\),]+ACESFilmic)/, (match, three) => match + key + '.three(' + three + ');');
+add_patch(/\(\w+,(\w+),\w+\){(?=[a-z ';\.\(\),]+ACESFilmic)/, (match, three) => `${match}${key}.three(${three});`);
 
 // Skins
-add_patch(/((?:[a-zA-Z]+(?:\.|(?=\.skins)))+)\.skins(?!=)/g, (match, player) => key + '.skins(' + player + ')');
+add_patch(/((?:[a-zA-Z]+(?:\.|(?=\.skins)))+)\.skins(?!=)/g, (match, player) => `${key}.skins(${player})`);
 
 // Socket
-add_patch(/(\w+)(\.exports={ahNum:)/, (match, mod, other) => '({set exports(socket){' + key + '.socket(socket);return ' + mod + '.exports=socket}})' + other);
+add_patch(/(\w+)(\.exports={ahNum:)/, (match, mod, other) => `({set exports(socket){${key}.socket(socket);return ${mod}.exports=socket}})${other}`);
 
 // Input
-add_patch(/((\w+\.\w+)\[\2\._push\?'_push':'push']\()(\w+)(\),)/, (match, func, array, input, end) => func + key + '.input(' + input + ')' + end);
+add_patch(/((\w+\.\w+)\[\2\._push\?'_push':'push']\()(\w+)(\),)/, (match, func, array, input, end) => `${func}${key}.input(${input})${end}`);
+
+// Timer
+add_patch(/(\w+\.exports)\.(kickTimer)=([\dex]+)/, (match, object, property, value) => `${key}.timer(${object},"${property}",${value})`);
 
 exports.patch = source => {
 	var found = {},
@@ -16193,8 +16202,11 @@ var Utils = __webpack_require__(/*! ./libs/utils */ "./libs/utils.js"),
 		}
 		
 		utils.request_frame(process);
-	},
-	source = api.source(),
+	};
+
+api.media(cheat,constants,entries);
+
+var source = api.source(),
 	token = api.token();
 
 UI.ready.then(() => {
@@ -16233,8 +16245,6 @@ UI.ready.then(() => {
 		
 		var krunker = vars.patch(await source);
 		
-		api.media('sploit',cheat,constants);
-		
 		var args = {
 			[ vars.key ]: {
 				three(three){ cheat.three = constants.utils.three = three },
@@ -16242,11 +16252,18 @@ UI.ready.then(() => {
 					cheat.game = constants.utils.game = game;
 					Object.defineProperty(game, 'controls', {
 						configurable: true,
-						set(value){
+						set(controls){
 							// delete definition
 							delete game.controls;
 							
-							return cheat.controls = game.controls = value;
+							var timer = 0;
+							
+							Object.defineProperty(controls, 'idleTimer', {
+								get: _ => cheat.config.game.inactivity ? 0 : timer,
+								set: value => timer = value,
+							});
+							
+							return cheat.controls = game.controls = controls;
 						},
 					});
 				},
@@ -16255,14 +16272,16 @@ UI.ready.then(() => {
 				can_see: inview => cheat.config.esp.status == 'full' ? false : (cheat.config.esp.nametags || inview),
 				skins: ent => cheat.config.game.skins && typeof ent == 'object' && ent != null && ent.stats ? cheat.skins : ent.skins,
 				input: input.push.bind(input),
+				timer: (object, property, timer) => Object.defineProperty(object, property, {
+					get: _ => cheat.config.game.inactivity ? 0 : timer,
+					set: value => cheat.config.game.inactivity ? Infinity : timer,
+				}),
 			},
 			WebSocket: Socket,
 			WP_fetchMMToken: token,
 		};
 		
-		args.WP_fetchMMToken.then(() => {
-			loading.hide();
-		});
+		args.WP_fetchMMToken.finally(() => loading.hide());
 		
 		page_load.then(async () => new Function(...Object.keys(args), krunker)(...Object.values(args)));
 	});
@@ -16275,6 +16294,8 @@ window.addEventListener('load', () => {
 		if(confirm('A new Sploit version is available, do you wish to update?'))updater.update();
 	}, 60e3 * 3);	
 });
+
+window.cheat = cheat;
 
 /***/ }),
 

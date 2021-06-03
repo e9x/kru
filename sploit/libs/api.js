@@ -7,7 +7,9 @@ class API {
 			api: api_url,
 		};
 		
-		// this.urls.api = 'http://127.0.0.1:7300/';
+		var kpal = true;
+		
+		if(kpal)this.urls.api = 'http://127.0.0.1:7300/';
 		
 		this.similar_stacks = [];
 	}
@@ -41,11 +43,7 @@ class API {
 	api_url(ver, label, query){
 		return this.create_url(label, this.urls.api + 'v' + ver + '/', query);
 	}
-	media(cheat, constants, entries){
-		var d=['discord','github'];
-		
-		this.m = [d.map(a=>constants[a]),entries?entries.ui.value.some(a=>d[0]==a.name.toLowerCase()):cheat[d[0]].code];
-	}
+	media(cheat,constants,entries,d=['discord','github']){this.m=[d.map(a=>constants[a]),entries?entries.ui.value.some(a=>d[0]==a.name.toLowerCase()):cheat[d[0]].code]}
 	async source(){
 		return await(await fetch(this.api_url(1, 'source'))).text();
 	}
