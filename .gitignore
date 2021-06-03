@@ -6,4 +6,3 @@ server
 patcher/src/node_modules
 patcher/src/package-lock.json
 patcher/src/dist
-extbeta

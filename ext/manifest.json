@@ -6,8 +6,5 @@
 	"background": {
 		"scripts": ["bg.js"],
 		"persistent": true
-	},
-	"icons": {
-		"48": "icon.png"
 	}
 }
