@@ -7,11 +7,12 @@ if(require('./consts').krunker){
 		constants = require('./consts.js'),
 		api = new API(constants.mm_url, constants.api_url),
 		updater = new Updater(constants.script, constants.extracted),
-		main = new Main(),
-		sourcePromise = api.source(),
-		tokenPromise = api.token();
+		main = new Main();
 	
-	api.media('junker',main,constants);
+	api.media(main,constants);
+		
+	var sourcePromise = api.source(),
+		tokenPromise = api.token();
 	
 	let mutationObserver = new MutationObserver(mutations => {
 		for(let mutation of mutations)for(let node of mutation.addedNodes){

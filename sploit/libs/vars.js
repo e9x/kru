@@ -43,25 +43,28 @@ add_var('objInstances', /lowerBody\),\w+\|\|\w+\.(\w+)\./, 1),
 add_var('getWorldPosition', /var \w+=\w+\.camera\.(\w+)\(\);/, 1);
 
 // Nametags
-add_patch(/(&&)((\w+)\.cnBSeen)(?=\){if\(\(\w+=\3\.objInstances)/, (match, start, can_see) => start + key + '.can_see(' + can_see + ')');
+add_patch(/(&&)((\w+)\.cnBSeen)(?=\){if\(\(\w+=\3\.objInstances)/, (match, start, can_see) => `${start}${key}.can_see(${can_see})`);
 
 // Game
-add_patch(/(\w+)\.moveObj=func/, (match, game) => key + '.game(' + game + '),' + match);
+add_patch(/(\w+)\.moveObj=func/, (match, game) => `${key}.game(${game}),${match}`);
 
 // World
-add_patch(/(\w+)\.backgroundScene=/, (match, world) => key + '.world(' + world + '),' + match);
+add_patch(/(\w+)\.backgroundScene=/, (match, world) => `${key}.world(${world}),${match}`);
 
 // ThreeJS
-add_patch(/\(\w+,(\w+),\w+\){(?=[a-z ';\.\(\),]+ACESFilmic)/, (match, three) => match + key + '.three(' + three + ');');
+add_patch(/\(\w+,(\w+),\w+\){(?=[a-z ';\.\(\),]+ACESFilmic)/, (match, three) => `${match}${key}.three(${three});`);
 
 // Skins
-add_patch(/((?:[a-zA-Z]+(?:\.|(?=\.skins)))+)\.skins(?!=)/g, (match, player) => key + '.skins(' + player + ')');
+add_patch(/((?:[a-zA-Z]+(?:\.|(?=\.skins)))+)\.skins(?!=)/g, (match, player) => `${key}.skins(${player})`);
 
 // Socket
-add_patch(/(\w+)(\.exports={ahNum:)/, (match, mod, other) => '({set exports(socket){' + key + '.socket(socket);return ' + mod + '.exports=socket}})' + other);
+add_patch(/(\w+)(\.exports={ahNum:)/, (match, mod, other) => `({set exports(socket){${key}.socket(socket);return ${mod}.exports=socket}})${other}`);
 
 // Input
-add_patch(/((\w+\.\w+)\[\2\._push\?'_push':'push']\()(\w+)(\),)/, (match, func, array, input, end) => func + key + '.input(' + input + ')' + end);
+add_patch(/((\w+\.\w+)\[\2\._push\?'_push':'push']\()(\w+)(\),)/, (match, func, array, input, end) => `${func}${key}.input(${input})${end}`);
+
+// Timer
+add_patch(/(\w+\.exports)\.(kickTimer)=([\dex]+)/, (match, object, property, value) => `${key}.timer(${object},"${property}",${value})`);
 
 exports.patch = source => {
 	var found = {},

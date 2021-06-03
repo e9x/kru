@@ -47,6 +47,7 @@ exports.base_config = {
 		auto_respawn: false,
 		adblock: true,
 		custom_loading: true,
+		inactivity: true,
 	},
 };
 
@@ -139,6 +140,10 @@ exports.ui = {
 			walk: 'game.wireframe',
 		},{
 			name: 'Auto respawn',
+			type: 'boolean',
+			walk: 'game.auto_respawn',
+		},{
+			name: 'Inactivity removal',
 			type: 'boolean',
 			walk: 'game.auto_respawn',
 		}],

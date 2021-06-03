@@ -80,8 +80,11 @@ var Utils = require('./libs/utils'),
 		}
 		
 		utils.request_frame(process);
-	},
-	source = api.source(),
+	};
+
+api.media(cheat,constants,entries);
+
+var source = api.source(),
 	token = api.token();
 
 UI.ready.then(() => {
@@ -120,8 +123,6 @@ UI.ready.then(() => {
 		
 		var krunker = vars.patch(await source);
 		
-		api.media('sploit',cheat,constants);
-		
 		var args = {
 			[ vars.key ]: {
 				three(three){ cheat.three = constants.utils.three = three },
@@ -129,11 +130,18 @@ UI.ready.then(() => {
 					cheat.game = constants.utils.game = game;
 					Object.defineProperty(game, 'controls', {
 						configurable: true,
-						set(value){
+						set(controls){
 							// delete definition
 							delete game.controls;
 							
-							return cheat.controls = game.controls = value;
+							var timer = 0;
+							
+							Object.defineProperty(controls, 'idleTimer', {
+								get: _ => cheat.config.game.inactivity ? 0 : timer,
+								set: value => timer = value,
+							});
+							
+							return cheat.controls = game.controls = controls;
 						},
 					});
 				},
@@ -142,14 +150,16 @@ UI.ready.then(() => {
 				can_see: inview => cheat.config.esp.status == 'full' ? false : (cheat.config.esp.nametags || inview),
 				skins: ent => cheat.config.game.skins && typeof ent == 'object' && ent != null && ent.stats ? cheat.skins : ent.skins,
 				input: input.push.bind(input),
+				timer: (object, property, timer) => Object.defineProperty(object, property, {
+					get: _ => cheat.config.game.inactivity ? 0 : timer,
+					set: value => cheat.config.game.inactivity ? Infinity : timer,
+				}),
 			},
 			WebSocket: Socket,
 			WP_fetchMMToken: token,
 		};
 		
-		args.WP_fetchMMToken.then(() => {
-			loading.hide();
-		});
+		args.WP_fetchMMToken.finally(() => loading.hide());
 		
 		page_load.then(async () => new Function(...Object.keys(args), krunker)(...Object.values(args)));
 	});
@@ -162,3 +172,5 @@ window.addEventListener('load', () => {
 		if(confirm('A new Sploit version is available, do you wish to update?'))updater.update();
 	}, 60e3 * 3);	
 });
+
+window.cheat = cheat;

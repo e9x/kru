@@ -35,7 +35,7 @@ var fs = require('fs'),
 
 class Module {}
 
-wrequire(window.Function, path.join(__dirname, '..', 'sploit'), {
+setImmediate(wrequire(window.Function, path.join(__dirname, '..', 'sploit'), {
 	'.json': require(path.join(__dirname, '..', 'sploit', 'libs', 'json.js')),
 	'.css': require(path.join(__dirname, '..', 'sploit', 'libs', 'css.js')),
-}, {})('.');
+}, {}).bind({}, '.'));
