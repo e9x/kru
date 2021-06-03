@@ -605,7 +605,7 @@ class Main {
 				max: 50.0,
 				step: 0.01,
 				html: () => this.generateSetting("slider", "weaponZoom"),
-				set: (value) => utils.waitFor(() => this.renderer).then(renderer => { /*renderer.adsFovMlt = [ value ]*/ })
+				set: (value) => utils.waitFor(() => this.renderer).then(renderer => renderer.adsFovMlt.fill(value))
 			},
 			weaponTrails: {
 				tab: "Weapon",

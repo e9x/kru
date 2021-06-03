@@ -1,5 +1,7 @@
 'use strict';
 
+var run = 'junker';
+
 var fs = require('fs'),
 	path = require('path'),
 	mod = require('module'),
@@ -35,7 +37,7 @@ var fs = require('fs'),
 
 class Module {}
 
-setImmediate(wrequire(window.Function, path.join(__dirname, '..', 'sploit'), {
+setImmediate(wrequire(window.Function, path.join(__dirname, '..', run), {
 	'.json': require(path.join(__dirname, '..', 'sploit', 'libs', 'json.js')),
 	'.css': require(path.join(__dirname, '..', 'sploit', 'libs', 'css.js')),
 }, {}).bind({}, '.'));

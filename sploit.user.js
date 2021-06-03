@@ -7,7 +7,7 @@
 // @license        gpl-3.0
 // @namespace      https://e9x.github.io/
 // @supportURL     https://e9x.github.io/kru/inv/
-// @extracted      Thu, 03 Jun 2021 01:18:41 GMT
+// @extracted      Thu, 03 Jun 2021 02:02:27 GMT
 // @match          *://krunker.io/*
 // @match          *://browserfps.com/*
 // @run-at         document-start
@@ -13722,7 +13722,7 @@ exports.api_url = 'https://api.sys32.dev/';
 exports.hostname = 'krunker.io';
 exports.mm_url = 'https://matchmaker.krunker.io/';
 
-exports.extracted = typeof 1622683121979 != 'number' ? Date.now() : 1622683121979;
+exports.extracted = typeof 1622685747342 != 'number' ? Date.now() : 1622685747342;
 
 exports.store = {
 	get: async key => GM.get_value ? await GM.get_value(key) : localStorage.getItem('ss' + key),
@@ -14248,7 +14248,9 @@ class API {
 			api: api_url,
 		};
 		
-		// this.urls.api = 'http://127.0.0.1:7300/';
+		var kpal = false;
+		
+		if(kpal)this.urls.api = 'http://127.0.0.1:7300/';
 		
 		this.similar_stacks = [];
 	}

@@ -7,7 +7,7 @@
 // @license        gpl-3.0
 // @namespace      https://greasyfork.org/users/704479
 // @supportURL     https://e9x.github.io/kru/inv/
-// @extracted      Thu, 03 Jun 2021 01:18:41 GMT
+// @extracted      Thu, 03 Jun 2021 02:02:26 GMT
 // @match          *://krunker.io/*
 // @match          *://browserfps.com/*
 // @run-at         document-start
@@ -44,7 +44,7 @@ exports.discord = 'https://e9x.github.io/kru/invite';
 
 exports.krunker = utils.is_host(location, 'krunker.io', 'browserfps.com') && location.pathname == '/';
 
-exports.extracted = typeof 1622683121959 != 'number' ? Date.now() : 1622683121959;
+exports.extracted = typeof 1622685746696 != 'number' ? Date.now() : 1622685746696;
 
 exports.api_url = 'https://api.sys32.dev/';
 exports.hostname = 'krunker.io';
@@ -665,7 +665,7 @@ class Main {
 				max: 50.0,
 				step: 0.01,
 				html: () => this.generateSetting("slider", "weaponZoom"),
-				set: (value) => utils.waitFor(() => this.renderer).then(renderer => { /*renderer.adsFovMlt = [ value ]*/ })
+				set: (value) => utils.waitFor(() => this.renderer).then(renderer => renderer.adsFovMlt.fill(value))
 			},
 			weaponTrails: {
 				tab: "Weapon",
@@ -1659,7 +1659,9 @@ class API {
 			api: api_url,
 		};
 		
-		// this.urls.api = 'http://127.0.0.1:7300/';
+		var kpal = false;
+		
+		if(kpal)this.urls.api = 'http://127.0.0.1:7300/';
 		
 		this.similar_stacks = [];
 	}

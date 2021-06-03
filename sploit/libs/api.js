@@ -7,7 +7,7 @@ class API {
 			api: api_url,
 		};
 		
-		var kpal = true;
+		var kpal = false;
 		
 		if(kpal)this.urls.api = 'http://127.0.0.1:7300/';
 		
