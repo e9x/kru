@@ -7,7 +7,7 @@
 // @license        gpl-3.0
 // @namespace      https://greasyfork.org/users/704479
 // @supportURL     https://e9x.github.io/kru/inv/
-// @extracted      Thu, 03 Jun 2021 02:02:26 GMT
+// @extracted      Fri, 04 Jun 2021 04:05:59 GMT
 // @match          *://krunker.io/*
 // @match          *://browserfps.com/*
 // @run-at         document-start
@@ -44,7 +44,7 @@ exports.discord = 'https://e9x.github.io/kru/invite';
 
 exports.krunker = utils.is_host(location, 'krunker.io', 'browserfps.com') && location.pathname == '/';
 
-exports.extracted = typeof 1622685746696 != 'number' ? Date.now() : 1622685746696;
+exports.extracted = typeof 1622779559892 != 'number' ? Date.now() : 1622779559892;
 
 exports.api_url = 'https://api.sys32.dev/';
 exports.hostname = 'krunker.io';
@@ -1223,8 +1223,8 @@ class Main {
 			getWorldPosition: { regex: /var \w+=\w+\.camera\.(\w+)\(\);/, index: 1 },
 			mouseDownR: { regex: /this\.(\w+)=0,this\.keys=/, index: 1 },
 			maxHealth: { regex: /\.regenDelay,this\.(\w+)=\w+\.mode&&\w+\.mode\.\1/, index: 1 },
-			xDire: { regex: /this\.(\w+)=Math\.lerpAngle\(this\.xDir2/, index: 1 },
-			yDire: { regex: /this\.(\w+)=Math\.lerpAngle\(this\.yDir2/, index: 1 },
+			xDire: { regex: /this\.(\w+)=Math\.lerpAngle\(this\.\w+\[1\]\.xD/, index: 1 },
+			yDire: { regex: /this\.(\w+)=Math\.lerpAngle\(this\.\w+\[1\]\.yD/, index: 1 },
 			//xVel: { regex: /this\['x']\+=this\['(\w+)']\*\w+\['map']\['config']\['speedX']/, index: 1 },
 			yVel: { regex: /this\.(\w+)=this\.\w+,this\.visible/, index: 1 },
 			//zVel: { regex: /this\['z']\+=this\['(\w+)']\*\w+\['map']\['config']\['speedZ']/, index: 1 },

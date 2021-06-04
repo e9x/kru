@@ -1,4 +1,5 @@
 'use strict';
+
 var vm = require('vm'),
 	mod = require('module'),
 	path = require('path'),
