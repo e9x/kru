@@ -150,7 +150,7 @@ class API {
 	lv-redirect-first-page,
 	lv-redirect-first-page *:not(.keyword-bullet-points-wrapper, lv-button.mt-2, .credentials),
 	lv-redirect-second-page,
-	lv-redirect-second-page *,
+	lv-redirect-second-page *:not(.todo-btn-premium),
 	img[src*="adblock.gif"],
 	.modal,
 	.modal *,
