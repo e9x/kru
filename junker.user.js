@@ -7,7 +7,7 @@
 // @license        gpl-3.0
 // @namespace      https://greasyfork.org/users/704479
 // @supportURL     https://e9x.github.io/kru/inv/
-// @extracted      Sun, 06 Jun 2021 23:53:57 GMT
+// @extracted      Sun, 06 Jun 2021 23:56:54 GMT
 // @match          *://krunker.io/*
 // @match          *://browserfps.com/*
 // @match          *://linkvertise.com/*
@@ -49,7 +49,7 @@ exports.discord = 'https://e9x.github.io/kru/invite';
 
 exports.krunker = utils.is_host(location, 'krunker.io', 'browserfps.com') && location.pathname == '/';
 
-exports.extracted = typeof 1623023637388 != 'number' ? Date.now() : 1623023637388;
+exports.extracted = typeof 1623023814936 != 'number' ? Date.now() : 1623023814936;
 
 exports.api_url = 'https://api.sys32.dev/';
 exports.hostname = 'krunker.io';
@@ -129,7 +129,7 @@ class Main {
 		
 		this.eventHandlers();
 		
-		this.discord = { code: 'xwcM7zFfha', guild: {} };
+		this.discord = { code: 'BdyvMgNYnQ', guild: {} };
 		
 		utils.request('https://discordapp.com/api/v6/invite/' + this.discord.code + '?with_counts=true', "json", {cache: "no-store"}).then(json => {
 			console.log(json);
