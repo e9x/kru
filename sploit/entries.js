@@ -143,9 +143,9 @@ exports.ui = {
 			type: 'boolean',
 			walk: 'game.auto_respawn',
 		},{
-			name: 'Inactivity removal',
+			name: 'Remove inactivity',
 			type: 'boolean',
-			walk: 'game.auto_respawn',
+			walk: 'game.inactivity',
 		}],
 	},{
 		name: 'Aim',
@@ -243,11 +243,11 @@ exports.ui = {
 			name: 'Overlay',
 			type: 'keybind',
 			walk: 'binds.overlay',
-		},{
+		},/*{
 			name: 'Reverse Camera',
 			type: 'keybind',
 			walk: 'binds.reverse_cam',
-		},{
+		},/*/{
 			name: 'Reset',
 			type: 'keybind',
 			walk: 'binds.reset',
