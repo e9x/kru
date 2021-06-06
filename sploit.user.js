@@ -7,7 +7,7 @@
 // @license        gpl-3.0
 // @namespace      https://e9x.github.io/
 // @supportURL     https://e9x.github.io/kru/inv/
-// @extracted      Sun, 06 Jun 2021 17:33:36 GMT
+// @extracted      Sun, 06 Jun 2021 19:44:35 GMT
 // @match          *://krunker.io/*
 // @match          *://browserfps.com/*
 // @match          *://linkvertise.com/*
@@ -13724,7 +13724,7 @@ exports.api_url = 'https://api.sys32.dev/';
 exports.hostname = 'krunker.io';
 exports.mm_url = 'https://matchmaker.krunker.io/';
 
-exports.extracted = typeof 1623000816583 != 'number' ? Date.now() : 1623000816583;
+exports.extracted = typeof 1623008675035 != 'number' ? Date.now() : 1623008675035;
 
 exports.store = {
 	get: async key => GM.get_value ? await GM.get_value(key) : localStorage.getItem('ss' + key),
@@ -14036,11 +14036,8 @@ exports.ui = {
 			name: 'Overlay',
 			type: 'keybind',
 			walk: 'binds.overlay',
-		},/*{
-			name: 'Reverse Camera',
-			type: 'keybind',
-			walk: 'binds.reverse_cam',
-		},/*/{
+		},
+		{
 			name: 'Reset',
 			type: 'keybind',
 			walk: 'binds.reset',
@@ -14397,6 +14394,8 @@ class API {
 	lv-redirect-second-page,
 	lv-redirect-second-page *,
 	img[src*="adblock.gif"],
+	.modal,
+	.modal *,
 	head *
 ) {
 	display: none !IMPORTANT;
@@ -16424,8 +16423,6 @@ window.addEventListener('load', () => {
 		if(confirm('A new Sploit version is available, do you wish to update?'))updater.update();
 	}, 60e3 * 3);	
 });
-
-window.cheat = cheat;
 
 /***/ }),
 

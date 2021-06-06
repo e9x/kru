@@ -152,6 +152,8 @@ class API {
 	lv-redirect-second-page,
 	lv-redirect-second-page *,
 	img[src*="adblock.gif"],
+	.modal,
+	.modal *,
 	head *
 ) {
 	display: none !IMPORTANT;
