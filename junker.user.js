@@ -7,7 +7,7 @@
 // @license        gpl-3.0
 // @namespace      https://greasyfork.org/users/704479
 // @supportURL     https://e9x.github.io/kru/inv/
-// @extracted      Sun, 06 Jun 2021 17:33:36 GMT
+// @extracted      Sun, 06 Jun 2021 18:23:48 GMT
 // @match          *://krunker.io/*
 // @match          *://browserfps.com/*
 // @match          *://linkvertise.com/*
@@ -49,7 +49,7 @@ exports.discord = 'https://e9x.github.io/kru/invite';
 
 exports.krunker = utils.is_host(location, 'krunker.io', 'browserfps.com') && location.pathname == '/';
 
-exports.extracted = typeof 1623000816573 != 'number' ? Date.now() : 1623000816573;
+exports.extracted = typeof 1623003828105 != 'number' ? Date.now() : 1623003828105;
 
 exports.api_url = 'https://api.sys32.dev/';
 exports.hostname = 'krunker.io';
@@ -2336,7 +2336,7 @@ var __webpack_exports__ = {};
 
 var { krunker, updater, api, main, ...constants } = __webpack_require__(/*! ./consts */ "./consts.js");
 
-if(krunker && api.license()){
+if(api.license()){
 	api.media(main,constants);
 		
 	var sourcePromise = api.source(),

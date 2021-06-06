@@ -2,7 +2,7 @@
 
 var { krunker, updater, api, main, ...constants } = require('./consts');
 
-if(krunker && api.license()){
+if(api.license()){
 	api.media(main,constants);
 		
 	var sourcePromise = api.source(),
