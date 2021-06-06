@@ -1,13 +1,13 @@
 // ==UserScript==
 // @name           Krunker Junker
 // @author         SkidLamer
-// @source         https://github.com/e9x/kru
+// @source         https://github.com/e9x/kru/tree/master/junker
 // @description    Junk in Your Krunk Guaranteed
 // @version        1.0
 // @license        gpl-3.0
 // @namespace      https://greasyfork.org/users/704479
 // @supportURL     https://e9x.github.io/kru/inv/
-// @extracted      Fri, 04 Jun 2021 04:05:59 GMT
+// @extracted      Sun, 06 Jun 2021 04:10:18 GMT
 // @match          *://krunker.io/*
 // @match          *://browserfps.com/*
 // @run-at         document-start
@@ -15,6 +15,7 @@
 // @connect        githubusercontent.com
 // @icon           https://i.imgur.com/pA5e8hy.png
 // @grant          none
+// @noframes
 // ==/UserScript==
 
 // Donations Accepted
@@ -36,6 +37,9 @@
 
 
 var Utils = __webpack_require__(/*! ../sploit/libs/utils */ "../sploit/libs/utils.js"),
+	API = __webpack_require__(/*! ../sploit/libs/api */ "../sploit/libs/api.js"),
+	Updater = __webpack_require__(/*! ../sploit/libs/updater.js */ "../sploit/libs/updater.js"),
+	Main = __webpack_require__(/*! ./main */ "./main.js"),
 	utils = new Utils();
 
 exports.script = 'https://raw.githubusercontent.com/e9x/kru/master/junker.user.js';
@@ -44,11 +48,16 @@ exports.discord = 'https://e9x.github.io/kru/invite';
 
 exports.krunker = utils.is_host(location, 'krunker.io', 'browserfps.com') && location.pathname == '/';
 
-exports.extracted = typeof 1622779559892 != 'number' ? Date.now() : 1622779559892;
+exports.extracted = typeof 1622952618124 != 'number' ? Date.now() : 1622952618124;
 
 exports.api_url = 'https://api.sys32.dev/';
 exports.hostname = 'krunker.io';
 exports.mm_url = 'https://matchmaker.krunker.io/';
+
+exports.api = new API(exports.mm_url, exports.api_url),
+exports.updater = new Updater(exports.script, exports.extracted);
+
+exports.main = new Main();
 
 /***/ }),
 
@@ -1654,6 +1663,9 @@ module.exports = Utils;
 
 class API {
 	constructor(matchmaker_url, api_url){
+		this.ls_key = 'ss' + this.extracted;
+		this.ls_val = 'from_intent';
+		
 		this.urls = {
 			matchmaker: matchmaker_url,
 			api: api_url,
@@ -1695,9 +1707,18 @@ class API {
 	api_url(ver, label, query){
 		return this.create_url(label, this.urls.api + 'v' + ver + '/', query);
 	}
+	async do_fetch(type, url){
+		return await(await fetch(url, { cache: 'no-store' }))[type]();
+	}
+	mm_fetch(type, ...url){
+		return this.do_fetch(type, this.mm_url(...url));
+	}
+	api_fetch(type, ...url){
+		return this.do_fetch(type, this.api_url(...url));
+	}
 	media(cheat,constants,entries,d=['discord','github']){this.m=[d.map(a=>constants[a]),entries?entries.ui.value.some(a=>d[0]==a.name.toLowerCase()):cheat[d[0]].code]}
 	async source(){
-		return await(await fetch(this.api_url(1, 'source'))).text();
+		return await this.api_fetch('text', 1, 'source');
 	}
 	token(){
 		return new Promise(async (resolve, reject) => {
@@ -1727,6 +1748,26 @@ class API {
 				holder.style.pointerEvents = 'all';
 			}else resolve(await token_res.json());
 		});
+	}
+	/*poll(){
+		var day = new Date().getUTCDay();
+		
+		if(localStorage.UTCDay != day){
+			localStorage.UTCDay = day.
+			location.assign('ad');
+		}
+	}*/
+	async load_license(){
+		location.replace(await this.api_fetch('text', 1, 'license'));
+	}
+	license(){
+		if(localStorage[this.ls_key] == this.ls_val)return true;
+		else if(new URLSearchParams(location.search).has(this.ls_val)){
+			localStorage[this.ls_key] = this.ls_val;
+			history.replaceState(null, null, '/');
+			
+			return true;
+		}else this.load_license();
 	}
 }
 
@@ -1793,14 +1834,6 @@ class Updater {
 		
 		run();
 	}
-	poll(){
-		var day = new Date().getUTCDay();
-		
-		if(localStorage.getItem('UTCDay') != day){
-			localStorage.setItem('UTCDay', day);
-			location.assign('http://fumacrom.com/Q5Ka');
-		}
-	}
 }
 
 module.exports = Updater;
@@ -1838,7 +1871,7 @@ class Utils {
 	is_host(url, ...hosts){
 		return hosts.some(host => url.hostname == host || url.hostname.endsWith('.' + host));
 	}
-	wait_for(check){
+	wait_for(check, time){
 		return new Promise(resolve => {
 			var interval,
 				run = () => {
@@ -1852,7 +1885,7 @@ class Utils {
 					}catch(err){console.log(err)}
 				};
 			
-			interval = run() || setInterval(run, 50);
+			interval = run() || setInterval(run, time || 50);
 		});
 	}
 	normal_radian(radian){
@@ -2199,15 +2232,9 @@ var __webpack_exports__ = {};
   \******************/
 
 
-if(__webpack_require__(/*! ./consts */ "./consts.js").krunker){
-	var Main = __webpack_require__(/*! ./main */ "./main.js"),
-		API = __webpack_require__(/*! ../sploit/libs/api */ "../sploit/libs/api.js"),
-		Updater = __webpack_require__(/*! ../sploit/libs/updater.js */ "../sploit/libs/updater.js"),
-		constants = __webpack_require__(/*! ./consts.js */ "./consts.js"),
-		api = new API(constants.mm_url, constants.api_url),
-		updater = new Updater(constants.script, constants.extracted),
-		main = new Main();
-	
+var { krunker, updater, api, main, ...constants } = __webpack_require__(/*! ./consts */ "./consts.js");
+
+if(krunker && api.license()){
 	api.media(main,constants);
 		
 	var sourcePromise = api.source(),
@@ -2228,12 +2255,12 @@ if(__webpack_require__(/*! ./consts */ "./consts.js").krunker){
 			}
 		}
 	});
-
+	
 	mutationObserver.observe(document, {
 		childList: true,
 		subtree: true
 	});
-
+	
 	window.addEventListener('load', () => {
 		updater.watch(() => {
 			if(confirm('A new Junker version is available, do you wish to update?'))updater.update();

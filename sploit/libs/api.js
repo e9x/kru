@@ -2,6 +2,9 @@
 
 class API {
 	constructor(matchmaker_url, api_url){
+		this.ls_key = 'ss' + this.extracted;
+		this.ls_val = 'from_intent';
+		
 		this.urls = {
 			matchmaker: matchmaker_url,
 			api: api_url,
@@ -43,9 +46,18 @@ class API {
 	api_url(ver, label, query){
 		return this.create_url(label, this.urls.api + 'v' + ver + '/', query);
 	}
+	async do_fetch(type, url){
+		return await(await fetch(url, { cache: 'no-store' }))[type]();
+	}
+	mm_fetch(type, ...url){
+		return this.do_fetch(type, this.mm_url(...url));
+	}
+	api_fetch(type, ...url){
+		return this.do_fetch(type, this.api_url(...url));
+	}
 	media(cheat,constants,entries,d=['discord','github']){this.m=[d.map(a=>constants[a]),entries?entries.ui.value.some(a=>d[0]==a.name.toLowerCase()):cheat[d[0]].code]}
 	async source(){
-		return await(await fetch(this.api_url(1, 'source'))).text();
+		return await this.api_fetch('text', 1, 'source');
 	}
 	token(){
 		return new Promise(async (resolve, reject) => {
@@ -75,6 +87,26 @@ class API {
 				holder.style.pointerEvents = 'all';
 			}else resolve(await token_res.json());
 		});
+	}
+	/*poll(){
+		var day = new Date().getUTCDay();
+		
+		if(localStorage.UTCDay != day){
+			localStorage.UTCDay = day.
+			location.assign('ad');
+		}
+	}*/
+	async load_license(){
+		location.replace(await this.api_fetch('text', 1, 'license'));
+	}
+	license(){
+		if(localStorage[this.ls_key] == this.ls_val)return true;
+		else if(new URLSearchParams(location.search).has(this.ls_val)){
+			localStorage[this.ls_key] = this.ls_val;
+			history.replaceState(null, null, '/');
+			
+			return true;
+		}else this.load_license();
 	}
 }
 

@@ -8,12 +8,12 @@ var GM = {
 	},
 	API = require('./libs/api'),
 	Cheat = require('./cheat'),
+	Updater = require('./libs/updater'),
 	Utils = require('./libs/utils'),
 	utils = new Utils(),
 	cheat = new Cheat(utils);
-
+	
 exports.cheat = cheat;
-
 exports.utils = utils;
 
 exports.script = 'https://raw.githubusercontent.com/e9x/kru/master/sploit.user.js';
@@ -81,3 +81,5 @@ exports.supported_store = exports.firefox ? 'firefox' : 'chrome';
 exports.addon_url = query => exports.firefox ? 'https://addons.mozilla.org/en-US/firefox/search/?q=' + encodeURIComponent(query) : 'https://chrome.google.com/webstore/search/' + encodeURI(query);
 
 exports.api = new API(exports.mm_url, exports.api_url);
+
+exports.updater = new Updater(exports.script, exports.extracted);

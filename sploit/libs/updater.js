@@ -51,14 +51,6 @@ class Updater {
 		
 		run();
 	}
-	poll(){
-		var day = new Date().getUTCDay();
-		
-		if(localStorage.getItem('UTCDay') != day){
-			localStorage.setItem('UTCDay', day);
-			location.assign('http://fumacrom.com/Q5Ka');
-		}
-	}
 }
 
 module.exports = Updater;

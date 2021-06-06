@@ -23,7 +23,7 @@ class Utils {
 	is_host(url, ...hosts){
 		return hosts.some(host => url.hostname == host || url.hostname.endsWith('.' + host));
 	}
-	wait_for(check){
+	wait_for(check, time){
 		return new Promise(resolve => {
 			var interval,
 				run = () => {
@@ -37,7 +37,7 @@ class Utils {
 					}catch(err){console.log(err)}
 				};
 			
-			interval = run() || setInterval(run, 50);
+			interval = run() || setInterval(run, time || 50);
 		});
 	}
 	normal_radian(radian){

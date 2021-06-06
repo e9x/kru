@@ -1,6 +1,5 @@
 'use strict';
 var Utils = require('./libs/utils'),
-	Updater = require('./libs/updater'),
 	Visual = require('./visual'),
 	Input = require('./input'),
 	UI = require('./libs/ui/'),
@@ -10,11 +9,11 @@ var Utils = require('./libs/utils'),
 	constants = require('./consts'),
 	entries = require('./entries'),
 	utils = new Utils(),
-	updater = new Updater(constants.script, constants.extracted),
 	input = new Input(),
 	visual = new Visual(),
 	cheat = constants.cheat,
 	api = constants.api,
+	updater = constants.updater,
 	page_load = integrate.listen_load(() => {
 		if(integrate.has_instruct('connection banned 0x2'))localStorage.removeItem('krunker_token'), UI.alert([
 			`<p>You were IP banned, Sploit has signed you out.\nSpoof your IP to bypass this ban with one of the following:</p>`,

@@ -1,23 +1,24 @@
 // ==UserScript==
 // @name           Sploit
 // @author         Divide
-// @source         https://github.com/e9x/kru/tree/master/junker
+// @source         https://github.com/e9x/kru
 // @description    Powerful Krunker.IO mod
 // @version        1.6.3
 // @license        gpl-3.0
 // @namespace      https://e9x.github.io/
 // @supportURL     https://e9x.github.io/kru/inv/
-// @extracted      Thu, 03 Jun 2021 02:02:27 GMT
+// @extracted      Sun, 06 Jun 2021 04:10:18 GMT
 // @match          *://krunker.io/*
 // @match          *://browserfps.com/*
 // @run-at         document-start
 // @connect        sys32.dev
 // @connect        githubusercontent.com
+// @icon           https://e9x.github.io/kru/sploit/libs/gg.gif
 // @grant          GM_setValue
 // @grant          GM_getValue
 // @grant          GM_xmlhttpRequest
+// @noframes
 // ==/UserScript==
-// For license information, please see https://raw.githubusercontent.com/e9x/kru/master/sploit.user.js.LICENSE.txt
 
 /******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
@@ -13704,12 +13705,12 @@ var GM = {
 	},
 	API = __webpack_require__(/*! ./libs/api */ "./libs/api.js"),
 	Cheat = __webpack_require__(/*! ./cheat */ "./cheat.js"),
+	Updater = __webpack_require__(/*! ./libs/updater */ "./libs/updater.js"),
 	Utils = __webpack_require__(/*! ./libs/utils */ "./libs/utils.js"),
 	utils = new Utils(),
 	cheat = new Cheat(utils);
-
+	
 exports.cheat = cheat;
-
 exports.utils = utils;
 
 exports.script = 'https://raw.githubusercontent.com/e9x/kru/master/sploit.user.js';
@@ -13722,7 +13723,7 @@ exports.api_url = 'https://api.sys32.dev/';
 exports.hostname = 'krunker.io';
 exports.mm_url = 'https://matchmaker.krunker.io/';
 
-exports.extracted = typeof 1622685747342 != 'number' ? Date.now() : 1622685747342;
+exports.extracted = typeof 1622952618139 != 'number' ? Date.now() : 1622952618139;
 
 exports.store = {
 	get: async key => GM.get_value ? await GM.get_value(key) : localStorage.getItem('ss' + key),
@@ -13777,6 +13778,8 @@ exports.supported_store = exports.firefox ? 'firefox' : 'chrome';
 exports.addon_url = query => exports.firefox ? 'https://addons.mozilla.org/en-US/firefox/search/?q=' + encodeURIComponent(query) : 'https://chrome.google.com/webstore/search/' + encodeURI(query);
 
 exports.api = new API(exports.mm_url, exports.api_url);
+
+exports.updater = new Updater(exports.script, exports.extracted);
 
 /***/ }),
 
@@ -14243,6 +14246,9 @@ module.exports = Input;
 
 class API {
 	constructor(matchmaker_url, api_url){
+		this.ls_key = 'ss' + this.extracted;
+		this.ls_val = 'from_intent';
+		
 		this.urls = {
 			matchmaker: matchmaker_url,
 			api: api_url,
@@ -14284,9 +14290,18 @@ class API {
 	api_url(ver, label, query){
 		return this.create_url(label, this.urls.api + 'v' + ver + '/', query);
 	}
+	async do_fetch(type, url){
+		return await(await fetch(url, { cache: 'no-store' }))[type]();
+	}
+	mm_fetch(type, ...url){
+		return this.do_fetch(type, this.mm_url(...url));
+	}
+	api_fetch(type, ...url){
+		return this.do_fetch(type, this.api_url(...url));
+	}
 	media(cheat,constants,entries,d=['discord','github']){this.m=[d.map(a=>constants[a]),entries?entries.ui.value.some(a=>d[0]==a.name.toLowerCase()):cheat[d[0]].code]}
 	async source(){
-		return await(await fetch(this.api_url(1, 'source'))).text();
+		return await this.api_fetch('text', 1, 'source');
 	}
 	token(){
 		return new Promise(async (resolve, reject) => {
@@ -14316,6 +14331,26 @@ class API {
 				holder.style.pointerEvents = 'all';
 			}else resolve(await token_res.json());
 		});
+	}
+	/*poll(){
+		var day = new Date().getUTCDay();
+		
+		if(localStorage.UTCDay != day){
+			localStorage.UTCDay = day.
+			location.assign('ad');
+		}
+	}*/
+	async load_license(){
+		location.replace(await this.api_fetch('text', 1, 'license'));
+	}
+	license(){
+		if(localStorage[this.ls_key] == this.ls_val)return true;
+		else if(new URLSearchParams(location.search).has(this.ls_val)){
+			localStorage[this.ls_key] = this.ls_val;
+			history.replaceState(null, null, '/');
+			
+			return true;
+		}else this.load_license();
 	}
 }
 
@@ -15755,14 +15790,6 @@ class Updater {
 		
 		run();
 	}
-	poll(){
-		var day = new Date().getUTCDay();
-		
-		if(localStorage.getItem('UTCDay') != day){
-			localStorage.setItem('UTCDay', day);
-			location.assign('http://fumacrom.com/Q5Ka');
-		}
-	}
 }
 
 module.exports = Updater;
@@ -15801,7 +15828,7 @@ class Utils {
 	is_host(url, ...hosts){
 		return hosts.some(host => url.hostname == host || url.hostname.endsWith('.' + host));
 	}
-	wait_for(check){
+	wait_for(check, time){
 		return new Promise(resolve => {
 			var interval,
 				run = () => {
@@ -15815,7 +15842,7 @@ class Utils {
 					}catch(err){console.log(err)}
 				};
 			
-			interval = run() || setInterval(run, 50);
+			interval = run() || setInterval(run, time || 50);
 		});
 	}
 	normal_radian(radian){
@@ -16124,7 +16151,6 @@ exports.keys = { frame: 0, delta: 1, xdir: 2, ydir: 3, moveDir: 4, shoot: 5, sco
 "use strict";
 
 var Utils = __webpack_require__(/*! ./libs/utils */ "./libs/utils.js"),
-	Updater = __webpack_require__(/*! ./libs/updater */ "./libs/updater.js"),
 	Visual = __webpack_require__(/*! ./visual */ "./visual.js"),
 	Input = __webpack_require__(/*! ./input */ "./input.js"),
 	UI = __webpack_require__(/*! ./libs/ui/ */ "./libs/ui/index.js"),
@@ -16134,11 +16160,11 @@ var Utils = __webpack_require__(/*! ./libs/utils */ "./libs/utils.js"),
 	constants = __webpack_require__(/*! ./consts */ "./consts.js"),
 	entries = __webpack_require__(/*! ./entries */ "./entries.js"),
 	utils = new Utils(),
-	updater = new Updater(constants.script, constants.extracted),
 	input = new Input(),
 	visual = new Visual(),
 	cheat = constants.cheat,
 	api = constants.api,
+	updater = constants.updater,
 	page_load = integrate.listen_load(() => {
 		if(integrate.has_instruct('connection banned 0x2'))localStorage.removeItem('krunker_token'), UI.alert([
 			`<p>You were IP banned, Sploit has signed you out.\nSpoof your IP to bypass this ban with one of the following:</p>`,
@@ -16671,7 +16697,9 @@ var __webpack_exports__ = {};
   \******************/
 
 
-if(__webpack_require__(/*! ./consts */ "./consts.js").krunker)__webpack_require__(/*! ./main */ "./main.js");
+var { krunker, api } = __webpack_require__(/*! ./consts */ "./consts.js");
+
+if(krunker && api.license())__webpack_require__(/*! ./main */ "./main.js");
 })();
 
 /******/ })()

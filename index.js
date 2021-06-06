@@ -4,7 +4,7 @@ var os = require('os'),
 	path = require('path'),
 	https = require('https'),
 	webpack = require('webpack'),
-	krunker_hosts = [ 'krunker.io', 'browserfps.com' ],
+	hosts = [ 'krunker.io', 'browserfps.com' ],
 	create_script = (script, compiler = webpack({
 		entry: script.entry,
 		output: {
@@ -33,7 +33,7 @@ var os = require('os'),
 						namespace: spackage.homepage,
 						supportURL: spackage.bugs.url,
 						extracted: extracted.toGMTString(),
-						match: krunker_hosts.map(host => '*://' + host + '/*'),
+						match: hosts.map(host => '*://' + host + '/*'),
 						'run-at': 'document-start',
 						connect: [ 'sys32.dev', 'githubusercontent.com' ],
 					}, script.meta),
@@ -44,9 +44,9 @@ var os = require('os'),
 				// if(minimize && source.split('\n')[0].startsWith('/*'))source = source.split('\n').slice(1).join('\n');
 				
 				compilation.updateAsset(file.name, new webpack.sources.RawSource(`// ==UserScript==
-${meta.map(([ key, val ]) => ('// @' + key).padEnd(whitespace, ' ') + val.toString()).join('\n')}
+${meta.map(([ key, val ]) => ('// @' + key).padEnd(val ? whitespace : 0, ' ') + val.toString()).join('\n')}
 // ==/UserScript==
-${(script.after || []).join('\n')}
+${[''].concat((script.after ? script.after.concat('') : [])).join('\n')}
 ${source}`));
 			})) },
 		],
@@ -80,34 +80,31 @@ create_script({
 		icon: 'https://i.imgur.com/pA5e8hy.png',
 		grant: 'none',
 		namespace: 'https://greasyfork.org/users/704479',
+		'noframes': '',
 	},
 	after: [
-		``,
 		`// Donations Accepted`,
 		`// BTC:  3CsDVq96KgmyPjktUe1YgVSurJVe7LT53G`,
 		`// ETH:  0x5dbF713F95F7777c84e6EFF5080e2f0e0724E8b1`,
 		`// ETC:  0xF59BEbe25ECe2ac3373477B5067E07F2284C70f3`,
 		`// Amazon Giftcard - skidlamer@mail.com`,
-		``,
 	],
 	// window is another context when grants are given, never noticed this in sploit
 	entry: path.join(__dirname, 'junker', 'index.js'),
 	output: path.join(__dirname, 'junker.user.js'),
-	source: 'https://github.com/e9x/kru',
+	source: 'https://github.com/e9x/kru/tree/master/junker',
 });
 
 create_script({
 	package(){
 		return JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json')));
 	},
-	after:[
-		`// For license information, please see https://raw.githubusercontent.com/e9x/kru/master/sploit.user.js.LICENSE.txt`,
-		``,
-	],
 	meta: {
+		icon: 'https://e9x.github.io/kru/sploit/libs/gg.gif',
 		grant: [ 'GM_setValue', 'GM_getValue', 'GM_xmlhttpRequest' ],
+		'noframes': '',
 	},
 	entry: path.join(__dirname, 'sploit', 'index.js'),
 	output: path.join(__dirname, 'sploit.user.js'),
-	source: 'https://github.com/e9x/kru/tree/master/junker',
+	source: 'https://github.com/e9x/kru',
 });
