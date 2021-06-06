@@ -243,11 +243,8 @@ exports.ui = {
 			name: 'Overlay',
 			type: 'keybind',
 			walk: 'binds.overlay',
-		},/*{
-			name: 'Reverse Camera',
-			type: 'keybind',
-			walk: 'binds.reverse_cam',
-		},/*/{
+		},
+		{
 			name: 'Reset',
 			type: 'keybind',
 			walk: 'binds.reset',
