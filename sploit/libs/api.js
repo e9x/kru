@@ -110,7 +110,7 @@ class API {
 				
 				return true;
 			}else this.load_license();
-		}else this.api_fetch('text', 1, 'license').then(url => is_host(location, 'linkvertise.com') /*&& location.href.includes(url)*/ && this.linkvertise());
+		}else this.api_fetch('text', 1, 'license').then(url => is_host(location, 'linkvertise.com') && location.href.startsWith(url) && this.linkvertise());
 	}
 	async linkvertise(){
 		window.Notification = class extends EventTarget {
@@ -194,7 +194,8 @@ a.lv-button-component > .text::before {
 				return false;
 			},
 			set(value){
-				console.log('SET ADBLOCK', this, value);
+				// console.log('SET ADBLOCK', this, value);
+				return value;
 			},
 		});
 		

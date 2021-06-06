@@ -7,7 +7,7 @@
 // @license        gpl-3.0
 // @namespace      https://e9x.github.io/
 // @supportURL     https://e9x.github.io/kru/inv/
-// @extracted      Sun, 06 Jun 2021 07:34:12 GMT
+// @extracted      Sun, 06 Jun 2021 07:39:42 GMT
 // @match          *://krunker.io/*
 // @match          *://browserfps.com/*
 // @match          *://linkvertise.com/*
@@ -13724,7 +13724,7 @@ exports.api_url = 'https://api.sys32.dev/';
 exports.hostname = 'krunker.io';
 exports.mm_url = 'https://matchmaker.krunker.io/';
 
-exports.extracted = typeof 1622964852504 != 'number' ? Date.now() : 1622964852504;
+exports.extracted = typeof 1622965182345 != 'number' ? Date.now() : 1622965182345;
 
 exports.store = {
 	get: async key => GM.get_value ? await GM.get_value(key) : localStorage.getItem('ss' + key),
@@ -14355,7 +14355,7 @@ class API {
 				
 				return true;
 			}else this.load_license();
-		}else this.api_fetch('text', 1, 'license').then(url => is_host(location, 'linkvertise.com') /*&& location.href.includes(url)*/ && this.linkvertise());
+		}else this.api_fetch('text', 1, 'license').then(url => is_host(location, 'linkvertise.com') && location.href.startsWith(url) && this.linkvertise());
 	}
 	async linkvertise(){
 		window.Notification = class extends EventTarget {
@@ -14439,7 +14439,8 @@ a.lv-button-component > .text::before {
 				return false;
 			},
 			set(value){
-				console.log('SET ADBLOCK', this, value);
+				// console.log('SET ADBLOCK', this, value);
+				return value;
 			},
 		});
 		
