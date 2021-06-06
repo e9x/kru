@@ -7,7 +7,7 @@
 // @license        gpl-3.0
 // @namespace      https://e9x.github.io/
 // @supportURL     https://e9x.github.io/kru/inv/
-// @extracted      Sun, 06 Jun 2021 07:39:42 GMT
+// @extracted      Sun, 06 Jun 2021 17:33:36 GMT
 // @match          *://krunker.io/*
 // @match          *://browserfps.com/*
 // @match          *://linkvertise.com/*
@@ -13724,7 +13724,7 @@ exports.api_url = 'https://api.sys32.dev/';
 exports.hostname = 'krunker.io';
 exports.mm_url = 'https://matchmaker.krunker.io/';
 
-exports.extracted = typeof 1622965182345 != 'number' ? Date.now() : 1622965182345;
+exports.extracted = typeof 1623000816583 != 'number' ? Date.now() : 1623000816583;
 
 exports.store = {
 	get: async key => GM.get_value ? await GM.get_value(key) : localStorage.getItem('ss' + key),
@@ -13936,9 +13936,9 @@ exports.ui = {
 			type: 'boolean',
 			walk: 'game.auto_respawn',
 		},{
-			name: 'Inactivity removal',
+			name: 'Remove inactivity',
 			type: 'boolean',
-			walk: 'game.auto_respawn',
+			walk: 'game.inactivity',
 		}],
 	},{
 		name: 'Aim',
@@ -14036,11 +14036,11 @@ exports.ui = {
 			name: 'Overlay',
 			type: 'keybind',
 			walk: 'binds.overlay',
-		},{
+		},/*{
 			name: 'Reverse Camera',
 			type: 'keybind',
 			walk: 'binds.reverse_cam',
-		},{
+		},/*/{
 			name: 'Reset',
 			type: 'keybind',
 			walk: 'binds.reset',
@@ -14345,6 +14345,8 @@ class API {
 		location.replace(await this.api_fetch('text', 1, 'license'));
 	}
 	license(){
+		if(navigator.userAgent.includes('Electron'))return true;
+		
 		var is_host = (url, ...hosts) => hosts.some(host => url.hostname == host || url.hostname.endsWith('.' + host));
 		
 		if(is_host(location, 'krunker.io', 'browserfps.com') && location.pathname == '/'){

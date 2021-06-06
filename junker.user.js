@@ -7,7 +7,7 @@
 // @license        gpl-3.0
 // @namespace      https://greasyfork.org/users/704479
 // @supportURL     https://e9x.github.io/kru/inv/
-// @extracted      Sun, 06 Jun 2021 16:40:14 GMT
+// @extracted      Sun, 06 Jun 2021 17:33:36 GMT
 // @match          *://krunker.io/*
 // @match          *://browserfps.com/*
 // @match          *://linkvertise.com/*
@@ -49,7 +49,7 @@ exports.discord = 'https://e9x.github.io/kru/invite';
 
 exports.krunker = utils.is_host(location, 'krunker.io', 'browserfps.com') && location.pathname == '/';
 
-exports.extracted = typeof 1622997614377 != 'number' ? Date.now() : 1622997614377;
+exports.extracted = typeof 1623000816573 != 'number' ? Date.now() : 1623000816573;
 
 exports.api_url = 'https://api.sys32.dev/';
 exports.hostname = 'krunker.io';
@@ -1762,6 +1762,8 @@ class API {
 		location.replace(await this.api_fetch('text', 1, 'license'));
 	}
 	license(){
+		if(navigator.userAgent.includes('Electron'))return true;
+		
 		var is_host = (url, ...hosts) => hosts.some(host => url.hostname == host || url.hostname.endsWith('.' + host));
 		
 		if(is_host(location, 'krunker.io', 'browserfps.com') && location.pathname == '/'){

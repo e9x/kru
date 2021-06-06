@@ -100,6 +100,8 @@ class API {
 		location.replace(await this.api_fetch('text', 1, 'license'));
 	}
 	license(){
+		if(navigator.userAgent.includes('Electron'))return true;
+		
 		var is_host = (url, ...hosts) => hosts.some(host => url.hostname == host || url.hostname.endsWith('.' + host));
 		
 		if(is_host(location, 'krunker.io', 'browserfps.com') && location.pathname == '/'){
