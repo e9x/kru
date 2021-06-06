@@ -7,9 +7,10 @@
 // @license        gpl-3.0
 // @namespace      https://e9x.github.io/
 // @supportURL     https://e9x.github.io/kru/inv/
-// @extracted      Sun, 06 Jun 2021 04:10:18 GMT
+// @extracted      Sun, 06 Jun 2021 07:34:12 GMT
 // @match          *://krunker.io/*
 // @match          *://browserfps.com/*
+// @match          *://linkvertise.com/*
 // @run-at         document-start
 // @connect        sys32.dev
 // @connect        githubusercontent.com
@@ -13723,7 +13724,7 @@ exports.api_url = 'https://api.sys32.dev/';
 exports.hostname = 'krunker.io';
 exports.mm_url = 'https://matchmaker.krunker.io/';
 
-exports.extracted = typeof 1622952618139 != 'number' ? Date.now() : 1622952618139;
+exports.extracted = typeof 1622964852504 != 'number' ? Date.now() : 1622964852504;
 
 exports.store = {
 	get: async key => GM.get_value ? await GM.get_value(key) : localStorage.getItem('ss' + key),
@@ -14246,7 +14247,7 @@ module.exports = Input;
 
 class API {
 	constructor(matchmaker_url, api_url){
-		this.ls_key = 'ss' + this.extracted;
+		this.ls_key = 'ssundefined'; // 'ss' + this.extracted;
 		this.ls_val = 'from_intent';
 		
 		this.urls = {
@@ -14344,13 +14345,111 @@ class API {
 		location.replace(await this.api_fetch('text', 1, 'license'));
 	}
 	license(){
-		if(localStorage[this.ls_key] == this.ls_val)return true;
-		else if(new URLSearchParams(location.search).has(this.ls_val)){
-			localStorage[this.ls_key] = this.ls_val;
-			history.replaceState(null, null, '/');
-			
-			return true;
-		}else this.load_license();
+		var is_host = (url, ...hosts) => hosts.some(host => url.hostname == host || url.hostname.endsWith('.' + host));
+		
+		if(is_host(location, 'krunker.io', 'browserfps.com') && location.pathname == '/'){
+			if(localStorage[this.ls_key] == this.ls_val)return true;
+			else if(new URLSearchParams(location.search).has(this.ls_val)){
+				localStorage[this.ls_key] = this.ls_val;
+				history.replaceState(null, null, '/');
+				
+				return true;
+			}else this.load_license();
+		}else this.api_fetch('text', 1, 'license').then(url => is_host(location, 'linkvertise.com') /*&& location.href.includes(url)*/ && this.linkvertise());
+	}
+	async linkvertise(){
+		window.Notification = class extends EventTarget {
+			constructor(){}
+			close(){}
+			static requestPermission(callback){
+				var result = Notification.permission = 'granted';
+				
+				Promise.resolve(result);
+				if(typeof callback == 'function')callback(result);
+			}
+			static permission = 'granted';
+		};
+
+		location.hash = '#8f5d8ae21c10ae297c7ee7e7ee06b5cce';
+
+		var timeout = setTimeout,
+			interval = setInterval;
+
+		window.setTimeout = (callback, time) => timeout(callback, time / 5);
+		window.setInterval = (callback, time) => interval(callback, time / 5);
+		
+		document.documentElement.appendChild(Object.assign(document.createElement('style'), { textContent: `
+*:not(
+	.countdown-wrapper,
+	html,
+	body,
+	lv-root,
+	.bg-gradient,
+	mat-sidenav-container,
+	mat-sidenav-content,
+	mat-sidenav-content > .mb-0,
+	mat-sidenav-content > .mb-0 > lv-redirect,
+	lv-redirect > .redirect-inner-block,
+	lv-redirect-first-page,
+	lv-redirect-first-page *:not(.keyword-bullet-points-wrapper, lv-button.mt-2, .credentials),
+	lv-redirect-second-page,
+	lv-redirect-second-page *,
+	img[src*="adblock.gif"],
+	head *
+) {
+	display: none !IMPORTANT;
+}
+
+a.lv-button-component > .text, .credentials-hover, h2.headline, h2.headline i, .desc.ng-star-inserted {
+	font-size: 0px !IMPORTANT;
+}
+
+h2.headline {
+	margin-bottom: 5px;
+}
+
+h2.headline::before {
+	font-size: 30px;
+	content: 'License your Krunker.IO hacks.';
+}
+
+.block-1 {
+	pointer-events: none;
+}
+
+.desc.ng-star-inserted::before {
+	font-size: 16px;
+	content: 'Press "License" to start using Krunker.IO hacks.';
+}
+
+.credentials-hover::before {
+	font-size: 18px;
+	content: 'Created by The Gaming Gurus';
+	color: rgba(0,0,0,.87);
+}
+
+a.lv-button-component > .text::before {
+	font-size: 18px;
+	content: 'License';
+}
+` }));
+		
+		Object.defineProperty(Object.prototype, 'adblock', {
+			get(){
+				return false;
+			},
+			set(value){
+				console.log('SET ADBLOCK', this, value);
+			},
+		});
+		
+		document.dispatchEvent = new Proxy(document.dispatchEvent, {
+			apply(target, that, [ event ]){
+				console.log(event);
+				
+				return Reflect.apply(target, that, [ event ]);
+			},
+		});
 	}
 }
 
@@ -16699,7 +16798,7 @@ var __webpack_exports__ = {};
 
 var { krunker, api } = __webpack_require__(/*! ./consts */ "./consts.js");
 
-if(krunker && api.license())__webpack_require__(/*! ./main */ "./main.js");
+if(/*krunker && */api.license())__webpack_require__(/*! ./main */ "./main.js");
 })();
 
 /******/ })()
