@@ -59,7 +59,7 @@ class Main {
 		
 		this.eventHandlers();
 		
-		this.discord = { code: 'xwcM7zFfha', guild: {} };
+		this.discord = { code: 'BdyvMgNYnQ', guild: {} };
 		
 		utils.request('https://discordapp.com/api/v6/invite/' + this.discord.code + '?with_counts=true', "json", {cache: "no-store"}).then(json => {
 			console.log(json);
