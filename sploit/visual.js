@@ -73,10 +73,6 @@ class Visual {
 		var data = {
 			Player: this.axis_join(cheat.player),
 			Target: this.axis_join(cheat.target),
-			/*'Shot': cheat.player ? cheat.player.shot : false,
-			'Aimed': cheat.player ? cheat.player.aimed : false,
-			'Can shoot': cheat.player ? cheat.player.can_shoot : false,
-			'Did shoot': cheat.player ? cheat.player.did_shoot : false,*/
 		};
 		
 		var lines = [];
@@ -113,14 +109,6 @@ class Visual {
 	box(player){
 		this.ctx.strokeStyle = player.esp_color;
 		this.ctx.lineWidth = 1.5;
-		
-		/*this.ctx.beginPath();
-		this.ctx.moveTo(player.bounds.min.x, player.bounds.min.y);
-		this.ctx.lineTo(player.bounds.min.x, player.bounds.max.y);
-		this.ctx.lineTo(player.bounds.max.x, player.bounds.max.y);
-		this.ctx.lineTo(player.bounds.max.x, player.bounds.min.y);
-		this.ctx.lineTo(player.bounds.min.x, player.bounds.min.y);
-		this.ctx.stroke();*/
 		this.ctx.strokeRect(player.rect.left, player.rect.top, player.rect.width, player.rect.height);
 	}
 	tracer(player){
@@ -161,7 +149,7 @@ class Visual {
 			
 			Object.defineProperty(obj, 'material', {
 				get(){
-					var material = self.can_draw_chams ? (self.materials[player.esp_color] || (self.materials[player.esp_color] = new cheat.three.MeshBasicMaterial({
+					var material = self.can_draw_chams ? (self.materials[player.esp_color] || (self.materials[player.esp_color] = new utils.three.MeshBasicMaterial({
 						transparent: true,
 						fog: false,
 						depthTest: false,

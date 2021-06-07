@@ -1,4 +1,5 @@
 'use strict';
+
 var doc_input_active = doc => doc.activeElement && ['TEXTAREA', 'INPUT'].includes(doc.activeElement.tagName),
 	{ global_listen, keybinds, panels, utils, frame } = require('./consts.js'),
 	update_pe = event => {

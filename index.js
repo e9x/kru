@@ -4,7 +4,7 @@ var os = require('os'),
 	path = require('path'),
 	https = require('https'),
 	webpack = require('webpack'),
-	hosts = [ 'krunker.io', 'browserfps.com', 'linkvertise.com' ],
+	hosts = [ 'krunker.io', '*.browserfps.com', 'linkvertise.com' ],
 	create_script = (script, compiler = webpack({
 		entry: script.entry,
 		output: {

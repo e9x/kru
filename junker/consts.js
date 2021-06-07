@@ -25,6 +25,8 @@ var main = new Main(exports.meta),
 	updater = new Updater(exports.meta.script, exports.extracted),
 	api = new API(exports.mm_url, exports.api_url);
 
+if(exports.krunker)api.observe();
+
 api.license(exports.meta);
 
 exports.main = main

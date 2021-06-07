@@ -21,22 +21,17 @@ exports.meta = {
 	forum: 'https://forum.sys32.dev',
 };
 
-exports.krunker = utils.is_host(location, 'krunker.io', 'browserfps.com') && location.pathname == '/';
+exports.krunker = utils.is_host(location, 'krunker.io', 'browserfps.com') && location.pathname == '/' && location.host != 'browserfps.com';
 
 exports.api_url = 'https://api.sys32.dev/';
 exports.mm_url = 'https://matchmaker.krunker.io/';
 
+/*if(exports.krunker && utils.is_host(location, 'browserfps.com')){
+	exports.mm_url = location.origin + '/mm/';
+	require('./libs/proxy');
+}*/
+
 exports.extracted = typeof build_extracted != 'number' ? Date.now() : build_extracted;
-
-var updater = new Updater(exports.meta.script, exports.extracted),
-	api = new API(exports.mm_url, exports.api_url);
-
-api.license(exports.meta);
-
-exports.cheat = cheat;
-exports.utils = utils;
-exports.api = api;
-exports.updater = updater;
 
 exports.store = {
 	async get(key){
@@ -80,3 +75,15 @@ exports.firefox = navigator.userAgent.includes('Firefox');
 exports.supported_store = exports.firefox ? 'firefox' : 'chrome';
 
 exports.addon_url = query => exports.firefox ? 'https://addons.mozilla.org/en-US/firefox/search/?q=' + encodeURIComponent(query) : 'https://chrome.google.com/webstore/search/' + encodeURI(query);
+
+var updater = new Updater(exports.meta.script, exports.extracted),
+	api = new API(exports.mm_url, exports.api_url, exports.store);
+
+if(exports.krunker)api.observe();
+
+api.license(exports.meta);
+
+exports.cheat = cheat;
+exports.utils = utils;
+exports.api = api;
+exports.updater = updater;

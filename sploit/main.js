@@ -1,23 +1,17 @@
 'use strict';
-var Utils = require('./libs/utils'),
-	Visual = require('./visual'),
+
+var Visual = require('./visual'),
 	Input = require('./input'),
 	UI = require('./libs/ui/'),
 	Socket = require('./socket'),
 	vars = require('./libs/vars'),
-	constants = require('./consts'),
 	entries = require('./entries'),
-	utils = new Utils(),
 	input = new Input(),
 	visual = new Visual(),
-	cheat = constants.cheat,
-	api = constants.api,
-	updater = constants.updater,
+	{ utils, proxy_addons, supported_store, addon_url, meta, cheat, api, store } = require('./consts'),
 	process = () => {
 		try{
 			visual.tick();
-			
-			// visual.crosshair();
 			
 			if(cheat.config.game.overlay)visual.overlay();
 			
@@ -35,22 +29,16 @@ var Utils = require('./libs/utils'),
 				
 				visual.cham(player);
 				
-				if(['box', 'box_chams', 'full'].includes(cheat.config.esp.status)){
-					visual.box(player);
-				}
+				if(['box', 'box_chams', 'full'].includes(cheat.config.esp.status))visual.box(player);
 				
 				if(cheat.config.esp.status == 'full'){
 					visual.health(player);
 					visual.text(player);
 				}
 				
-				if(cheat.config.esp.tracers){
-					visual.tracer(player);
-				}
+				if(cheat.config.esp.tracers)visual.tracer(player);
 				
-				if(cheat.config.esp.labels){
-					visual.label(player);
-				}
+				if(cheat.config.esp.labels)visual.label(player);
 			};
 		}catch(err){
 			api.report_error('frame', err);
@@ -66,8 +54,8 @@ api.on_instruct = () => {
 		`<p>You were IP banned, Sploit has signed you out.\nSpoof your IP to bypass this ban with one of the following:</p>`,
 		`<ul>`,
 			`<li>Using your mobile hotspot</li>`,
-			...constants.proxy_addons.filter(data => data[constants.supported_store]).map(data => `<li><a target='_blank' href=${JSON.stringify(data[constants.supported_store])}>${data.name}</a></li>`),
-			`<li>Use a <a target="_blank" href=${JSON.stringify(constants.addon_url('Proxy VPN'))}>Search for a VPN</a></li>`,
+			...proxy_addons.filter(data => data[supported_store]).map(data => `<li><a target='_blank' href=${JSON.stringify(data[supported_store])}>${data.name}</a></li>`),
+			`<li>Use a <a target="_blank" href=${JSON.stringify(addon_url('Proxy VPN'))}>Search for a VPN</a></li>`,
 		`</ul>`,
 	].join(''));
 	else if(api.has_instruct('connection banned 0x1'))localStorage.removeItem('krunker_token'), UI.alert(
@@ -84,7 +72,7 @@ api.on_instruct = () => {
 };
 
 UI.ready.then(() => {
-	constants.utils.canvas = UI.canvas;
+	utils.canvas = UI.canvas;
 	
 	cheat.ui = new UI.Config(entries.ui);
 	
@@ -104,11 +92,11 @@ UI.ready.then(() => {
 		
 		utils.add_ele('div', loading.node);
 		
-		utils.add_ele('a', loading.node, { href: constants.discord, draggable: false});
+		utils.add_ele('a', loading.node, { href: meta.discord, draggable: false});
 		
 		cheat.css_editor = new UI.Editor({
 			tabs: cheat.config.game.css,
-			store: constants.store,
+			store: store,
 			save(tabs){
 				cheat.config.game.css = tabs;
 				cheat.ui.config.save();
@@ -123,9 +111,9 @@ UI.ready.then(() => {
 		
 		var args = {
 			[ vars.key ]: {
-				three(three){ cheat.three = constants.utils.three = three },
+				three(three){ utils.three = three },
 				game(game){
-					cheat.game = constants.utils.game = game;
+					cheat.game = utils.game = game;
 					Object.defineProperty(game, 'controls', {
 						configurable: true,
 						set(controls){
@@ -144,7 +132,7 @@ UI.ready.then(() => {
 					});
 				},
 				socket(socket){ cheat.socket = socket },
-				world(world){ cheat.world = constants.utils.world = world },
+				world(world){ cheat.world = utils.world = world },
 				can_see: inview => cheat.config.esp.status == 'full' ? false : (cheat.config.esp.nametags || inview),
 				skins: ent => cheat.config.game.skins && typeof ent == 'object' && ent != null && ent.stats ? cheat.skins : ent.skins,
 				input: input.push.bind(input),
@@ -157,16 +145,8 @@ UI.ready.then(() => {
 			WP_fetchMMToken: token,
 		};
 		
-		await api.page_load;
+		await api.load;
 		
 		new Function(...Object.keys(args), krunker)(...Object.values(args));
 	});
-});
-
-// alerts shown prior to the window load event are cancelled
-
-window.addEventListener('load', () => {
-	updater.watch(() => {
-		if(confirm('A new Sploit version is available, do you wish to update?'))updater.update();
-	}, 60e3 * 3);	
 });

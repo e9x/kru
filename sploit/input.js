@@ -68,7 +68,7 @@ class Input {
 	enemy_sight(){
 		if(cheat.player.shot)return;
 		
-		var raycaster = new cheat.three.Raycaster();
+		var raycaster = new utils.three.Raycaster();
 		
 		raycaster.setFromCamera({ x: 0, y: 0 }, cheat.world.camera);
 		

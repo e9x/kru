@@ -9,12 +9,11 @@ if(krunker){
 		}, 60e3 * 3);	
 	});
 	
-	var sourcePromise = api.source(),
-		tokenPromise = api.token();
+	var tokenPromise = api.token();
 	
-	api.page_load.then(() => sourcePromise.then(source => {
+	api.source().then(source => {
 		main.gameLoad(source, tokenPromise);
 		main.createSettings();
 		main.gameHooks();
-	}));
+	});
 }
