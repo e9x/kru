@@ -7,7 +7,7 @@
 // @license        gpl-3.0
 // @namespace      https://greasyfork.org/users/704479
 // @supportURL     https://e9x.github.io/kru/inv/
-// @extracted      Sun, 06 Jun 2021 23:56:54 GMT
+// @extracted      Mon, 07 Jun 2021 04:22:16 GMT
 // @match          *://krunker.io/*
 // @match          *://browserfps.com/*
 // @match          *://linkvertise.com/*
@@ -49,7 +49,7 @@ exports.discord = 'https://e9x.github.io/kru/invite';
 
 exports.krunker = utils.is_host(location, 'krunker.io', 'browserfps.com') && location.pathname == '/';
 
-exports.extracted = typeof 1623023814936 != 'number' ? Date.now() : 1623023814936;
+exports.extracted = typeof 1623039736479 != 'number' ? Date.now() : 1623039736479;
 
 exports.api_url = 'https://api.sys32.dev/';
 exports.hostname = 'krunker.io';
@@ -1243,7 +1243,7 @@ class Main {
 		console.log(this.vars);
 		
 		var patched = utils.patchData(this.gameJS, {
-			exports: {regex: /(this\.\w+\.\w+\(this\)}},function\(\w+,\w+,(\w+)\){)/, patch: `$1 ${this.hash}.exports=$2.c; ${this.hash}.modules=$2.m;`},
+			exports: {regex: /(,(\w+)\(\2\.s=\d+\))(}\(\[)/, patch: `$1,${this.hash}.exports=$2.c$3`},
 			inputs: {regex: /(\w+\.\w+\.\w+\?'\w+':'push'\]\()(\w+)\),/, patch: `$1${this.hash}.onInput($2)),`},
 			inView: {regex: /&&(\w+\.\w+)\){(if\(\(\w+=\w+\.\w+\.\w+\.\w+)/, patch: `){if(void 0!==${this.hash}.noNameTags||!$1&&void 0 == ${this.hash}.nameTags)continue;$2`},
 			socket: {regex: /this\.\w+=new WebSocket\(\w+\)/, patch: `${this.hash}.ws=this;$&`},

@@ -133,7 +133,7 @@ class Player {
 	get enemy(){ return !this.teammate }
 	get team(){ return this.entity.team }
 	get weapon_auto(){ return !this.weapon.nAuto }
-	get weapon_rate(){ return this.weapon.rate + 5 }
+	get weapon_rate(){ return this.weapon.rate + 2 }
 	get did_shoot(){ return this.entity[vars.didShoot] }
 	get shot(){ return this.weapon_auto ? this.auto_shot : this.did_shoot }
 	get chest(){

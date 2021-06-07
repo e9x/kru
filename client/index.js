@@ -4,7 +4,7 @@ var vm = require('vm'),
 	mod = require('module'),
 	path = require('path'),
 	electron = require('electron'),
-	useragent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36 Edg/86.0.622.69',
+	useragent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.198 Safari/537.36 Edg/86.0.622.69 Electron/1',
 	useragent_opt = { userAgent: useragent },
 	test_host = (url, ...tests) => tests.some(test => url.host.endsWith('.' + test) || url.host == test),
 	parse_size = (side, config) => {

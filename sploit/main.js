@@ -79,12 +79,9 @@ var Utils = require('./libs/utils'),
 		}
 		
 		utils.request_frame(process);
-	};
-
-api.media(cheat,constants,entries);
-
-var source = api.source(),
-	token = api.token();
+	},
+	source = api.source(),
+	token = api.token('sploit', entries, constants.meta);
 
 UI.ready.then(() => {
 	constants.utils.canvas = UI.canvas;

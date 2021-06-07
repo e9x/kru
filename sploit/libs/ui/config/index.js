@@ -53,6 +53,12 @@ class RotateControl extends Control {
 	}
 }
 
+class LinkControl extends Control }
+	interact(){
+		window.open(this.value, '_blank');
+	}
+}
+
 class FunctionControl extends Control {
 	interact(){
 		this.value();
@@ -187,6 +193,7 @@ class Config extends PanelDraggable {
 					case'rotate': construct = RotateControl; break;
 					case'boolean': construct = BooleanControl; break;
 					case'function': construct = FunctionControl; break;
+					case'link':  construct = LinkControl; break;
 					case'textbox': construct = TextBoxControl; break;
 					case'slider': construct = SliderControl; break;
 					case'text': construct = TextElement; break;

@@ -9,7 +9,7 @@ var clone_obj = obj => JSON.parse(JSON.stringify(obj)),
 		
 		return target;
 	},
-	{ api, utils, cheat, store, discord, github } = require('./consts.js'),
+	{ api, utils, cheat, store, meta } = require('./consts.js'),
 	spackage = require('../package.json');
 
 exports.base_config = {
@@ -254,8 +254,16 @@ exports.ui = {
 		type: 'section',
 		value: [{
 			name: 'GitHub',
-			type: 'function',
-			value: () => window.open(github, '_blank'),
+			type: 'link',
+			value: () => window.open(meta.github, '_blank'),
+		},{
+			name: 'Discord',
+			type: 'link',
+			value: meta.discord,
+		},{
+			name: 'Forum',
+			type: 'link',
+			value: meta.forum,
 		},{
 			name: 'Save Krunker script',
 			type: 'function',
@@ -278,9 +286,5 @@ exports.ui = {
 			},
 			bind: 'binds.reset',
 		}],
-	},{
-		name: 'Discord',
-		type: 'function',
-		value: () => window.open(discord, '_blank'),
 	}],
 };

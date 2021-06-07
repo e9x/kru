@@ -16,9 +16,13 @@ var GM = {
 exports.cheat = cheat;
 exports.utils = utils;
 
-exports.script = 'https://raw.githubusercontent.com/e9x/kru/master/sploit.user.js';
-exports.github = 'https://github.com/e9x/kru';
-exports.discord = 'https://e9x.github.io/kru/invite';
+exports.meta = {
+	discord_code: 'BdyvMgNYnQ',
+	script: 'https://raw.githubusercontent.com/e9x/kru/master/sploit.user.js',
+	github: 'https://github.com/e9x/kru',
+	discord: 'https://e9x.github.io/kru/invite',
+	forum: 'https://forum.sys32.dev',
+};
 
 exports.krunker = utils.is_host(location, 'krunker.io', 'browserfps.com') && location.pathname == '/';
 
@@ -29,7 +33,10 @@ exports.mm_url = 'https://matchmaker.krunker.io/';
 exports.extracted = typeof build_extracted != 'number' ? Date.now() : build_extracted;
 
 exports.store = {
-	get: async key => GM.get_value ? await GM.get_value(key) : localStorage.getItem('ss' + key),
+	async get(key){
+		if(GM.get_value)return await GM.get_value(key);
+		else localStorage.getItem('ss' + key);
+	},
 	set(key, value){
 		if(GM.set_value)return GM.set_value(key, value);
 		else return localStorage.setItem('ss' + key, value);
@@ -39,18 +46,6 @@ exports.store = {
 		else this.set(key, '');
 	},
 };
-
-exports.request = (url, headers = {}) => new Promise((resolve, reject) => {
-	url = new URL(url, location);
-	
-	if(GM.request)GM.request({
-		url: url.href,
-		headers: headers,
-		onerror: reject,
-		onload: res => resolve(res.responseText),
-	});
-	else GM.fetch(url, { headers: headers }).then(res => res.text()).then(resolve).catch(reject);
-});
 
 exports.proxy_addons = [
 	{
@@ -82,4 +77,4 @@ exports.addon_url = query => exports.firefox ? 'https://addons.mozilla.org/en-US
 
 exports.api = new API(exports.mm_url, exports.api_url);
 
-exports.updater = new Updater(exports.script, exports.extracted);
+exports.updater = new Updater(exports.urls.script, exports.extracted);

@@ -1173,7 +1173,7 @@ class Main {
 		console.log(this.vars);
 		
 		var patched = utils.patchData(this.gameJS, {
-			exports: {regex: /(this\.\w+\.\w+\(this\)}},function\(\w+,\w+,(\w+)\){)/, patch: `$1 ${this.hash}.exports=$2.c; ${this.hash}.modules=$2.m;`},
+			exports: {regex: /(,(\w+)\(\2\.s=\d+\))(}\(\[)/, patch: `$1,${this.hash}.exports=$2.c$3`},
 			inputs: {regex: /(\w+\.\w+\.\w+\?'\w+':'push'\]\()(\w+)\),/, patch: `$1${this.hash}.onInput($2)),`},
 			inView: {regex: /&&(\w+\.\w+)\){(if\(\(\w+=\w+\.\w+\.\w+\.\w+)/, patch: `){if(void 0!==${this.hash}.noNameTags||!$1&&void 0 == ${this.hash}.nameTags)continue;$2`},
 			socket: {regex: /this\.\w+=new WebSocket\(\w+\)/, patch: `${this.hash}.ws=this;$&`},
