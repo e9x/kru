@@ -1,6 +1,5 @@
 'use strict';
 var vars = require('./libs/vars'),
-	integrate = require('./libs/integrate'),
 	Player = require('./libs/player'),
 	{ cheat, api, utils } = require('./consts');
 
@@ -26,6 +25,17 @@ for(let prop in vars.keys){
 }
 
 class Input {
+	constructor(){
+		document.addEventListener('pointerlockchange', () => {
+			this.focused = document.pointerLockElement != null;
+		});
+
+		this.inputs = {};
+
+		window.addEventListener('keydown', event => this.inputs[event.code] = true);
+		window.addEventListener('keyup', event => this.inputs[event.code] = false);
+		window.addEventListener('blur', event => this.inputs = {});
+	}
 	push(array){
 		if(cheat.player && cheat.controls)try{
 			var data = new InputData(array);
@@ -90,11 +100,11 @@ class Input {
 	}
 	modify(data){
 		// bhop
-		if(integrate.focused && cheat.config.game.bhop != 'off' && (integrate.inputs.Space || cheat.config.game.bhop == 'autojump' || cheat.config.game.bhop == 'autoslide')){
+		if(this.focused && cheat.config.game.bhop != 'off' && (this.inputs.Space || cheat.config.game.bhop == 'autojump' || cheat.config.game.bhop == 'autoslide')){
 			cheat.controls.keys[cheat.controls.binds.jump.val] ^= 1;
 			if(cheat.controls.keys[cheat.controls.binds.jump.val])cheat.controls.didPressed[cheat.controls.binds.jump.val] = 1;
 			
-			if((cheat.config.game.bhop == 'keyslide' && integrate.inputs.Space || cheat.config.game.bhop == 'autoslide') && cheat.player.y_vel < -0.02 && cheat.player.can_slide)setTimeout(() => cheat.controls.keys[cheat.controls.binds.crouch.val] = 0, 325), cheat.controls.keys[cheat.controls.binds.crouch.val] = 1;
+			if((cheat.config.game.bhop == 'keyslide' && this.inputs.Space || cheat.config.game.bhop == 'autoslide') && cheat.player.y_vel < -0.02 && cheat.player.can_slide)setTimeout(() => cheat.controls.keys[cheat.controls.binds.crouch.val] = 0, 325), cheat.controls.keys[cheat.controls.binds.crouch.val] = 1;
 		}
 		
 		// auto reload

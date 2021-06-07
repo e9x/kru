@@ -6,19 +6,28 @@ var Utils = require('../sploit/libs/utils'),
 	Main = require('./main'),
 	utils = new Utils();
 
-exports.script = 'https://raw.githubusercontent.com/e9x/kru/master/junker.user.js';
-exports.github = 'https://github.com/e9x/kru';
-exports.discord = 'https://e9x.github.io/kru/invite';
+exports.meta = {
+	discord_code: 'BdyvMgNYnQ',
+	script: 'https://raw.githubusercontent.com/e9x/kru/master/junker.user.js',
+	github: 'https://github.com/e9x/kru',
+	discord: 'https://e9x.github.io/kru/invite',
+	forum: 'https://forum.sys32.dev',
+};
 
 exports.krunker = utils.is_host(location, 'krunker.io', 'browserfps.com') && location.pathname == '/';
 
-exports.extracted = typeof build_extracted != 'number' ? Date.now() : build_extracted;
-
 exports.api_url = 'https://api.sys32.dev/';
-exports.hostname = 'krunker.io';
 exports.mm_url = 'https://matchmaker.krunker.io/';
 
-exports.api = new API(exports.mm_url, exports.api_url),
-exports.updater = new Updater(exports.script, exports.extracted);
+exports.extracted = typeof build_extracted != 'number' ? Date.now() : build_extracted;
 
-exports.main = new Main();
+var main = new Main(exports.meta),
+	updater = new Updater(exports.meta.script, exports.extracted),
+	api = new API(exports.mm_url, exports.api_url);
+
+api.license(exports.meta);
+
+exports.main = main
+exports.utils = utils;
+exports.api = api;
+exports.updater = updater;

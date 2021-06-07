@@ -5,7 +5,6 @@ var Utils = require('./libs/utils'),
 	UI = require('./libs/ui/'),
 	Socket = require('./socket'),
 	vars = require('./libs/vars'),
-	integrate = require('./libs/integrate'),
 	constants = require('./consts'),
 	entries = require('./entries'),
 	utils = new Utils(),
@@ -14,27 +13,6 @@ var Utils = require('./libs/utils'),
 	cheat = constants.cheat,
 	api = constants.api,
 	updater = constants.updater,
-	page_load = integrate.listen_load(() => {
-		if(integrate.has_instruct('connection banned 0x2'))localStorage.removeItem('krunker_token'), UI.alert([
-			`<p>You were IP banned, Sploit has signed you out.\nSpoof your IP to bypass this ban with one of the following:</p>`,
-			`<ul>`,
-				`<li>Using your mobile hotspot</li>`,
-				...constants.proxy_addons.filter(data => data[constants.supported_store]).map(data => `<li><a target='_blank' href=${JSON.stringify(data[constants.supported_store])}>${data.name}</a></li>`),
-				`<li>Use a <a target="_blank" href=${JSON.stringify(constants.addon_url('Proxy VPN'))}>Search for a VPN</a></li>`,
-			`</ul>`,
-		].join(''));
-		else if(integrate.has_instruct('connection banned 0x1'))localStorage.removeItem('krunker_token'), UI.alert(
-			`<p>You were banned, Sploit has signed you out.\nCreate a new account to bypass this ban.</p>`,
-		);
-		
-		if(cheat.config.game.auto_respawn){
-			if(integrate.has_instruct('connection error', 'game is full', 'kicked by vote', 'disconnected'))location.assign('https://krunker.io');
-			else if(integrate.has_instruct('to play') && (!cheat.player || !cheat.player.active)){
-				cheat.controls.locklessChange(true);
-				cheat.controls.locklessChange(false);
-			}
-		}
-	}),
 	process = () => {
 		try{
 			visual.tick();
@@ -81,7 +59,29 @@ var Utils = require('./libs/utils'),
 		utils.request_frame(process);
 	},
 	source = api.source(),
-	token = api.token('sploit', entries, constants.meta);
+	token = api.token();
+
+api.on_instruct = () => {
+	if(api.has_instruct('connection banned 0x2'))localStorage.removeItem('krunker_token'), UI.alert([
+		`<p>You were IP banned, Sploit has signed you out.\nSpoof your IP to bypass this ban with one of the following:</p>`,
+		`<ul>`,
+			`<li>Using your mobile hotspot</li>`,
+			...constants.proxy_addons.filter(data => data[constants.supported_store]).map(data => `<li><a target='_blank' href=${JSON.stringify(data[constants.supported_store])}>${data.name}</a></li>`),
+			`<li>Use a <a target="_blank" href=${JSON.stringify(constants.addon_url('Proxy VPN'))}>Search for a VPN</a></li>`,
+		`</ul>`,
+	].join(''));
+	else if(api.has_instruct('connection banned 0x1'))localStorage.removeItem('krunker_token'), UI.alert(
+		`<p>You were banned, Sploit has signed you out.\nCreate a new account to bypass this ban.</p>`,
+	);
+	
+	if(cheat.config.game.auto_respawn){
+		if(api.has_instruct('connection error', 'game is full', 'kicked by vote', 'disconnected'))location.assign('https://krunker.io');
+		else if(api.has_instruct('to play') && (!cheat.player || !cheat.player.active)){
+			cheat.controls.locklessChange(true);
+			cheat.controls.locklessChange(false);
+		}
+	}
+};
 
 UI.ready.then(() => {
 	constants.utils.canvas = UI.canvas;
@@ -116,6 +116,8 @@ UI.ready.then(() => {
 		});
 		
 		process();
+		
+		token.finally(() => loading.hide());
 		
 		var krunker = vars.patch(await source);
 		
@@ -155,9 +157,9 @@ UI.ready.then(() => {
 			WP_fetchMMToken: token,
 		};
 		
-		args.WP_fetchMMToken.finally(() => loading.hide());
+		await api.page_load;
 		
-		page_load.then(async () => new Function(...Object.keys(args), krunker)(...Object.values(args)));
+		new Function(...Object.keys(args), krunker)(...Object.values(args));
 	});
 });
 

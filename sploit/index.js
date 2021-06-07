@@ -1,5 +1,5 @@
 'use strict';
 
-var { krunker, api } = require('./consts');
+var { krunker } = require('./consts');
 
-if(/*krunker && */api.license())require('./main');
+if(krunker)require('./main');

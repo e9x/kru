@@ -43,8 +43,8 @@ var vm = require('vm'),
 			darkTheme: true,
 		}));
 		
-		window.webContents.on('new-window', navigate);
-		window.webContents.on('will-navigate', navigate);
+		/*window.webContents.on('new-window', navigate);
+		window.webContents.on('will-navigate', navigate);*/
 		
 		window.webContents.once('ready-to-show', () => {
 			window.show();

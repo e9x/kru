@@ -7,7 +7,7 @@ var main,
 	utils = new Utils();
 
 class Main {
-	constructor() {
+	constructor(meta) {
 		this.hash = utils.genHash(8);
 		global[this.hash] = this;
 		
@@ -59,7 +59,7 @@ class Main {
 		
 		this.eventHandlers();
 		
-		this.discord = { code: 'BdyvMgNYnQ', guild: {} };
+		this.discord = { code: meta.discord_code, guild: {} };
 		
 		utils.request('https://discordapp.com/api/v6/invite/' + this.discord.code + '?with_counts=true', "json", {cache: "no-store"}).then(json => {
 			console.log(json);

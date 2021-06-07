@@ -5,6 +5,7 @@ var { keybinds, global_listen, utils } = require('../consts'),
 	Control = require('./control');
 
 class TextElement {
+	static id = 'text';
 	constructor(data, section, ui){
 		this.data = data;
 		this.ui = ui;
@@ -24,6 +25,7 @@ class TextElement {
 }
 
 class BooleanControl extends Control {
+	static id = 'boolean';
 	interact(){
 		this.value = !this.value;
 	}
@@ -34,6 +36,7 @@ class BooleanControl extends Control {
 }
 
 class RotateControl extends Control {
+	static id = 'rotate';
 	constructor(...args){
 		super(...args);
 	}
@@ -53,19 +56,22 @@ class RotateControl extends Control {
 	}
 }
 
-class LinkControl extends Control }
+class LinkControl extends Control {
+	static id = 'link';
 	interact(){
 		window.open(this.value, '_blank');
 	}
 }
 
 class FunctionControl extends Control {
+	static id = 'function';
 	interact(){
 		this.value();
 	}
 }
 
 class KeybindControl extends Control {
+	static id = 'keybind';
 	constructor(...args){
 		super(...args);
 		
@@ -95,6 +101,7 @@ class KeybindControl extends Control {
 }
 
 class TextBoxControl extends Control {
+	static id = 'textbox';
 	update(){
 		this.button.style.display = 'none';
 		this.input.value = ('' + this.value).substr(0, this.data.max_length);
@@ -102,6 +109,7 @@ class TextBoxControl extends Control {
 }
 
 class SliderControl extends Control {
+	static id = 'slider';
 	constructor(...args){
 		super(...args);
 		
@@ -147,6 +155,17 @@ class SliderControl extends Control {
 	}
 };
 
+Control.Types = [
+	KeybindControl,
+	RotateControl,
+	BooleanControl,
+	FunctionControl,
+	LinkControl,
+	TextBoxControl,
+	SliderControl,
+	TextElement,
+];
+
 class Config extends PanelDraggable {
 	constructor(data){
 		super(data, 'config');
@@ -186,21 +205,9 @@ class Config extends PanelDraggable {
 			};
 			
 			if(section.data.type != 'function')section.controls = section.data.value.map(data => {
-				var construct;
-
-				switch(data.type){
-					case'keybind': construct = KeybindControl; break;
-					case'rotate': construct = RotateControl; break;
-					case'boolean': construct = BooleanControl; break;
-					case'function': construct = FunctionControl; break;
-					case'link':  construct = LinkControl; break;
-					case'textbox': construct = TextBoxControl; break;
-					case'slider': construct = SliderControl; break;
-					case'text': construct = TextElement; break;
-					default: throw new TypeError('Unknown type: ' + data.type); break;
-				}
-
-				return new construct(data, section, this);
+				for(var type of Control.Types)if(type.id == data.type)return new type(data, section, this);
+				
+				throw new TypeError('Unknown type: ' + data.type);
 			});
 			
 			utils.add_ele('div', this.sidebar_con, { className: 'open-section', textContent: section.data.name }).addEventListener('click', () => {

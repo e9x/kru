@@ -12,9 +12,6 @@ var GM = {
 	Utils = require('./libs/utils'),
 	utils = new Utils(),
 	cheat = new Cheat(utils);
-	
-exports.cheat = cheat;
-exports.utils = utils;
 
 exports.meta = {
 	discord_code: 'BdyvMgNYnQ',
@@ -27,15 +24,24 @@ exports.meta = {
 exports.krunker = utils.is_host(location, 'krunker.io', 'browserfps.com') && location.pathname == '/';
 
 exports.api_url = 'https://api.sys32.dev/';
-exports.hostname = 'krunker.io';
 exports.mm_url = 'https://matchmaker.krunker.io/';
 
 exports.extracted = typeof build_extracted != 'number' ? Date.now() : build_extracted;
 
+var updater = new Updater(exports.meta.script, exports.extracted),
+	api = new API(exports.mm_url, exports.api_url);
+
+api.license(exports.meta);
+
+exports.cheat = cheat;
+exports.utils = utils;
+exports.api = api;
+exports.updater = updater;
+
 exports.store = {
 	async get(key){
 		if(GM.get_value)return await GM.get_value(key);
-		else localStorage.getItem('ss' + key);
+		else return localStorage.getItem('ss' + key);
 	},
 	set(key, value){
 		if(GM.set_value)return GM.set_value(key, value);
@@ -74,7 +80,3 @@ exports.firefox = navigator.userAgent.includes('Firefox');
 exports.supported_store = exports.firefox ? 'firefox' : 'chrome';
 
 exports.addon_url = query => exports.firefox ? 'https://addons.mozilla.org/en-US/firefox/search/?q=' + encodeURIComponent(query) : 'https://chrome.google.com/webstore/search/' + encodeURI(query);
-
-exports.api = new API(exports.mm_url, exports.api_url);
-
-exports.updater = new Updater(exports.urls.script, exports.extracted);
