@@ -20,9 +20,14 @@ class Write {
 		});
 		
 		this.node.addEventListener('keydown', event => {
-			if(event.ctrlKey)this.emit('ctrl+' + event.key.toLowerCase());
+			var prevent_default = [ 's', 'w', 'r', 'tab' ],
+				key = event.key.toLowerCase();
 			
-			if(event.key == 'Tab')this.insertAtCaret('\t'), event.preventDefault();
+			if(prevent_default.includes(key))event.preventDefault();
+			
+			if(event.ctrlKey)this.emit('ctrl+' + key);
+			
+			if(key == 'tab')this.insertAtCaret('\t'), event.preventDefault();
 		});
 		
 		this.update();

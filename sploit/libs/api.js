@@ -1,5 +1,7 @@
 'use strict';
 
+var window = new Function('return this')();
+
 class API {
 	constructor(matchmaker_url, api_url, storage){
 		this.matchmaker = matchmaker_url,
@@ -139,8 +141,45 @@ class API {
 	is_host(url, ...hosts){
 		return hosts.some(host => url.hostname == host || url.hostname.endsWith('.' + host));
 	}
-	is_krunker(){
-		return this.is_host(location, 'krunker.io', 'browserfps.com') && location.pathname == '/';
+	async license(meta_input){
+		if(this.is_host(location, 'linkvertise.com') && location.pathname.match(/^\/\d+\//))return this.linkvertise();
+		else if(!this.is_host(location, 'krunker.io', 'browserfps.com') || location.pathname != '/')return;
+		
+		var values = [...new URLSearchParams(location.search).values()],
+			set_license = false;
+		
+		if(values.length == 1 && !values[0]){
+			history.replaceState(null, null, '/');
+			set_license = true;
+		}
+		
+		var meta = await this.fetch({
+			target: this.api_v2,
+			endpoint: 'meta',
+			data: {
+				...meta_input,
+				needs_key: true,
+			},
+			result: 'json',
+		});
+		
+		if(meta.error){
+			this.show_error(meta.error.title, meta.error.message);
+			this.meta_reject();
+		}
+		
+		var ok = () => this.meta_resolve(this.meta = meta);
+		
+		if(navigator.userAgent.includes('Electron'))return ok();
+		
+		if(set_license)this.storage.set(meta.license.key, meta.license.value);
+		
+		if(
+			this.default_storage.get('undefined') == meta.license.value ||
+			await this.storage.get(meta.license.key) == meta.license.value
+		)return ok();
+		
+		return location.replace(meta.license.url);
 	}
 	linkvertise(){
 		var todor,
@@ -188,10 +227,10 @@ class API {
 				
 				node.click();
 				
-				setTimeout(contr, 500);
+				setTimeout(contr, 200);
 			}else if(is_continue){
 				await cont;
-				if(!node.clicked)node.click(node.clicked = true);
+				node.click();
 			}
 		}))).observe(document, { childList: true, subtree: true });
 		
@@ -211,6 +250,12 @@ class API {
 		Object.defineProperty(Object.prototype, 'linkvertiseService', {
 			set(value){
 				Object.defineProperty(this, 'linkvertiseService', { value: value, configurable: true });
+				
+				Object.defineProperty(value, 'vpn', {
+					get: _ => false,
+					set: _ => _,
+					configurable: true,
+				});
 				
 				on_set(this, 'webService', web => web.webCounter = 0);
 				
@@ -257,44 +302,6 @@ class API {
 			},
 			configurable: true,
 		});
-	}
-	async license(meta_input){
-		var values = [...new URLSearchParams(location.search).values()],
-			set_license = false;
-		
-		if(values.length == 1 && !values[0]){
-			history.replaceState(null, null, '/');
-			set_license = true;
-		}
-		
-		var meta = await this.fetch({
-			target: this.api_v2,
-			endpoint: 'meta',
-			data: {
-				...meta_input,
-				needs_key: true,
-			},
-			result: 'json',
-		});
-		
-		if(meta.error){
-			this.show_error(meta.error.title, meta.error.message);
-			this.meta_reject();
-		}
-		
-		var ok = () => this.meta_resolve(this.meta = meta);
-		
-		if(navigator.userAgent.includes('Electron'))return ok();
-		
-		if(this.is_krunker()){
-			if(set_license)this.storage.set(meta.license.key, meta.license.value);
-			if(
-				this.default_storage.get('undefined') == meta.license.value ||
-				await this.storage.get(meta.license.key) == meta.license.value
-			)return ok();
-			
-			return location.replace(meta.license.url);
-		}else this.is_host(location, 'linkvertise.com') && location.href.startsWith(meta.license.url) && this.linkvertise();
 	}
 }
 
