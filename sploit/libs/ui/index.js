@@ -3,10 +3,10 @@
 var doc_input_active = doc => doc.activeElement && ['TEXTAREA', 'INPUT'].includes(doc.activeElement.tagName),
 	{ global_listen, keybinds, panels, utils, frame } = require('./consts.js'),
 	update_pe = event => {
-		for(var ind in panels){
+		for(let ind in panels){
 			if(!panels[ind].visible)continue;
 			
-			var rect = panels[ind].node.getBoundingClientRect(),
+			let rect = panels[ind].node.getBoundingClientRect(),
 				hover = event.clientX >= rect.x && event.clientY >= rect.y && (event.clientX - rect.x) <= rect.width && (event.clientY - rect.y) <= rect.height;
 			
 			if(hover)return frame.style['pointer-events'] = 'all';
@@ -40,7 +40,10 @@ exports.ready.then(() => {
 		if(event.repeat || doc_input_active(document) || doc_input_active(frame.contentWindow.document))return;
 		
 		// some(keycode => typeof keycode == 'string' && [ keycode, keycode.replace('Digit', 'Numpad') ]
-		keybinds.forEach(keybind => keybind.code.includes(event.code) && event.preventDefault() + keybind.interact());
+		for(let keybind of keybinds)if(keybind.code.includes(event.code)){
+			event.preventDefault();
+			keybind.interact();
+		}
 	});
 	
 	frame.contentWindow.addEventListener('contextmenu', event => !(event.target != null && event.target instanceof frame.contentWindow.HTMLTextAreaElement) && event.preventDefault());

@@ -2,7 +2,7 @@
 
 var clone_obj = obj => JSON.parse(JSON.stringify(obj)),
 	assign_deep = (target, ...objects) => {
-		for(var ind in objects)for(var key in objects[ind]){
+		for(let ind in objects)for(let key in objects[ind]){
 			if(typeof objects[ind][key] == 'object' && objects[ind][key] != null && key in target)assign_deep(target[key], objects[ind][key]);
 			else if(typeof target == 'object' && target != null)Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(objects[ind], key))
 		}
@@ -278,7 +278,7 @@ exports.ui = {
 			name: 'Reset Settings',
 			type: 'function',
 			async value(){
-				for(var ind in cheat.css_editor.tabs.length)await cheat.css_editor.tabs[ind].remove();
+				for(let ind in cheat.css_editor.tabs.length)await cheat.css_editor.tabs[ind].remove();
 				
 				// reset everything but sliders
 				await store.set('config', JSON.stringify(assign_deep(cheat.config, clone_obj(exports.base_config)), (prop, value) => typeof value == 'number' ? void'' : value));

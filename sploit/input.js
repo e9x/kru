@@ -29,9 +29,9 @@ class Input {
 		document.addEventListener('pointerlockchange', () => {
 			this.focused = document.pointerLockElement != null;
 		});
-
+		
 		this.inputs = {};
-
+		
 		window.addEventListener('keydown', event => this.inputs[event.code] = true);
 		window.addEventListener('keyup', event => this.inputs[event.code] = false);
 		window.addEventListener('blur', event => this.inputs = {});
