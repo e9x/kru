@@ -4,6 +4,9 @@ var { utils } = require('../consts'),
 	svg = require('./svg.json');
 
 class Tab {
+	static ID(){
+		return Math.random().toString();
+	}
 	constructor(uuid, ui){
 		this.ui = ui;
 		
@@ -114,7 +117,7 @@ class Tab {
 		this.ui.tabs.forEach(tab => tab.blur());
 		this.focused = true;
 		this.node.classList.add('active');
-		this.ui.mirror.setValue(data.value);
+		this.ui.editor.setValue(data.value);
 		this.ui.saved = true;
 		this.ui.update();
 	}

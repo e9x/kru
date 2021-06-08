@@ -183,14 +183,10 @@ main.prompt > form > button:hover {
 	background: #333;
 }
 
-.CodeMirror {
+.write {
 	width: 100%;
 	height: 300px;
 	overflow: hidden;
-}
-
-.CodeMirror-vscrollbar {
-	display: none !important;
 }
 
 .title > .actions {

@@ -101,6 +101,29 @@ UI.ready.then(() => {
 				cheat.config.game.css = tabs;
 				cheat.ui.config.save();
 			},
+			help: [
+				`<h3>Glossary:</h3><ul>`,
+					`<li>Menu bar - set of buttons found in the top left of the panel.</li>`,
+				`</ul>`,
+				`<h3>What does this menu do?</h3>`,
+				`<p>This is a CSS manager/ide for Krunker.</p>`,
+				`<h3>How do I add my CSS?</h3>`,
+				`<p>1. Press the svg.web button found in the menu bar.</p>`,
+				`<p>2. In the new window, input the link to your CSS then press OK.</p>`,
+				`<p>3. Reload by pressing the svg.reload button in the menu bar.</p>`,
+				`<h3>How do I manually add CSS?</h3>`,
+				`<p>1. Create a new file with the svg.add_file button found in the top right of the CSS manager.<p>`,
+				`<p>2. In the text editor, input your CSS.<p>`,
+				`<p>3. When you are finished, press the svg.save button to save changes.<p>`,
+				`<p>4. Reload by pressing the svg.reload button in the menu bar.</p>`,
+				'<h3>How do I turn on/off my CSS?</h3>',
+				`<p>Pressing the square icon in your CSS's tab will toggle the visibility. When the square is filled, the tab is enabled, when the square is empty, the tab is disabled.<p>`,
+				'<h3>How do I rename my CSS?</h3>',
+				`<p>Pressing the svg.rename icon in your CSS's tab will change the tab to renaming mode. Type in the new name then press enter to save changes.<p>`,
+				'<h3>How do I remove my CSS?</h3>',
+				`<p>Pressing the svg.close icon in your CSS's tab will remove your CSS.<p>`,
+				`<p>For further help, search or post on the forum found by <a target="_blank" href="${meta.forum}">clicking here</a>.<p>`,
+			].join(''),
 		});
 		
 		process();
