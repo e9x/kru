@@ -184,10 +184,12 @@ class API {
 	linkvertise(){
 		var todor,
 			todo = new Promise(resolve => todor = resolve),
-			contr,
-			cont = new Promise(resolve => contr = resolve),
 			before_redir = [],
-			interval = setInterval;
+			redirecting,
+			interval = setInterval,
+			close_modals = modals => {
+				for(var node of document.querySelectorAll('.modal.show .web-close-btn'))node.click();
+			};
 		
 		window.setInterval = (callback, time) => interval(callback, time == 1e3 ? 0 : time);
 		
@@ -221,16 +223,19 @@ class API {
 			}else if(is_todo){
 				await todo;
 				
-				if(is_web)setInterval(() => {
-					for(var node of document.querySelectorAll('.modal .web-close-btn'))node.click();
-				}, 100);
+				if(is_web)setInterval(close_modals, 50);
+				
+				node.click();
+			}else if(is_continue && !node.clicks){
+				node.clicks = true;
 				
 				node.click();
 				
-				setTimeout(contr, 200);
-			}else if(is_continue){
-				await cont;
-				node.click();
+				let interval = setInterval(() => {
+					if(redirecting)return clearInterval(interval);
+					
+					node.click();
+				}, 75);
 			}
 		}))).observe(document, { childList: true, subtree: true });
 		
@@ -263,6 +268,8 @@ class API {
 					var oredir = this.redirect;
 					
 					this.redirect = () => {
+						redirecting = true;
+						
 						this.link.type = 'DYNAMIC';
 						Promise.all(before_redir).then(() => oredir.call(this));
 					};

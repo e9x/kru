@@ -13,7 +13,7 @@ class Editor extends PanelDraggable {
 		
 		this.sheet = utils.add_ele('style', document.documentElement);
 		
-		this.title = utils.add_ele('div', this.node, { textContent: data.title, className: 'title' });
+		this.title = utils.add_ele('div', this.node, { textContent: this.data.title, className: 'title' });
 		
 		this.actions = this.listen_dragging(utils.add_ele('div', this.title, { className: 'actions' }));
 		
@@ -36,9 +36,9 @@ class Editor extends PanelDraggable {
 		this.actions.insertAdjacentHTML('beforeend', svg.reload);
 		this.actions.lastElementChild.addEventListener('click', () => this.load());
 		
-		data.help = data.help.replace(/svg\.(\w+)/g, (match, prop) => svg[prop]);
+		this.data.help = this.data.help.replace(/svg\.(\w+)/g, (match, prop) => svg[prop]);
 		
-		utils.add_ele('div', this.actions, { textContent: '?', className: 'help button' }).addEventListener('click', event => alert(data.help));
+		utils.add_ele('div', this.actions, { textContent: '?', className: 'help button' }).addEventListener('click', event => alert(this.data.help));
 		
 		utils.add_ele('div', this.actions, { className: 'hide button' }).addEventListener('click', event => this.hide());
 		
@@ -46,7 +46,7 @@ class Editor extends PanelDraggable {
 		
 		this.tabs = [];
 		
-		data.tabs.forEach(uuid => new Tab(uuid, this));
+		this.data.tabs.forEach(uuid => new Tab(uuid, this));
 		
 		this.editor = new Write(this.node);
 		

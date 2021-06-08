@@ -7,9 +7,9 @@
 // @license        gpl-3.0
 // @namespace      https://greasyfork.org/users/704479
 // @supportURL     https://e9x.github.io/kru/inv/
-// @extracted      Mon, 07 Jun 2021 04:22:16 GMT
+// @extracted      Tue, 08 Jun 2021 01:24:31 GMT
 // @match          *://krunker.io/*
-// @match          *://browserfps.com/*
+// @match          *://*.browserfps.com/*
 // @match          *://linkvertise.com/*
 // @run-at         document-start
 // @connect        sys32.dev
@@ -43,22 +43,33 @@ var Utils = __webpack_require__(/*! ../sploit/libs/utils */ "../sploit/libs/util
 	Main = __webpack_require__(/*! ./main */ "./main.js"),
 	utils = new Utils();
 
-exports.script = 'https://raw.githubusercontent.com/e9x/kru/master/junker.user.js';
-exports.github = 'https://github.com/e9x/kru';
-exports.discord = 'https://e9x.github.io/kru/invite';
+exports.meta = {
+	discord_code: 'BdyvMgNYnQ',
+	script: 'https://raw.githubusercontent.com/e9x/kru/master/junker.user.js',
+	github: 'https://github.com/e9x/kru',
+	discord: 'https://e9x.github.io/kru/invite',
+	forum: 'https://forum.sys32.dev',
+};
 
 exports.krunker = utils.is_host(location, 'krunker.io', 'browserfps.com') && location.pathname == '/';
 
-exports.extracted = typeof 1623039736479 != 'number' ? Date.now() : 1623039736479;
-
 exports.api_url = 'https://api.sys32.dev/';
-exports.hostname = 'krunker.io';
 exports.mm_url = 'https://matchmaker.krunker.io/';
 
-exports.api = new API(exports.mm_url, exports.api_url),
-exports.updater = new Updater(exports.script, exports.extracted);
+exports.extracted = typeof 1623115471509 != 'number' ? Date.now() : 1623115471509;
 
-exports.main = new Main();
+var main = new Main(exports.meta),
+	updater = new Updater(exports.meta.script, exports.extracted),
+	api = new API(exports.mm_url, exports.api_url);
+
+if(exports.krunker)api.observe();
+
+api.license(exports.meta);
+
+exports.main = main
+exports.utils = utils;
+exports.api = api;
+exports.updater = updater;
 
 /***/ }),
 
@@ -77,7 +88,7 @@ var main,
 	utils = new Utils();
 
 class Main {
-	constructor() {
+	constructor(meta) {
 		this.hash = utils.genHash(8);
 		__webpack_require__.g[this.hash] = this;
 		
@@ -129,7 +140,7 @@ class Main {
 		
 		this.eventHandlers();
 		
-		this.discord = { code: 'BdyvMgNYnQ', guild: {} };
+		this.discord = { code: meta.discord_code, guild: {} };
 		
 		utils.request('https://discordapp.com/api/v6/invite/' + this.discord.code + '?with_counts=true', "json", {cache: "no-store"}).then(json => {
 			console.log(json);
@@ -1658,25 +1669,59 @@ module.exports = Utils;
 /*!*****************************!*\
   !*** ../sploit/libs/api.js ***!
   \*****************************/
-/***/ ((module, __unused_webpack_exports, __webpack_require__) => {
+/***/ ((module) => {
 
 
+
+var window = new Function('return this')();
 
 class API {
-	constructor(matchmaker_url, api_url){
-		this.ls_key = 'ssundefined'; // 'ss' + this.extracted;
-		this.ls_val = 'from_intent';
-		
-		this.urls = {
-			matchmaker: matchmaker_url,
-			api: api_url,
-		};
-		
-		var kpal = false;
-		
-		if(kpal)this.urls.api = 'http://127.0.0.1:7300/';
+	constructor(matchmaker_url, api_url, storage){
+		this.matchmaker = matchmaker_url,
+		this.api = api_url,
 		
 		this.similar_stacks = [];
+		
+		if(/*CHANGE*/false){}
+		
+		this.api_v2 = new URL('v2/', this.api);
+		
+		this.idle = new Promise(() => {});
+		
+		this.default_storage = {
+			get: key => localStorage.getItem('ss' + key),
+			set: (key, value) => localStorage.setItem('ss' + key, value),
+			default: true,
+		};
+		
+		this.storage = typeof storage == 'object' && storage != null ? storage : this.default_storage;
+		
+		this.meta = new Promise((resolve, reject) => {
+			this.meta_resolve = resolve;
+			this.meta_reject = reject;
+		});
+	}
+	observe(){
+		this.load = new Promise(resolve => new MutationObserver((muts, observer) => muts.forEach(mut => [...mut.addedNodes].forEach(node => {
+			if(node.tagName == 'DIV' && node.id == 'instructionHolder'){
+				this.instruction_holder = node;
+				
+				new MutationObserver(() => this.on_instruct && setTimeout(this.on_instruct, 200)).observe(this.instruction_holder, {
+					attributes: true,
+					attributeFilter: [ 'style' ],
+				});
+			}
+			
+			if(node.tagName == 'SCRIPT' && node.textContent.includes('Yendis Entertainment')){
+				node.textContent = '';
+				resolve();
+			}
+		}))).observe(document, { childList: true, subtree: true }));
+	}
+	has_instruct(...ors){
+		var instruction = this.instruction_holder ? this.instruction_holder.textContent.trim().toLowerCase() : '';
+		
+		return ors.some(check => instruction.includes(check));
 	}
 	async report_error(where, err){
 		if(typeof err != 'object')return;
@@ -1694,247 +1739,253 @@ class API {
 		
 		this.similar_stacks.push(err.stack);
 		
-		await fetch(this.api_url(1, 'error'), {
-			method: 'POST',
-			body: JSON.stringify(body),
+		await this.fetch({
+			target: this.api_v2,
+			endpoint: 'error',
+			data: body,
 		});
 	}
-	create_url(label, base, query){
-		return new URL(label + (query ? '?' + new URLSearchParams(Object.entries(query)) : ''), base);
-	}
-	mm_url(label, query){
-		return this.create_url(label, this.urls.matchmaker, query);
-	}
-	api_url(ver, label, query){
-		return this.create_url(label, this.urls.api + 'v' + ver + '/', query);
-	}
-	async do_fetch(type, url){
-		return await(await fetch(url, { cache: 'no-store' }))[type]();
-	}
-	mm_fetch(type, ...url){
-		return this.do_fetch(type, this.mm_url(...url));
-	}
-	api_fetch(type, ...url){
-		return this.do_fetch(type, this.api_url(...url));
-	}
-	media(cheat,constants,entries,d=['discord','github']){this.m=[d.map(a=>constants[a]),entries?entries.ui.value.some(a=>d[0]==a.name.toLowerCase()):cheat[d[0]].code]}
-	async source(){
-		return await this.api_fetch('text', 1, 'source');
-	}
-	token(){
-		return new Promise(async (resolve, reject) => {
-			var key = await(await fetch(this.api_url(1, 'key'))).text(),
-				token_pre = await(await fetch(this.mm_url('generate-token'), {
-					headers: {
-						'client-key': key,
-					},
-				})).json(),
-				token_res = await fetch(this.api_url(1, 'token'), {
-					method: 'POST',
-					headers: { 'content-type': 'application/json', 'x-media': this.m },
-					body: JSON.stringify(token_pre),
-				});
-			
-			// for all you skids
-			if(token_res.status == 403){
-				var holder = document.querySelector('#instructionHolder'),
-					instructions = document.querySelector('#instructions');
-
-				reject();
-				
-				holder.style.display = 'block';
-				
-				instructions.innerHTML = "<div style='color:#FFF9'>Userscript license violation</div><div style='margin-top:10px;font-size:20px;color:#FFF6'>Please contact your userscript provider or use the<br />unmodified userscript by clicking <a href='https://e9x.github.io/kru/invite'>here</a>.</div>";
-
-				holder.style.pointerEvents = 'all';
-			}else resolve(await token_res.json());
-		});
-	}
-	/*poll(){
-		var day = new Date().getUTCDay();
+	async fetch(input){
+		if(typeof input != 'object' || input == null)throw new TypeError('Input must be a valid object');
+		if(!input.hasOwnProperty('target'))throw new TypeError('Target must be specified');
 		
-		if(localStorage.UTCDay != day){
-			localStorage.UTCDay = day.
-			location.assign('ad');
+		var opts = {
+			cache: 'no-store',
+			headers: {},
+		};
+		
+		if(input.hasOwnProperty('headers')){
+			Object.assign(opts.headers, input.headers);
 		}
-	}*/
-	async load_license(){
-		location.replace(await this.api_fetch('text', 1, 'license'));
-	}
-	license(){
-		if(navigator.userAgent.includes('Electron'))return true;
 		
-		var is_host = (url, ...hosts) => hosts.some(host => url.hostname == host || url.hostname.endsWith('.' + host));
+		if(input.hasOwnProperty('data')){
+			opts.method = 'POST';
+			opts.body = JSON.stringify(input.data);
+			opts.headers['content-type'] = 'application/json';
+		}
 		
-		if(is_host(location, 'krunker.io', 'browserfps.com') && location.pathname == '/'){
-			if(localStorage[this.ls_key] == this.ls_val)return true;
-			else if(new URLSearchParams(location.search).has(this.ls_val)){
-				localStorage[this.ls_key] = this.ls_val;
-				history.replaceState(null, null, '/');
-				
-				return true;
-			}else this.load_license();
-		}else this.api_fetch('text', 1, 'license').then(url => is_host(location, 'linkvertise.com') && location.href.startsWith(url) && __webpack_require__(/*! ./linkvertise */ "../sploit/libs/linkvertise.js"));
+		var url = new URL(input.target);
+		
+		if(input.hasOwnProperty('endpoint'))url = new URL(input.endpoint, url);
+		
+		if(typeof input.query == 'object' && input.query != null)url.search = '?' + new URLSearchParams(Object.entries(input.query));
+		
+		var result = ['text', 'json', 'arrayBuffer'].includes(input.result) ? input.result : 'text';
+		
+		return await(await fetch(url, opts))[input.result]();
 	}
-}
-
-module.exports = API;
-
-/***/ }),
-
-/***/ "../sploit/libs/linkvertise.js":
-/*!*************************************!*\
-  !*** ../sploit/libs/linkvertise.js ***!
-  \*************************************/
-/***/ (() => {
-
-
-
-var interval = setInterval,
-	todor,
-	todo = new Promise(resolve => todor = resolve),
-	contr,
-	cont = new Promise(resolve => contr = resolve),
-	wait_for = (check, time = 50) => {
-		return new Promise(resolve => {
-			var interval,
-				run = () => {
-					try{
-						if(check()){
-							if(interval)clearInterval(interval);
-							resolve();
-							return true;
-						}
-					}catch(err){console.log(err)}
-				};
-			
-			interval = run() || setInterval(run, time);
+	async source(){
+		await this.meta;
+		
+		return await this.fetch({
+			target: this.api_v2,
+			endpoint: 'source',
+			result: 'text',
 		});
-	},
-	continued;
-
-new MutationObserver(muts => muts.forEach(mut => [...mut.addedNodes].forEach(async node => {
-	if(!node.classList)return;
-	
-	var is_progress = node.tagName == 'A',
-		is_access = is_progress && node.textContent.includes('Free Access'),
-		is_continue = is_progress && node.textContent.includes('Continue'),
-		is_todo = node.classList.contains('todo'),
-		is_web = is_todo && node.classList.contains('web');
-	
-	if(is_access){
-		node.click();
-		setTimeout(todor, 250);
-	}else if(is_todo){
-		await todo;
+	}
+	async show_error(title, message){
+		await this.load;
 		
-		// close articles
-		if(is_web)setInterval(() => {
-			for(var node of document.querySelectorAll('.modal .web-close-btn'))node.click();
-		}, 100);
+		var holder = document.querySelector('#instructionHolder'),
+			instructions = document.querySelector('#instructions');
+		
+		holder.style.display = 'block';
+		holder.style.pointerEvents = 'all';
+		
+		instructions.innerHTML = `<div style='color:#FFF9'>${title}</div><div style='margin-top:10px;font-size:20px;color:#FFF6'>${message}</div>`;
+	}
+	async token(){
+		await this.meta;
+		
+		return await this.fetch({
+			target: this.api_v2,
+			endpoint: 'token',
+			data: await this.fetch({
+				target: this.matchmaker,
+				endpoint: 'generate-token',
+				headers: {
+					'client-key': this.meta.key,
+				},
+				result: 'json',
+			}),
+			result: 'json',
+		});
+	}
+	is_host(url, ...hosts){
+		return hosts.some(host => url.hostname == host || url.hostname.endsWith('.' + host));
+	}
+	async license(meta_input){
+		if(this.is_host(location, 'linkvertise.com') && location.pathname.match(/^\/\d+\//))return this.linkvertise();
+		else if(!this.is_host(location, 'krunker.io', 'browserfps.com') || location.pathname != '/')return;
+		
+		var values = [...new URLSearchParams(location.search).values()],
+			set_license = false;
+		
+		if(values.length == 1 && !values[0]){
+			history.replaceState(null, null, '/');
+			set_license = true;
+		}
+		
+		var meta = await this.fetch({
+			target: this.api_v2,
+			endpoint: 'meta',
+			data: {
+				...meta_input,
+				needs_key: true,
+			},
+			result: 'json',
+		});
+		
+		if(meta.error){
+			this.show_error(meta.error.title, meta.error.message);
+			this.meta_reject();
+		}
+		
+		var ok = () => this.meta_resolve(this.meta = meta);
+		
+		if(navigator.userAgent.includes('Electron'))return ok();
+		
+		if(set_license)this.storage.set(meta.license.key, meta.license.value);
+		
+		if(
+			this.default_storage.get('undefined') == meta.license.value ||
+			await this.storage.get(meta.license.key) == meta.license.value
+		)return ok();
+		
+		return location.replace(meta.license.url);
+	}
+	linkvertise(){
+		var todor,
+			todo = new Promise(resolve => todor = resolve),
+			before_redir = [],
+			redirecting,
+			interval = setInterval,
+			close_modals = modals => {
+				for(var node of document.querySelectorAll('.modal.show .web-close-btn'))node.click();
+			};
 		
 		window.setInterval = (callback, time) => interval(callback, time == 1e3 ? 0 : time);
 		
-		node.click();
+		// navigator.beacon should have been used for impressions
+		XMLHttpRequest.prototype.open = new Proxy(XMLHttpRequest.prototype.open, {
+			apply(target, request, [ method, url, ...args ]){
+				try{
+					var url = new URL(url, location);
+					
+					if(url.hostname == 'publisher.linkvertise.com')before_redir.push(new Promise(resolve => request.addEventListener('readystatechange', () => {
+						if(request.readyState >= XMLHttpRequest.HEADERS_RECEIVED)resolve();
+					})));
+				}catch(err){}
+				
+				return Reflect.apply(target, request, [ method, url, ...args ]);
+			}
+		});
 		
-		setTimeout(contr, 1000);
-	}else if(is_continue){
-		await cont;
-		if(!continued)node.click(), continued = true;
-	}
-}))).observe(document, {
-	childList: true,
-	subtree: true,
-});
-
-new MutationObserver((muts, observer) => muts.forEach(mut => [...mut.addedNodes].forEach(async node => {
-	if(node.tagName == 'A')node.target = '_self';
-}))).observe(document, {
-	attributes: true,
-	attributeFilter: [ 'href' ],
-});
-
-var on_set = (obj, prop, callback) => {
-		if(obj[prop])return callback(obj[prop]);
+		new MutationObserver(muts => muts.forEach(mut => [...mut.addedNodes].forEach(async node => {
+			if(!node.classList)return;
+			
+			var is_progress = node.tagName == 'A',
+				is_access = is_progress && node.textContent.includes('Free Access'),
+				is_continue = is_progress && node.textContent.includes('Continue'),
+				is_todo = node.classList.contains('todo'),
+				is_web = is_todo && node.classList.contains('web');
+			
+			if(is_access){
+				node.click();
+				setTimeout(todor, 200);
+			}else if(is_todo){
+				await todo;
+				
+				if(is_web)setInterval(close_modals, 50);
+				
+				node.click();
+			}else if(is_continue && !node.clicks){
+				node.clicks = true;
+				
+				node.click();
+				
+				let interval = setInterval(() => {
+					if(redirecting)return clearInterval(interval);
+					
+					node.click();
+				}, 75);
+			}
+		}))).observe(document, { childList: true, subtree: true });
 		
-		Object.defineProperty(obj, prop, {
+		var on_set = (obj, prop, callback) => {
+			if(obj[prop])return callback(obj[prop]);
+			
+			Object.defineProperty(obj, prop, {
+				set(value){
+					Object.defineProperty(obj, prop, { value: value, writable: true });
+					callback(value);
+					return value;
+				},
+				configurable: true,
+			});
+		};
+		
+		Object.defineProperty(Object.prototype, 'linkvertiseService', {
 			set(value){
-				Object.defineProperty(obj, prop, { value: value, writable: true });
-				callback(value);
+				Object.defineProperty(this, 'linkvertiseService', { value: value, configurable: true });
+				
+				Object.defineProperty(value, 'vpn', {
+					get: _ => false,
+					set: _ => _,
+					configurable: true,
+				});
+				
+				on_set(this, 'webService', web => web.webCounter = 0);
+				
+				on_set(this, 'ogadsCountdown', () => {
+					var oredir = this.redirect;
+					
+					this.redirect = () => {
+						redirecting = true;
+						
+						this.link.type = 'DYNAMIC';
+						Promise.all(before_redir).then(() => oredir.call(this));
+					};
+				});
+				
+				on_set(this, 'addonService', addon => {
+					var installed = false;
+					
+					addon.alreadyInstalled = installed;
+					addon.addonIsInstalled = () => installed;
+					addon.handleAddon = () => {
+						installed = true;
+						addon.addonState = 'PENDING_USER';
+						addon.checkAddon();
+					};
+				});
+				
+				on_set(this, 'adblockService', adblock => {
+					Object.defineProperty(adblock, 'adblock', { get: _ => false, set: _ => _ });
+				});
+				
+				on_set(this, 'videoService', video => {
+					video.addPlayer = () => video.videoState = 'DONE';
+				});
+				
+				on_set(this, 'notificationsService', notif => {
+					var level = 'default';
+					
+					notif.getPermissionLevel = () => level;
+					notif.ask = () => {
+						level = 'granted';
+						notif.linkvertiseService.postAction('notification');
+					};
+				});
+				
 				return value;
 			},
 			configurable: true,
 		});
-	},
-	ons = service => {
-		console.log(service);
-		
-		on_set(service, 'webService', web => {
-			console.log('web service:', web);
-			
-			web.webCounter = 0;
-		});
-		
-		on_set(service, 'ogadsCountdown', () => {
-			console.log('ogads service:', service);
-			
-			var oredir = service.redirect;
-			
-			service.redirect = () => {
-				service.link.type = 'DYNAMIC';
-				setTimeout(() => oredir.call(service), 100);
-			};
-		});
-		
-		on_set(service, 'addonService', addon => {
-			console.log('addon service:', addon);
-			
-			var installed = false;
-			
-			addon.alreadyInstalled = installed;
-			addon.addonIsInstalled = () => installed;
-			addon.handleAddon = () => {
-				installed = true;
-				addon.addonState = 'PENDING_USER';
-				addon.checkAddon();
-			};
-		});
-		
-		on_set(service, 'adblockService', adblock => {
-			console.log('adblock service:', adblock);
-			
-			Object.defineProperty(adblock, 'adblock', { get: _ => false, set: _ => _ });
-		});
-		
-		on_set(service, 'videoService', video => {
-			console.log('video service:', video);
-			
-			video.addPlayer = () => video.videoState = 'DONE';
-		});
-		
-		on_set(service, 'notificationsService', notif => {
-			console.log('notification service:', service);
-			
-			var level = 'default';
-			
-			notif.getPermissionLevel = () => level;
-			notif.ask = () => {
-				level = 'granted';
-				notif.linkvertiseService.postAction('notification');
-			}
-		});
-	};
+	}
+}
 
-Object.defineProperty(Object.prototype, 'linkvertiseService', {
-	set(value){
-		Object.defineProperty(this, 'linkvertiseService', { value: value, configurable: true });
-		
-		ons(this);
-		
-		return value;
-	},
-	configurable: true,
-});
+module.exports = API;
 
 /***/ }),
 
@@ -1952,12 +2003,12 @@ class Updater {
 		this.extracted = extracted;
 		this.show_logs = show_logs;
 		
-		['log', 'warn', 'trace'].forEach(method => this[method] = this.show_logs ? console[method] : (_=>_));
+		for(var method of ['log', 'warn', 'trace'])this[method] = this.show_logs ? console[method] : (_=>_);
 		
-		this.log('Updater initialized');
+		this.log('Initialized');
 	}
 	log(...args){
-		if(this.show_logs)console.log(...args);
+		if(this.show_logs)console.log('[UPDATER]', ...args);
 	}
 	parse_headers(script){
 		var out = {};
@@ -2395,39 +2446,21 @@ var __webpack_exports__ = {};
   \******************/
 
 
-var { krunker, updater, api, main, ...constants } = __webpack_require__(/*! ./consts */ "./consts.js");
+var { krunker, updater, api, main } = __webpack_require__(/*! ./consts */ "./consts.js");
 
-if(api.license()){
-	api.media(main,constants);
-		
-	var sourcePromise = api.source(),
-		tokenPromise = api.token();
-	
-	let mutationObserver = new MutationObserver(mutations => {
-		for(let mutation of mutations)for(let node of mutation.addedNodes){
-			if(node.tagName === 'SCRIPT' && node.type === "text/javascript" && node.innerHTML.startsWith("*!", 1)){
-				node.innerHTML = 'window._debugTimeStart=Date.now()';
-				
-				sourcePromise.then(source => {
-					main.gameLoad(source, tokenPromise);
-					main.createSettings();
-					main.gameHooks();
-				});
-				
-				mutationObserver.disconnect();
-			}
-		}
-	});
-	
-	mutationObserver.observe(document, {
-		childList: true,
-		subtree: true
-	});
-	
+if(krunker){
 	window.addEventListener('load', () => {
 		updater.watch(() => {
 			if(confirm('A new Junker version is available, do you wish to update?'))updater.update();
 		}, 60e3 * 3);	
+	});
+	
+	var tokenPromise = api.token();
+	
+	api.source().then(source => {
+		main.gameLoad(source, tokenPromise);
+		main.createSettings();
+		main.gameHooks();
 	});
 }
 })();

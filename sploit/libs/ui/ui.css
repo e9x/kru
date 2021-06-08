@@ -186,7 +186,6 @@ main.prompt > form > button:hover {
 .write {
 	width: 100%;
 	height: 300px;
-	overflow: hidden;
 }
 
 .title > .actions {

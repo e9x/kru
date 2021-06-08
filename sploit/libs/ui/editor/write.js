@@ -39,10 +39,21 @@ class Write {
 		this.node.value = value;
 		this.update();
 	}
+	get line_count(){
+		return this.node.value.split('\n').length;
+	}
 	update(){
+		this.node.style.width = '5px';
 		this.node.style.height = '5px';
+		this.node.style.width = this.node.scrollWidth + 4 + 'px';
 		this.node.style.height = this.node.scrollHeight + 'px';
-		this.linenums.textContent = this.node.value.split('\n').map((x, index) => index + 1).join('\n');
+		
+		var lines = this.line_count;
+		
+		if(this.prev_line_count != lines){
+			this.prev_line_count = lines;
+			this.linenums.textContent = [...Array(lines)].map((x, index) => index + 1).join('\n');
+		}
 	}
 	insertAtCaret(text = ''){
 		if(this.node.selectionStart || this.node.selectionStart == 0){
