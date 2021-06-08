@@ -21,7 +21,7 @@ exports.meta = {
 	forum: 'https://forum.sys32.dev',
 };
 
-exports.krunker = true;//utils.is_host(location, 'krunker.io', 'browserfps.com') && location.pathname == '/' && location.host != 'browserfps.com';
+exports.krunker = utils.is_host(location, 'krunker.io', 'browserfps.com') && location.pathname == '/' && location.host != 'browserfps.com';
 
 exports.api_url = 'https://api.sys32.dev/';
 exports.mm_url = 'https://matchmaker.krunker.io/';

@@ -6,12 +6,12 @@ class Updater {
 		this.extracted = extracted;
 		this.show_logs = show_logs;
 		
-		['log', 'warn', 'trace'].forEach(method => this[method] = this.show_logs ? console[method] : (_=>_));
+		for(var method of ['log', 'warn', 'trace'])this[method] = this.show_logs ? console[method] : (_=>_);
 		
-		this.log('Updater initialized');
+		this.log('Initialized');
 	}
 	log(...args){
-		if(this.show_logs)console.log(...args);
+		if(this.show_logs)console.log('[UPDATER]', ...args);
 	}
 	parse_headers(script){
 		var out = {};
