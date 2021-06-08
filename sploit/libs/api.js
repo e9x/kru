@@ -5,15 +5,11 @@ var window = new Function('return this')();
 class API {
 	constructor(matchmaker_url, api_url, storage){
 		this.matchmaker = matchmaker_url,
-		this.api = api_url,
+		this.api = /*CHANGE*/0 ? 'http://localhost:7300/' : api_url,
 		
 		this.similar_stacks = [];
 		
-		if(/*CHANGE*/0)this.api = 'http://localhost:7300/';
-		
 		this.api_v2 = new URL('v2/', this.api);
-		
-		this.idle = new Promise(() => {});
 		
 		this.default_storage = {
 			get: key => localStorage.getItem('ss' + key),

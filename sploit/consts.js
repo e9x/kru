@@ -26,11 +26,6 @@ exports.krunker = utils.is_host(location, 'krunker.io', 'browserfps.com') && loc
 exports.api_url = 'https://api.sys32.dev/';
 exports.mm_url = 'https://matchmaker.krunker.io/';
 
-/*if(exports.krunker && utils.is_host(location, 'browserfps.com')){
-	exports.mm_url = location.origin + '/mm/';
-	require('./libs/proxy');
-}*/
-
 exports.extracted = typeof build_extracted != 'number' ? Date.now() : build_extracted;
 
 exports.store = {
