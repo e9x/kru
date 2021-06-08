@@ -3,7 +3,7 @@
 var { utils } = require('../consts'),
 	PanelDraggable = require('../paneldraggable'),
 	Tab = require('./tab'),
-	svg = require('./svg.json'),
+	svg = require('./svg'),
 	Write = require('./write'),
 	{ alert, prompt } = require('../actions');
 

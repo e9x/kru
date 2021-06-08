@@ -1,12 +1,10 @@
 'use strict';
 
 var { utils } = require('../consts'),
-	Events = require('./events.js');
+	EventLite  = require('event-lite');
 
-class Write extends Events {
+class Write {
 	constructor(parent){
-		super();
-		
 		this.container = utils.add_ele('div', parent, { className: 'write' });
 		this.linenums = utils.add_ele('div', this.container, { className: 'linenums' });
 		this.node = utils.add_ele('textarea', this.container, {
@@ -53,5 +51,7 @@ class Write extends Events {
 		this.emit('change');
 	}
 }
+
+EventLite.mixin(Write.prototype);
 
 module.exports = Write;

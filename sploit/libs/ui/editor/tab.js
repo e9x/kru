@@ -1,7 +1,7 @@
 'use strict';
 
 var { utils } = require('../consts'),
-	svg = require('./svg.json');
+	svg = require('./svg');
 
 class Tab {
 	static ID(){
