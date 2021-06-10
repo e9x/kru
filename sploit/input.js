@@ -1,6 +1,7 @@
 'use strict';
 var vars = require('./libs/vars'),
 	Player = require('./libs/player'),
+	{ Vector3 } = require('./libs/space'),
 	{ cheat, api, utils } = require('./consts');
 
 class InputData {
@@ -31,6 +32,8 @@ class Input {
 		});
 		
 		this.inputs = {};
+		
+		this.axis = [ 'x', 'y', 'z' ];
 		
 		window.addEventListener('keydown', event => this.inputs[event.code] = true);
 		window.addEventListener('keyup', event => this.inputs[event.code] = false);
@@ -76,8 +79,9 @@ class Input {
 	}
 	calc_rot(target){
 		var camera_world = utils.camera_world(),
-			x_dire = utils.getXDire(camera_world.x, camera_world.y, camera_world.z, target.aim_point.x, target.aim_point.y - cheat.player.jump_bob_y, target.aim_point.z),
-			y_dire = utils.getDir(camera_world.z, camera_world.x, target.aim_point.z, target.aim_point.x);
+			target_point = target.aim_point.clone(),
+			x_dire = utils.getXDire(camera_world.x, camera_world.y, camera_world.z, target_point.x, target_point.y, target_point.z),
+			y_dire = utils.getDir(camera_world.z, camera_world.x, target_point.z, target_point.x);
 		
 		return {
 			x: utils.round(Math.max(-utils.halfpi, Math.min(utils.halfpi, x_dire - (cheat.player.entity.landBobY * 0.1) - cheat.player.recoil_y * 0.27)) % utils.pi2, 3) || 0,
@@ -143,9 +147,10 @@ class Input {
 			}
 		}
 		
+		// get shot(){ return this.weapon_auto ? this.auto_shot : this.did_shoot }
 		if(cheat.player.can_shoot && data.shoot && !cheat.player.auto_shot){
-			cheat.player.auto_shot = true;
-			setTimeout(() => cheat.player.auto_shot = false, cheat.player.weapon_rate);
+			cheat.player.shot = true;
+			setTimeout(() => cheat.player.shot = false, cheat.player.weapon_rate);
 		}
 	}
 };

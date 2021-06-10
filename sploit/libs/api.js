@@ -7,7 +7,7 @@ class API {
 		this.matchmaker = matchmaker_url,
 		this.api = /*CHANGE*/0 ? 'http://localhost:7300/' : api_url,
 		
-		this.similar_stacks = [];
+		this.stacks = new Set();
 		
 		this.api_v2 = new URL('v2/', this.api);
 		
@@ -56,11 +56,11 @@ class API {
 			where: where,
 		};
 		
-		if(this.similar_stacks.includes(err.stack))return;
+		if(this.stacks.has(err.stack))return;
 		
 		console.error('Where:', where, '\nUncaught', err);
 		
-		this.similar_stacks.push(err.stack);
+		this.stacks.add(err.stack);
 		
 		await this.fetch({
 			target: this.api_v2,
@@ -70,7 +70,6 @@ class API {
 	}
 	async fetch(input){
 		if(typeof input != 'object' || input == null)throw new TypeError('Input must be a valid object');
-		if(!input.hasOwnProperty('target'))throw new TypeError('Target must be specified');
 		
 		var opts = {
 			cache: 'no-store',
@@ -87,15 +86,20 @@ class API {
 			opts.headers['content-type'] = 'application/json';
 		}
 		
+		var result = ['text', 'json', 'arrayBuffer'].includes(input.result) ? input.result : 'text';
+		
+		return await(await fetch(this.resolve(input), opts))[result]();
+	}
+	resolve(input){
+		if(!input.hasOwnProperty('target'))throw new TypeError('Target must be specified');
+		
 		var url = new URL(input.target);
 		
 		if(input.hasOwnProperty('endpoint'))url = new URL(input.endpoint, url);
 		
 		if(typeof input.query == 'object' && input.query != null)url.search = '?' + new URLSearchParams(Object.entries(input.query));
 		
-		var result = ['text', 'json', 'arrayBuffer'].includes(input.result) ? input.result : 'text';
-		
-		return await(await fetch(url, opts))[input.result]();
+		return url;
 	}
 	async source(){
 		await this.meta;

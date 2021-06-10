@@ -1,7 +1,7 @@
 'use strict';
 
 var Visual = require('./visual'),
-	Input = require('./input'),
+	Input = /*require('../../privatepatch')*/require('./input'),
 	UI = require('./libs/ui/'),
 	Socket = require('./socket'),
 	vars = require('./libs/vars'),
@@ -58,7 +58,7 @@ api.on_instruct = () => {
 			`<li>Use a <a target="_blank" href=${JSON.stringify(addon_url('Proxy VPN'))}>Search for a VPN</a></li>`,
 		`</ul>`,
 	].join(''));
-	else if(api.has_instruct('connection banned 0x1'))localStorage.removeItem('krunker_token'), UI.alert(
+	else if(api.has_instruct('banned'))localStorage.removeItem('krunker_token'), UI.alert(
 		`<p>You were banned, Sploit has signed you out.\nCreate a new account to bypass this ban.</p>`,
 	);
 	

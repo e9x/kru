@@ -268,7 +268,11 @@ exports.ui = {
 			name: 'Save Krunker script',
 			type: 'function',
 			value(){
-				var link = utils.add_ele('a', document.documentElement, { href: api.api_url(1, 'source' , { download: true }) });
+				var link = utils.add_ele('a', document.documentElement, { href: api.resolve({
+					target: api.api_v2,
+					endpoint: 'source',
+					query: { download: true },
+				}) });
 				
 				link.click();
 				

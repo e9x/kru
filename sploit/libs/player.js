@@ -1,12 +1,16 @@
 'use strict';
 
-var vars = require('./vars');
+var vars = require('./vars'),
+	{ Vector3 } = require('./space');
 
-class Player {
+class Player extends Vector3 {
 	constructor(cheat, entity){
+		super();
+		
 		this.cheat = cheat;
 		this.utils = this.cheat.utils;
 		this.entity = typeof entity == 'object' && entity != null ? entity : {};
+		this.velocity = new Vector3();
 	}
 	distance_to(point){
 		return Math.hypot(this.x - point.x, this.y - point.y, this.z - point.z)
@@ -58,9 +62,6 @@ class Player {
 		
 		return '#' + hex.map(part_str).join('');
 	}
-	get x(){ return this.entity.x || 0 }
-	get y(){ return this.entity.y || 0 }
-	get z(){ return this.entity.z || 0 }
 	get ping(){ return this.entity.ping }
 	get jump_bob_y(){ return this.entity.jumpBobY }
 	get clan(){ return this.entity.clan }
@@ -135,7 +136,6 @@ class Player {
 	get weapon_auto(){ return !this.weapon.nAuto }
 	get weapon_rate(){ return this.weapon.rate + 2 }
 	get did_shoot(){ return this.entity[vars.didShoot] }
-	get shot(){ return this.weapon_auto ? this.auto_shot : this.did_shoot }
 	get chest(){
 		return this.entity.lowerBody ? this.entity.lowerBody.children[0] : null;
 	}
@@ -144,15 +144,17 @@ class Player {
 		return this.chest;
 	}
 	tick(){
+		super.copy(this.entity);
+		
+		this.velocity.set(this.entity.xVel, this.entity.yVel, this.entity.zVel);
+		
 		var box = this.box = new this.utils.three.Box3();
 		
 		box.expandByObject(this.chest);
 		
-		var add_obj = obj => {
-			if(obj.visible)obj.traverse(obj => {
-				if(obj.type == 'Mesh' && obj.visible)box.expandByObject(obj);
-			});
-		};
+		var add_obj = obj => obj.visible && obj.traverse(obj => {
+			if(obj.type == 'Mesh' && obj.visible)box.expandByObject(obj);
+		});
 		
 		
 		for(var obj of this.entity.legMeshes)add_obj(obj);
@@ -205,58 +207,52 @@ class Player {
 		var head_size = 1.5,
 			chest_box = new this.utils.three.Box3().setFromObject(this.chest),
 			chest_size = chest_box.getSize(),
-			chest_pos = chest_box.getCenter(),
-			// rotated offset
-			translate = (obj, input, translate) => {
-				for(var axis in translate){
-					var ind = ['x','y','z'].indexOf(axis),
-						pos = new this.utils.three.Vector3(...[0,0,0].map((x, index) => ind == index ? 1 : 0)).applyQuaternion(obj.getWorldQuaternion()).multiplyScalar(translate[axis]);
-					
-					input.x += pos.x;
-					input.y += pos.y;
-					input.z += pos.z;
-				}
-				
-				return input;
-			};
+			chest_pos = chest_box.getCenter();
 		
 		this.parts = {};
 		
 		// parts centered
-		this.parts.torso = translate(this.chest, {
+		this.parts.torso = new Vector3().copy({
 			x: chest_pos.x,
 			y: chest_pos.y,
 			z: chest_pos.z,
-			height: chest_size.y - head_size,
-		}, {
+		}).translate_quaternion(this.chest.getWorldQuaternion(), new Vector3().copy({
+			x: 0,
 			y: -head_size / 2,
-		});
+			z: 0,
+		}));
 		
-		this.parts.head = translate(this.chest, {
+		this.parts.torso_height = chest_size.y - head_size;
+		
+		this.parts.head = new Vector3().copy({
 			x: chest_pos.x,
 			y: chest_pos.y,
 			z: chest_pos.z,
-		}, {
-			y: this.parts.torso.height / 2,
-		});
+		}).translate_quaternion(this.chest.getWorldQuaternion(), new Vector3().copy({
+			x: 0,
+			y: this.parts.torso_height / 2,
+			z: 0,
+		}));
 		
 		var leg_pos = this.leg[vars.getWorldPosition](),
 			leg_scale = this.leg.getWorldScale();
 		
-		this.parts.legs = translate(this.leg, {
+		this.parts.legs = new Vector3().copy({
 			x: leg_pos.x,
 			y: leg_pos.y,
 			z: leg_pos.z,
-		}, {
+		}).translate_quaternion(this.leg.getWorldQuaternion(), {
 			x: -leg_scale.x / 2,
 			y: -leg_scale.y / 2,
+			z: 0,
 		});
 		
-		this.aim_point = this.cheat.aim_part == 'head' ? {
+		/* - (this.is_ai ? this.dat.mSize / 2 : this.jump_bob_y * 0.072)*/
+		this.aim_point = this.cheat.aim_part == 'head' ? new Vector3().copy({
 			x: this.x,
-			y: this.y + this.height - (this.is_ai ? this.dat.mSize / 2 : this.jump_bob_y * 0.072),
+			y: this.y + this.height,
 			z: this.z,
-		} : (this.parts[this.cheat.aim_part] || (console.error(this.cheat.aim_part, 'not registered'), { x: 0, y: 0, z: 0 }));
+		}) : (this.parts[this.cheat.aim_part] || (console.error(this.cheat.aim_part, 'not registered'), Vector3.Blank));
 		
 		this.world_pos = this.active ? this.obj[vars.getWorldPosition]() : { x: 0, y: 0, z: 0 };
 		
