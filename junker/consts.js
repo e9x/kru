@@ -7,10 +7,9 @@ var Utils = require('../sploit/libs/utils'),
 	utils = new Utils();
 
 exports.meta = {
-	discord_code: 'BdyvMgNYnQ',
 	script: 'https://raw.githubusercontent.com/e9x/kru/master/junker.user.js',
 	github: 'https://github.com/e9x/kru',
-	discord: 'https://e9x.github.io/kru/invite',
+	discord: 'https://y9x.github.io/discord/',
 	forum: 'https://forum.sys32.dev',
 };
 

@@ -84,15 +84,7 @@ UI.ready.then(() => {
 		if(cheat.config.aim.target == 'feet')cheat.config.aim.target == 'legs';
 		else if(cheat.config.aim.target == 'chest')cheat.config.aim.target == 'torso';
 		
-		var loading = new UI.Loading(cheat.config.game.custom_loading);
-		
-		loading.update();
-		
-		UI.panels.push(loading);
-		
-		utils.add_ele('div', loading.node);
-		
-		utils.add_ele('a', loading.node, { href: meta.discord, draggable: false});
+		var loading = new UI.Loading(cheat.config.game.custom_loading, meta.discord);
 		
 		cheat.css_editor = new UI.Editor({
 			tabs: cheat.config.game.css,

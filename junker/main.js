@@ -59,37 +59,17 @@ class Main {
 		
 		this.eventHandlers();
 		
-		this.discord = { code: meta.discord_code, guild: {} };
+		this.discord = { guild: {} };
 		
-		utils.request('https://discordapp.com/api/v6/invite/' + this.discord.code + '?with_counts=true', "json", {cache: "no-store"}).then(json => {
-			console.log(json);
-			Object.assign(this.discord, json);
+		fetch(new URL('code.txt', meta.discord), { cache: 'no-store' }).then(async res => {
+			var code = await res.text();
+			
+			this.discord.code = code;
+			
+			Object.assign(this.discord, await(await fetch(`https://discord.com/api/v8/invites/${code}?with_counts=true`)).json());
 		});
 	}
 	onInput(input) {
-		/*var camera = this.renderer && this.renderer.camera;
-		
-		if(camera && !camera.hooked){
-			camera.hooked = true;
-			
-			let prop = 'zoomVal',
-				defined = camera[prop];
-			
-			Object.defineProperty(camera, prop, {
-				get(){
-					return defined;
-				},
-				set(value){
-					if(isNaN(value)){
-						console.trace('NaN', value);
-						debugger;
-					}
-					
-					return defined = value;
-				},
-			});
-		}*/
-		
 		if (!this.settings || !utils.isDefined(this.me)) return input;
 		let isMelee = utils.isDefined(this.me.weapon.melee)&&this.me.weapon.melee||utils.isDefined(this.me.weapon.canThrow)&&this.me.weapon.canThrow;
 		let ammoLeft = this.me[this.vars.ammos][this.me[this.vars.weaponIndex]];
