@@ -64,8 +64,8 @@ Tool for injecting Sploit into Krunker clients
 1. Clone this repository
 `git clone https://github.com/e9x/kru.git`
 
-2. Enter the packer folder
-`cd e9x/packer`
+2. Enter the patcher folder
+`cd e9x/patcher`
 
 3. Install dependencies
 `./!INSTALL_MODULES.cmd`
