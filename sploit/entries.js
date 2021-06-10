@@ -255,7 +255,7 @@ exports.ui = {
 		value: [{
 			name: 'GitHub',
 			type: 'link',
-			value: () => window.open(meta.github, '_blank'),
+			value: meta.github,
 		},{
 			name: 'Discord',
 			type: 'link',
