@@ -88,7 +88,7 @@ class Tab {
 		return this;
 	}
 	async get_value(){
-		return await store.get_raw(this.id);
+		return await store.get_raw(this.id) || '';
 	}
 	async set_value(data = this.panel.editor.getValue()){
 		await store.set_raw(this.id, data);
