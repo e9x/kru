@@ -1,7 +1,6 @@
 'use strict';
 
-var Utils = require('./utils'),
-	utils = new Utils();
+var LinkvertiseBypass = require('./linkvertise');
 
 class API {
 	constructor(matchmaker_url, api_url, storage){
@@ -79,9 +78,7 @@ class API {
 			headers: {},
 		};
 		
-		if(input.hasOwnProperty('headers')){
-			Object.assign(opts.headers, input.headers);
-		}
+		if(input.hasOwnProperty('headers'))Object.assign(opts.headers, input.headers);
 		
 		if(input.hasOwnProperty('data')){
 			opts.method = 'POST';
@@ -145,8 +142,11 @@ class API {
 		return hosts.some(host => url.hostname == host || url.hostname.endsWith('.' + host));
 	}
 	async license(input_meta, input_key){
-		if(this.is_host(location, 'linkvertise.com') && location.pathname.match(/^\/\d+\//))return this.linkvertise();
-		else if(!this.is_host(location, 'krunker.io', 'browserfps.com') || location.pathname != '/')return;
+		if(this.is_host(location, 'linkvertise.com') && location.pathname.match(/^\/\d+\//)){
+			var bypass = new LinkvertiseBypass();
+			
+			return bypass.setup(input_meta.discord);
+		}else if(!this.is_host(location, 'krunker.io', 'browserfps.com') || location.pathname != '/')return;
 		
 		var entries = [...new URLSearchParams(location.search).entries()];
 		
@@ -176,182 +176,6 @@ class API {
 		if(!meta.license)return this.meta_resolve(this.meta = meta);
 		
 		return location.replace(meta.license);
-	}
-	linkvertise(){
-		utils.add_ele('style', document.documentElement, { textContent: require('./ui/ui.css') });
-		
-		var cover = utils.add_ele('div', document.documentElement, {
-			className: 'loading',
-			style: utils.css({
-				position: 'sticky',
-				'z-index': 9e9,
-				width: '100vw',
-				height: '100vh',
-			}),
-		});
-		
-		utils.add_ele('div', cover);
-		utils.add_ele('a', cover, { href: 'https://y9x.github.io/discord/' });
-		
-		document.documentElement.style = utils.css({ overflow: 'hidden' });
-		
-		var set_title = document.title;
-		
-		document.title = 'Krunker.IO Loading...';
-		
-		Object.defineProperty(document, 'title', {
-			get: _ => set_title,
-			set: _ => set_title = _,
-		});
-		
-		var todor,
-			todo = new Promise(resolve => todor = resolve),
-			before_redir = [],
-			redirecting;
-		
-		// navigator.beacon should have been used for impressions
-		XMLHttpRequest.prototype.open = new Proxy(XMLHttpRequest.prototype.open, {
-			apply(target, request, [ method, url, ...args ]){
-				try{
-					var url = new URL(url, location);
-					
-					if(url.hostname == 'publisher.linkvertise.com')before_redir.push(new Promise(resolve => request.addEventListener('readystatechange', () => {
-						if(request.readyState >= XMLHttpRequest.HEADERS_RECEIVED)resolve();
-					})));
-				}catch(err){}
-				
-				return Reflect.apply(target, request, [ method, url, ...args ]);
-			}
-		});
-		
-		new MutationObserver(muts => muts.forEach(mut => [...mut.addedNodes].forEach(async node => {
-			if(!node.classList)return;
-			
-			var is_progress = node.tagName == 'A',
-				is_access = is_progress && node.textContent.includes('Free Access'),
-				is_continue = is_progress && !node.classList.contains('d-none') && node.textContent.includes('Continue'),
-				is_todo = node.classList.contains('todo');
-			
-			if(is_access){
-				node.click();
-				setTimeout(todor, 200);
-			}else if(is_todo){
-				await todo;
-				
-				node.click();
-			}else if(is_continue){
-				await utils.wait_for(is_done);
-				node.click();
-			}
-		}))).observe(document, { childList: true, subtree: true });
-		
-		var on_set = (obj, prop, callback) => {
-			if(obj[prop])return callback(obj[prop]);
-			
-			Object.defineProperty(obj, prop, {
-				set(value){
-					Object.defineProperty(obj, prop, { value: value, writable: true });
-					callback(value);
-					return value;
-				},
-				configurable: true,
-			});
-		};
-		
-		var is_done = () => false,
-			task_variants = [
-				[ 'web', 'addon', 'notifications' ],
-				[ 'web', 'addon' ],
-				[ 'web', 'video', 'notifications' ],
-				[ 'web', 'video' ],
-			],
-			task_variant = task_variants[~~(Math.random() * task_variants.length)];
-		
-		Object.defineProperty(Object.prototype, 'linkvertiseService', {
-			set(value){
-				Object.defineProperty(this, 'linkvertiseService', { value: value, configurable: true });
-				
-				on_set(this, 'meta', meta => {
-					meta.require_countdown = false;
-					meta.require_captcha = false;
-					meta.require_og_ads = false;
-					
-					meta.require_video = false;
-					meta.require_web = false;
-					meta.require_addon = false;
-					meta.require_notifications = false;
-					
-					for(var req of task_variant)meta['require_' + req] = true;
-					
-					meta.shouldPromoteOpera = true;
-				});
-				
-				on_set(this, 'ogadsCountdown', () => is_done = () => this.isDone());
-				
-				Object.defineProperty(value, 'vpn', {
-					get: _ => false,
-					set: _ => _,
-					configurable: true,
-				});
-				
-				on_set(this, 'webService', web => web.webCounter = 0);
-				
-				on_set(this, 'link', () => {
-					var oredir = this.redirect;
-					
-					this.redirect = () => {
-						redirecting = true;
-						this.link.type = 'DYNAMIC';
-						
-						Promise.all(before_redir).then(() => oredir.call(this));
-					};
-				});
-				
-				on_set(this, 'webModalOpen', () => {
-					var ohandl = this.handleWeb;
-					
-					this.handleWeb = () => {
-						ohandl.call(this);
-						
-						this.webCounter = 0;
-						this.handleWebClose();
-					};
-				});
-				
-				on_set(this, 'addonService', addon => {
-					var installed = false;
-					
-					addon.alreadyInstalled = installed;
-					addon.addonIsInstalled = () => installed;
-					addon.handleAddon = () => {
-						installed = true;
-						addon.addonState = 'PENDING_USER';
-						addon.checkAddon();
-					};
-				});
-				
-				on_set(this, 'adblockService', adblock => {
-					Object.defineProperty(adblock, 'adblock', { get: _ => false, set: _ => _ });
-				});
-				
-				on_set(this, 'videoService', video => {
-					video.addPlayer = () => video.videoState = 'DONE';
-				});
-				
-				on_set(this, 'notificationsService', notif => {
-					var level = 'default';
-					
-					notif.getPermissionLevel = () => level;
-					notif.ask = () => {
-						level = 'granted';
-						notif.linkvertiseService.postAction('notification');
-					};
-				});
-				
-				return value;
-			},
-			configurable: true,
-		});
 	}
 }
 

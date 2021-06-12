@@ -1,6 +1,6 @@
-|||||||
-| --- | --- | --- | --- | --- | --- |
-| [Junker](#junker) | [Sploit](#sploit) | [Client Patcher](https://y9x.github.io/client-patcher/) | [Resources](https://y9x.github.io/resources/) | [Discord](https://y9x.github.io/discord/) |
+||||||
+| --- | --- | --- | --- | --- |
+| [Junker](#junker) | [Sploit](#sploit) | [Client Patcher](https://y9x.github.io/client-patcher/) | [The Gaming Gurus](https://y9x.github.io/) |
 
 # Sploit
 
