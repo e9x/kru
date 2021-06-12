@@ -1,6 +1,6 @@
 |||||||
 | --- | --- | --- | --- | --- | --- |
-| [Discord](https://y9x.github.io/discord/) | [Junker](#junker) | [Sploit](#sploit) | [Gaming Gurus Client](#gg-client) | [Client Patcher](https://github.com/y9x/client-patcher) | [Resources](#resources) | 
+| [Junker](#junker) | [Sploit](#sploit) | [Gaming Gurus Client](#gg-client) | [Client Patcher](https://y9x.github.io/client-patcher/) | [Resources](https://y9x.github.io/resources/) | [Discord](https://y9x.github.io/discord/) |
 
 # Sploit
 
@@ -49,13 +49,3 @@ Run the client once then then go to your documents folder look for a folder name
 There is no specific format, all .js files will be loaded
 
 [Nametags example](https://hastebin.com/egapivejez.js)
-
-# Resources
-
-[Root folder](https://mega.nz/folder/PAcjzaYb#ITVrn9P7-0kRurX3MU969w)
-
-[Leaked Source](https://mega.nz/folder/OJEgjLIJ#YEyz7VsyyjauZarD8JLldg)
-
-[Latest Source](https://api.sys32.dev/v1/source)
-
-[Archived Versions](https://mega.nz/folder/eE9ghBzS#nw_TzAoWnK9Cz5Sry-lECw)
