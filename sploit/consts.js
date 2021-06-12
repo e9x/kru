@@ -1,11 +1,6 @@
 'use strict';
-// store greasemonkey values before they can be changed
-var GM = {
-		get_value: typeof GM_getValue == 'function' && GM_getValue,
-		set_value: typeof GM_setValue == 'function' && GM_setValue,
-		request: typeof GM_xmlhttpRequest == 'function' && GM_xmlhttpRequest,
-		fetch: window.fetch.bind(window),
-	},
+
+var DataStore = require('./libs/datastore'),
 	API = require('./libs/api'),
 	Cheat = require('./cheat'),
 	Updater = require('./libs/updater'),
@@ -13,34 +8,23 @@ var GM = {
 	utils = new Utils(),
 	cheat = new Cheat(utils);
 
-exports.meta = {
-	script: 'https://raw.githubusercontent.com/e9x/kru/master/sploit.user.js',
-	github: 'https://github.com/e9x/kru',
-	discord: 'https://y9x.github.io/discord/',
-	forum: 'https://forum.sys32.dev',
-};
+exports.store = new DataStore();
 
-exports.krunker = utils.is_host(location, 'krunker.io', 'browserfps.com') && location.pathname == '/' && location.host != 'browserfps.com';
+exports.meta = {
+	script: 'https://y9x.github.io/userscripts/sploit.user.js',
+	github: 'https://github.com/e9x/kru/',
+	discord: 'https://y9x.github.io/discord/',
+	forum: 'https://forum.sys32.dev/',
+};
 
 exports.api_url = 'https://api.sys32.dev/';
 exports.mm_url = 'https://matchmaker.krunker.io/';
 
+exports.is_frame = window != window.top;
 exports.extracted = typeof build_extracted != 'number' ? Date.now() : build_extracted;
 
-exports.store = {
-	async get(key){
-		if(GM.get_value)return await GM.get_value(key);
-		else return localStorage.getItem('ss' + key);
-	},
-	set(key, value){
-		if(GM.set_value)return GM.set_value(key, value);
-		else return localStorage.setItem('ss' + key, value);
-	},
-	del(key){
-		if(!GM.get_value)localStorage.removeItem('ss' + key);
-		else this.set(key, '');
-	},
-};
+// .htaccess for ui testing
+exports.krunker = utils.is_host(location, 'krunker.io', 'browserfps.com') && ['/.htaccess', '/'].includes(location.pathname);
 
 exports.proxy_addons = [
 	{
@@ -73,9 +57,18 @@ exports.addon_url = query => exports.firefox ? 'https://addons.mozilla.org/en-US
 var updater = new Updater(exports.meta.script, exports.extracted),
 	api = new API(exports.mm_url, exports.api_url, exports.store);
 
-if(exports.krunker)api.observe();
+if(!exports.is_frame){
+	if(exports.krunker){
+		// alerts shown prior to the window load event are cancelled
+		if(typeof DO_UPDATES != 'boolean' || DO_UPDATES == true)window.addEventListener('load', () => updater.watch(() => {
+			if(confirm('A new Sploit version is available, do you wish to update?'))updater.update();
+		}, 60e3 * 3));
+		
+		api.observe();
+	}
 
-api.license(exports.meta);
+	api.license(exports.meta, typeof LICENSE_KEY == 'string' && LICENSE_KEY);
+}
 
 exports.cheat = cheat;
 exports.utils = utils;

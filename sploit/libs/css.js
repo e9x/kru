@@ -8,8 +8,6 @@ var fs = require('fs'),
 module.exports = source => {
 	source += '';
 	
-	if(source.startsWith('/* https://skidlamer.github.io/'))return 'module.exports=' + JSON.stringify(source);
-	
 	var tree = parser.parse(source),
 		read_string = str => {
 			if(["'", '"'].includes(str[0])){

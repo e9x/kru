@@ -77,15 +77,25 @@ class Input {
 		
 		if(cheat.player.aimed && raycaster.intersectObjects(cheat.game.players.list.map(ent => cheat.add(ent)).filter(ent => ent.can_target).map(ent => ent.obj), true).length)return true;
 	}
-	calc_rot(target){
-		var camera_world = utils.camera_world(),
-			target_point = target.aim_point.clone(),
-			x_dire = utils.getXDire(camera_world.x, camera_world.y, camera_world.z, target_point.x, target_point.y, target_point.z),
-			y_dire = utils.getDir(camera_world.z, camera_world.x, target_point.z, target_point.x);
+	calc_rot(player){
+		var camera = utils.camera_world(),
+			target = player.aim_point;
+		
+		// target.add(player.velocity);
+		
+		var x_dire = utils.getXDire(camera.x, camera.y, camera.z, target.x, target.y
+			- cheat.player.jump_bob_y
+			, target.z)
+			- cheat.player.land_bob_y * 0.1
+			- cheat.player.recoil_y * vars.recoilMlt,
+			y_dire = utils.getDir(camera.z, camera.x, target.z, target.x);
 		
 		return {
-			x: utils.round(Math.max(-utils.halfpi, Math.min(utils.halfpi, x_dire - (cheat.player.entity.landBobY * 0.1) - cheat.player.recoil_y * 0.27)) % utils.pi2, 3) || 0,
-			y: utils.round(y_dire % utils.pi2, 3) || 0,
+			x: x_dire || 0,
+			y: y_dire || 0,
+			/* normalize
+			x: utils.round(Math.max(-utils.halfpi, Math.min(utils.halfpi, x_dire)) % utils.pi2, 3) || 0,
+			y: utils.round(y_dire % utils.pi2, 3) || 0,*/
 		};
 	}
 	smooth(target){
@@ -108,7 +118,7 @@ class Input {
 			cheat.controls.keys[cheat.controls.binds.jump.val] ^= 1;
 			if(cheat.controls.keys[cheat.controls.binds.jump.val])cheat.controls.didPressed[cheat.controls.binds.jump.val] = 1;
 			
-			if((cheat.config.game.bhop == 'keyslide' && this.inputs.Space || cheat.config.game.bhop == 'autoslide') && cheat.player.y_vel < -0.02 && cheat.player.can_slide)setTimeout(() => cheat.controls.keys[cheat.controls.binds.crouch.val] = 0, 325), cheat.controls.keys[cheat.controls.binds.crouch.val] = 1;
+			if((cheat.config.game.bhop == 'keyslide' && this.inputs.Space || cheat.config.game.bhop == 'autoslide') && cheat.player.velocity.y < -0.02 && cheat.player.can_slide)setTimeout(() => cheat.controls.keys[cheat.controls.binds.crouch.val] = 0, 325), cheat.controls.keys[cheat.controls.binds.crouch.val] = 1;
 		}
 		
 		// auto reload
@@ -118,9 +128,11 @@ class Input {
 		
 		data.could_shoot = cheat.player.can_shoot;
 		
-		var nauto = cheat.player.weapon_auto || !data.shoot || (!InputData.previous.could_shoot || !InputData.previous.shoot),
+		var nauto = cheat.player.weapon_auto || cheat.player.weapon.burst || !data.shoot || !InputData.previous.could_shoot || !InputData.previous.shoot,
 			hitchance = (Math.random() * 100) < cheat.config.aim.hitchance,
 			can_target = cheat.config.aim.status == 'auto' || data.scope || data.shoot;
+		
+		if(cheat.player.weapon.burst)cheat.player.shot = cheat.player.did_shoot;
 		
 		if(can_target)cheat.target = cheat.pick_target();
 		
@@ -143,14 +155,13 @@ class Input {
 				this.aim_camera(rot, data);
 				
 				// offset aim rather than revert to any previous camera rotation
-				// if(data.shoot && !cheat.player.shot && hitchance)data.ydir += 75;
+				if(data.shoot && !cheat.player.shot && !hitchance)data.ydir = 0;
 			}
 		}
 		
-		// get shot(){ return this.weapon_auto ? this.auto_shot : this.did_shoot }
-		if(cheat.player.can_shoot && data.shoot && !cheat.player.auto_shot){
+		if(cheat.player.can_shoot && data.shoot && !cheat.player.shot){
 			cheat.player.shot = true;
-			setTimeout(() => cheat.player.shot = false, cheat.player.weapon_rate);
+			setTimeout(() => cheat.player.shot = false, cheat.player.weapon.rate + 2);
 		}
 	}
 };

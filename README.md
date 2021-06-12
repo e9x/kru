@@ -1,8 +1,6 @@
 |||||||
 | --- | --- | --- | --- | --- | --- |
-| [Discord](#discord) | [Junker](#junker) | [Sploit](#sploit) | [Gaming Gurus Client](#gg-client) | [Client Patcher](#patcher) | [Resources](#resources) | 
-
-# [Discord](https://e9x.github.io/kru/invite)
+| [Discord](https://y9x.github.io/discord/) | [Junker](#junker) | [Sploit](#sploit) | [Gaming Gurus Client](#gg-client) | [Client Patcher](https://github.com/y9x/client-patcher) | [Resources](#resources) | 
 
 # Sploit
 
@@ -51,32 +49,6 @@ Run the client once then then go to your documents folder look for a folder name
 There is no specific format, all .js files will be loaded
 
 [Nametags example](https://hastebin.com/egapivejez.js)
-
-# Patcher
-Tool for injecting Sploit into Krunker clients
-
-[Source](patcher)
-
-[Pre-built binary](https://e9x.github.io/kru/patcher/Patcher.exe).
-
-## Building the patcher:
-
-1. Clone this repository
-`git clone https://github.com/e9x/kru.git`
-
-2. Enter the patcher folder
-`cd e9x/patcher`
-
-3. Install dependencies
-`./!INSTALL_MODULES.cmd`
-
-4. Test the app
-`./!TEST_PATCHER.cmd`
-
-5. Build the binaries
-`./!BUILD_EXE.cmd`
-
-Output in the `dist/` folder
 
 # Resources
 

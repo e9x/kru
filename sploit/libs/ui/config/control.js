@@ -3,10 +3,10 @@
 var { keybinds, utils } = require('../consts');
 
 class Control {
-	constructor(data, section, ui){
+	constructor(data, section){
 		this.data = data;
 		this.name = this.data.name;
-		this.ui = ui;
+		this.panel = section.panel;
 		this.container = utils.add_ele('div', section.node, { className: 'control' });
 		this.button = utils.add_ele('div', this.container, { className: 'toggle' });
 		this.label = utils.add_ele('div', this.container, { className: 'label' });
@@ -17,12 +17,15 @@ class Control {
 		keybinds.push({
 			get code(){ return [ self.key ] },
 			interact: () => {
-				if(!this.data.menu_hidden && !this.ui.visible)return;
+				if(!this.data.menu_hidden && !this.panel.visible)return;
 				
 				this.interact();
 				this.update();
 			},
 		});
+	}
+	remove(){
+		this.container.remove();
 	}
 	get key(){
 		if(!this.data.key)return null;
@@ -31,7 +34,7 @@ class Control {
 		return walked[0][walked[1]];
 	}
 	walk(data){
-		var state = this.ui.config.value,
+		var state = this.panel.config,
 			last_state,
 			last_key;
 		
@@ -51,7 +54,7 @@ class Control {
 		
 		walked[0][walked[1]] = value;
 		
-		this.ui.config.save();
+		this.panel.save_config();
 		
 		return value;
 	}

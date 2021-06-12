@@ -80,7 +80,7 @@ create_script({
 		icon: 'https://i.imgur.com/pA5e8hy.png',
 		grant: 'none',
 		namespace: 'https://greasyfork.org/users/704479',
-		'noframes': '',
+		noframes: 'temp',
 	},
 	after: [
 		`// Donations Accepted`,
@@ -102,7 +102,7 @@ create_script({
 	meta: {
 		icon: 'https://e9x.github.io/kru/sploit/libs/gg.gif',
 		grant: [ 'GM_setValue', 'GM_getValue', 'GM_xmlhttpRequest' ],
-		'noframes': '',
+		noframes: 'temp',
 	},
 	entry: path.join(__dirname, 'sploit', 'index.js'),
 	output: path.join(__dirname, 'sploit.user.js'),

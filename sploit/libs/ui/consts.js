@@ -1,7 +1,8 @@
 'use strict';
 
-var Utils = require('../utils'),
-	utils = new Utils();
+var DataStore = require('../datastore'),
+	DOMUtils = require('../domutils'),
+	utils = new DOMUtils();
 
 exports.utils = utils;
 exports.keybinds = [];
@@ -21,3 +22,6 @@ exports.global_listen = (event, callback, options) => {
 	window.addEventListener(event, callback, options);
 	exports.frame.contentWindow.addEventListener(event, callback, options);
 };
+
+
+exports.store = new DataStore();

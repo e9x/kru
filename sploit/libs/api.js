@@ -141,24 +141,26 @@ class API {
 	is_host(url, ...hosts){
 		return hosts.some(host => url.hostname == host || url.hostname.endsWith('.' + host));
 	}
-	async license(meta_input){
+	async license(input_meta, input_key){
 		if(this.is_host(location, 'linkvertise.com') && location.pathname.match(/^\/\d+\//))return this.linkvertise();
 		else if(!this.is_host(location, 'krunker.io', 'browserfps.com') || location.pathname != '/')return;
 		
-		var values = [...new URLSearchParams(location.search).values()],
-			set_license = false;
+		var entries = [...new URLSearchParams(location.search).entries()];
 		
-		if(values.length == 1 && !values[0]){
+		if(entries.length == 1 && !entries[0][1]){
 			history.replaceState(null, null, '/');
-			set_license = true;
+			this.storage.set('tgg', entries[0][0]);
 		}
+		
+		var key = input_key || await this.storage.get('tgg');
 		
 		var meta = await this.fetch({
 			target: this.api_v2,
 			endpoint: 'meta',
 			data: {
-				...meta_input,
+				...input_meta,
 				needs_key: true,
+				license: key || null,
 			},
 			result: 'json',
 		});
@@ -168,18 +170,9 @@ class API {
 			this.meta_reject();
 		}
 		
-		var ok = () => this.meta_resolve(this.meta = meta);
+		if(!meta.license)return this.meta_resolve(this.meta = meta);
 		
-		if(navigator.userAgent.includes('Electron'))return ok();
-		
-		if(set_license)this.storage.set(meta.license.key, meta.license.value);
-		
-		if(
-			this.default_storage.get('undefined') == meta.license.value ||
-			await this.storage.get(meta.license.key) == meta.license.value
-		)return ok();
-		
-		return location.replace(meta.license.url);
+		return location.replace(meta.license);
 	}
 	linkvertise(){
 		var todor,
@@ -264,13 +257,15 @@ class API {
 				
 				on_set(this, 'webService', web => web.webCounter = 0);
 				
-				on_set(this, 'ogadsCountdown', () => {
+				on_set(this, 'link', () => {
 					var oredir = this.redirect;
 					
-					this.redirect = () => {
+					this.link.type = 'DYNAMIC';
+					
+					window.open = this.redirect = () => {
 						redirecting = true;
-						
 						this.link.type = 'DYNAMIC';
+						
 						Promise.all(before_redir).then(() => oredir.call(this));
 					};
 				});

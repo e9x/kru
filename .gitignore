@@ -1,9 +1,2 @@
 node_modules
 package-lock.json
-client/node_modules
-client/package-lock.json
-server
-patcher/src/node_modules
-patcher/src/package-lock.json
-patcher/src/dist
-sploit/libs/apiTEMP.js

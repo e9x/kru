@@ -6,17 +6,22 @@ class Updater {
 		this.extracted = extracted;
 		this.show_logs = show_logs;
 		
-		for(var method of ['log', 'warn', 'trace'])this[method] = this.show_logs ? console[method] : (_=>_);
-		
 		this.log('Initialized');
 	}
 	log(...args){
-		if(this.show_logs)console.log('[UPDATER]', ...args);
+		if(this.show_logs)console.info('[UPDATER]', ...args);
+	}
+	warn(...args){
+		if(this.show_logs)console.warn('[UPDATER]', ...args);
 	}
 	parse_headers(script){
-		var out = {};
+		var out = {},
+			close = '==/UserScript==',
+			header = script.slice(0, script.indexOf(close));
 		
-		script.replace(/\/\/ ==UserScript==\n([\s\S]*?)\n\/\/ ==\/UserScript==/, (match, headers) => headers.split('\n').forEach(line => line.replace(/@(\S+)\s+(.*)/, (match, label, value) => out[label] = label in out ? [].concat(out[label], value) : value)));
+		header.replace(/@(\S+)(?: +(.*))?$/gm, (match, label, value) => {
+			out[label] = label in out ? [].concat(out[label], value) : value;
+		});
 		
 		return out;
 	}
@@ -24,12 +29,14 @@ class Updater {
 		location.assign(this.script);
 	}
 	async check(){
-		var latest = await(await fetch(this.script)).text();
+		var script = await(await fetch(this.script)).text();
 		
-		this.trace('Latest script fetched from', this.script);
+		this.log('Latest script fetched from', this.script);
 		
-		var parsed = this.parse_headers(latest),
+		var parsed = this.parse_headers(script),
 			latest = new Date(parsed.extracted).getTime();
+		
+		this.log(parsed);
 		
 		this.log('Parsed headers:', parsed, '\nCurrent script:', this.extracted, '\nLatest script:', latest);
 		
@@ -42,7 +49,7 @@ class Updater {
 		return will_update;
 	}
 	watch(callback, interval = 60e3 * 3){
-		// interval = 10e3;
+		this.log('Polling at an interval of', interval, 'MS');
 		
 		var run = async () => {
 			if(await this.check())callback();

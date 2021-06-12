@@ -1,22 +1,24 @@
 'use strict';
 
-var { utils } = require('../consts'),
+var { utils, store, frame } = require('../consts'),
 	svg = require('./svg');
 
 class Tab {
 	static ID(){
 		return Math.random().toString();
 	}
-	constructor(uuid, ui){
-		this.ui = ui;
+	constructor(data, panel){
+		this.panel = panel;
 		
-		if(!uuid)throw new Error('Bad UUID');
+		this.panel.tabs.add(this);
 		
-		this.uuid = uuid;
+		this.name = data.name;
+		this.id = data.id;
+		this.active = data.active;
 		
 		this.focused = false;
 		
-		this.node = utils.add_ele('div', ui.tab_con, { className: 'tab' });
+		this.node = utils.add_ele('div', panel.tab_con, { className: 'tab' });
 		
 		this.namen = utils.add_ele('div', this.node, { className: 'name' });
 		
@@ -34,17 +36,11 @@ class Tab {
 		this.activen.addEventListener('click', async () => {
 			this.active = !this.active;
 			
-			var data = await this.data();
+			await this.save();
 			
-			await this.write_data({
-				name: data.name,
-				active: !data.active,
-				value: data.value,
-			});
+			this.update();
 			
-			await this.update();
-			
-			this.ui.load();
+			this.panel.load();
 		});
 		
 		this.node.insertAdjacentHTML('beforeend', svg.close);
@@ -57,6 +53,20 @@ class Tab {
 		this.rename_input = utils.add_ele('span', this.node, { className: 'rename-input' });
 		
 		this.rename_input.setAttribute('contenteditable', '');
+		
+		this.rename_input.addEventListener('focus', () => {
+			console.log('focus');
+			
+			var range = document.createRange();
+			
+			range.selectNodeContents(this.rename_input);
+			
+			var selection = frame.contentWindow.getSelection();
+			
+			selection.removeAllRanges();
+			
+			selection.addRange(range);
+		});
 		
 		this.rename_input.addEventListener('keydown', event => {
 			if(event.code == 'Enter')event.preventDefault(), this.rename_input.blur();
@@ -71,55 +81,40 @@ class Tab {
 		this.node.addEventListener('click', () => this.focus());
 		
 		this.update();
-		
-		this.ui.tabs.push(this);
-		this.ui.save();
 	}
-	async data(){
-		var read = await this.ui.data.store.get(this.uuid),
-			name_end = read.indexOf(' ');
+	async save(){
+		await this.panel.save_config();
 		
-		return {
-			name: decodeURIComponent(read.slice(name, name_end)),
-			// string => number => bool
-			active: !!+read.slice(name_end + 1, name_end + 2),
-			value: read.slice(name_end + 2) || '',
-		};
+		return this;
 	}
-	async write_data(data){
-		await this.ui.write_data(this.uuid, data);
+	async get_value(){
+		return await store.get_raw(this.id);
+	}
+	async set_value(data = this.panel.editor.getValue()){
+		await store.set_raw(this.id, data);
 	}
 	async rename(name){
 		if(!name.replace(/\s/g, '').length)return;
 		
-		var data = await this.data();
+		this.name = this.namen.textContent = name;
 		
-		await this.write_data({
-			name: this.namen.textContent = name,
-			active: data.active,
-			value: data.value,
-		});
+		await this.save();
 		
-		await this.update();
+		this.update();
 	}
-	async update(){
-		var data = await this.data();
-		
-		this.namen.textContent = data.name;
-		this.activen.className = 'active ' + data.active;
-		this.ui.save();
+	update(){
+		this.namen.textContent = this.name;
+		this.activen.className = 'active ' + this.active;
 	}
 	async focus(){
 		if(this.focused)return;
 		
-		var data = await this.data();
-		
-		this.ui.tabs.forEach(tab => tab.blur());
+		for(let tab of this.panel.tabs)tab.blur();
 		this.focused = true;
 		this.node.classList.add('active');
-		this.ui.editor.setValue(data.value);
-		this.ui.saved = true;
-		this.ui.update();
+		this.panel.editor.setValue(await this.get_value());
+		this.panel.saved = true;
+		this.panel.update();
 	}
 	blur(){
 		this.focused = false;
@@ -127,11 +122,11 @@ class Tab {
 	}
 	async remove(){
 		this.node.remove();
-		this.ui.data.store.del(this.name);
-		this.ui.tabs.splice(this.ui.tabs.indexOf(this), 1);
-		this.ui.focus_first();
-		await this.ui.data.store.set(this.uuid, '');
-		this.ui.save();
+		this.panel.tabs.delete(this);
+		await store.set_raw(this.id, '');
+		await this.save();
+		await this.panel.load();
+		await this.panel.focus_first();
 	}
 };
 

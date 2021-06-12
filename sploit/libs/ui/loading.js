@@ -3,10 +3,8 @@
 var { frame, utils, panels } = require('./consts');
 
 class Loading {
-	constructor(visible, discord){
+	constructor(discord){
 		this.node = utils.add_ele('div', frame.contentWindow.document.documentElement, { className: 'loading' });
-		
-		this.visible = visible;
 		
 		utils.add_ele('div', this.node);
 		
@@ -14,7 +12,7 @@ class Loading {
 		
 		panels.push(this);
 		
-		this.update();
+		this.show();
 	}
 	show(){
 		this.visible = true;

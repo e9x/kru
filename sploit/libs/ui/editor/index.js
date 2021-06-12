@@ -1,6 +1,6 @@
 'use strict';
 
-var { utils } = require('../consts'),
+var { utils, store } = require('../consts'),
 	PanelDraggable = require('../paneldraggable'),
 	Tab = require('./tab'),
 	svg = require('./svg'),
@@ -18,14 +18,18 @@ class Editor extends PanelDraggable {
 		this.actions = this.listen_dragging(utils.add_ele('div', this.title, { className: 'actions' }));
 		
 		this.actions.insertAdjacentHTML('beforeend', svg.add_file);
-		this.actions.lastElementChild.addEventListener('click', async () => new Tab(await this.write_data(Tab.ID(), { name: 'new.css', active: true, value: '' }), this).focus());
+		this.actions.lastElementChild.addEventListener('click', async () => this.new_tab());
 		
 		this.actions.insertAdjacentHTML('beforeend', svg.web);
 		this.actions.lastElementChild.addEventListener('click', () => prompt('Enter a CSS link', 'https://').then(async input => {
-			var style = await(await fetch(input)).text(),
-				name = input.split('/').slice(-1)[0];
+			var style = await(await fetch(new URL(input, location))).text(),
+				name = input.split('/').slice(-1)[0],
+				tab = new Tab({ id: Tab.ID(), name: name, active: true }, this);
 			
-			new Tab(await this.write_data(Tab.ID(), { name: name, active: true, value: style }), this).focus();
+			await tab.set_value(style);
+			await tab.save();
+			
+			tab.focus();
 		}).catch(err => (alert('Loading failed: ' + err), 1)));
 		
 		this.actions.insertAdjacentHTML('beforeend', svg.save);
@@ -33,8 +37,8 @@ class Editor extends PanelDraggable {
 		
 		this.saven.addEventListener('click', () => this.save_doc());
 		
-		this.actions.insertAdjacentHTML('beforeend', svg.reload);
-		this.actions.lastElementChild.addEventListener('click', () => this.load());
+		/*this.actions.insertAdjacentHTML('beforeend', svg.reload);
+		this.actions.lastElementChild.addEventListener('click', () => this.load());*/
 		
 		this.data.help = this.data.help.replace(/svg\.(\w+)/g, (match, prop) => svg[prop]);
 		
@@ -44,9 +48,7 @@ class Editor extends PanelDraggable {
 		
 		this.tab_con = utils.add_ele('div', this.title, { className: 'tabs' });
 		
-		this.tabs = [];
-		
-		this.data.tabs.forEach(uuid => new Tab(uuid, this));
+		this.tabs = new Set();
 		
 		this.editor = new Write(this.node);
 		
@@ -61,8 +63,8 @@ class Editor extends PanelDraggable {
 		this.footer = utils.add_ele('footer', this.node, { className: 'left' });
 		
 		this.update();
-		this.focus_first();
-		this.load();
+		
+		this.load_config();
 		
 		this.pos = { x: this.center_side('width'), y: this.center_side('height') };
 		this.apply_bounds();
@@ -71,16 +73,18 @@ class Editor extends PanelDraggable {
 		this.hide();
 	}
 	async focus_first(){
-		var tab = this.tabs[0];
+		var first;
 		
-		if(!tab)tab = new Tab(await this.write_data(Tab.ID(), { name: 'new.css', active: true, value: '' }), this);
+		for(let tab of this.tabs)return tab.focus();
 		
-		tab.focus();
+		this.new_tab();
 	}
-	async write_data(uuid, data){
-		await this.data.store.set(uuid, encodeURIComponent(data.name) + ' ' + +data.active + data.value);
+	async new_tab(){
+		var tab = await new Tab({ id: Tab.ID(), name: 'new.css', active: true, value: '' }, this);
 		
-		return uuid;
+		await tab.save();
+		
+		tab.focus()
 	}
 	update(){
 		this.saven.classList[this.saved ? 'add' : 'remove']('saved');
@@ -89,23 +93,32 @@ class Editor extends PanelDraggable {
 		
 		this.apply_bounds();
 	}
-	save(){
-		this.data.save(this.tabs.map(tab => tab.uuid));
-	}
 	async save_doc(){
+		for(let tab of this.tabs)if(tab.focused)await store.set_raw(tab.id, this.editor.getValue());
+		
 		this.saved = true;
-		this.tabs.forEach(tab => tab.focused && tab.data().then(data => tab.write_data({ name: data.name, active: data.active, value: this.editor.getValue() })));
 		await this.update();
 		await this.load();
 	}
 	async load(){
 		this.sheet.textContent = '';
-		
-		for(var ind in this.tabs){
-			var data = await this.tabs[ind].data();
+		for(let tab of this.tabs)if(tab.active)this.sheet.textContent += await tab.get_value();
+	}
+	async load_config(){
+		for(let data of await store.get('css', 'array')){
+			let tab = new Tab(data, this);
 			
-			if(data.active)this.sheet.textContent += data.value + '\n';
+			if(tab.active)this.sheet.textContent += await tab.get_value();
 		}
+		
+		await this.focus_first();
+	}
+	async save_config(){
+		await store.set('css', [...this.tabs].map(tab => ({
+			id: tab.id,
+			name: tab.name,
+			active: tab.active,
+		})));
 	}
 };
 

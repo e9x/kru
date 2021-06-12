@@ -84,14 +84,14 @@ class Utils {
 			ad = 1 / (d3d * Math.sin(dir - Math.PI) * Math.cos(dist_dir)),
 			ae = 1 / (d3d * Math.cos(dir - Math.PI) * Math.cos(dist_dir)),
 			af = 1 / (d3d * Math.sin(dist_dir)),
-			height = player.y + (player.height || 0) - 1.15; // 1.15 = config.cameraHeight
+			view_y = player.y + (player.height || 0) - 1.15; // 1.15 = config.cameraHeight
 		
 		// iterate through game objects
 		for(var ind in this.game.map.manager.objects){
 			var obj = this.game.map.manager.objects[ind];
 			
 			if(!obj.noShoot && obj.active && (wallbangs ? !obj.penetrable : true)){
-				var in_rect = this.lineInRect(player.x, player.z, height, ad, ae, af, obj.x - Math.max(0, obj.width - offset), obj.z - Math.max(0, obj.length - offset), obj.y - Math.max(0, obj.height - offset), obj.x + Math.max(0, obj.width - offset), obj.z + Math.max(0, obj.length - offset), obj.y + Math.max(0, obj.height - offset));
+				var in_rect = this.lineInRect(player.x, player.z, view_y, ad, ae, af, obj.x - Math.max(0, obj.width - offset), obj.z - Math.max(0, obj.length - offset), obj.y - Math.max(0, obj.height - offset), obj.x + Math.max(0, obj.width - offset), obj.z + Math.max(0, obj.length - offset), obj.y + Math.max(0, obj.height - offset));
 				
 				if(in_rect && 1 > in_rect)return in_rect;
 			}
@@ -99,7 +99,7 @@ class Utils {
 		
 		// iterate through game terrain
 		if(this.game.map.terrain){
-			var al = this.game.map.terrain.raycast(player.x, -player.z, height, 1 / ad, -1 / ae, 1 / af);
+			var al = this.game.map.terrain.raycast(player.x, -player.z, view_y, 1 / ad, -1 / ae, 1 / af);
 			if(al)return this.getD3D(player.x, player.y, player.z, al.x, al.z, -al.y);
 		}
 	}
@@ -137,12 +137,6 @@ class Utils {
 	add_ele(node_name, parent, attributes){
 		return Object.assign(parent.appendChild(document.createElement(node_name)), attributes);
 	}
-	crt_ele(node_name, attributes){
-		return Object.assign(document.createElement(node_name), attributes);
-	}
-	string_key(key){
-		return key.replace(/^(Key|Digit|Numpad)/, '');
-	}
 	// box = Box3
 	box_size(obj, box){
 		var vFOV = this.world.camera.fov * Math.PI / 180;
@@ -169,27 +163,6 @@ class Utils {
 			top: center.y - size.height / 2,
 			bottom: center.y + size.height / 2,
 		};
-	}
-	css(obj){
-		var string = [];
-		
-		for(var name in obj)string.push(name + ':' + obj[name] + ';');
-		
-		return string.join('\n');
-	}
-	sanitize(string){
-		var node = document.createElement('div');
-		
-		node.textContent = string;
-		
-		return node.innerHTML;
-	}
-	unsanitize(string){
-		var node = document.createElement('div');
-		
-		node.innerHTML = string;
-		
-		return node.textContent;
 	}
 	contains_point(point){
 		for(var ind = 0; ind < 6; ind++)if(this.world.frustum.planes[ind].distanceToPoint(point) < 0)return false;

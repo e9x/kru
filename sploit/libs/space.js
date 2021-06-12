@@ -16,6 +16,18 @@ class Vector3 {
 		
 		return this;
 	}
+	set_x(x){
+		this.x = x;
+		return this;
+	}
+	set_y(y){
+		this.y = y;
+		return this;
+	}
+	set_z(z){
+		this.z = z;
+		return this;
+	}
 	copy(vector){
 		this.x = vector.x;
 		this.y = vector.y;
@@ -131,6 +143,9 @@ class Vector3 {
 		}
 		
 		return this;
+	}
+	distance_to(point){
+		return Math.hypot(this.x - point.x, this.y - point.y, this.z - point.z)
 	}
 };
 

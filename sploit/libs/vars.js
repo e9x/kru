@@ -112,3 +112,15 @@ exports.key = key;
 */
 
 exports.keys = { frame: 0, delta: 1, xdir: 2, ydir: 3, moveDir: 4, shoot: 5, scope: 6, jump: 7, reload: 8, crouch: 9, weaponScroll: 10, weaponSwap: 11, moveLock: 12, speed_limit: 13, reset: 14, interact: 15 };
+
+exports.playerHeight = 11;
+exports.cameraHeight = 1.5;
+exports.headScale = 2;
+exports.armScale = 1.1;
+exports.armInset = 0.1;
+exports.chestWidth = 2.5;
+exports.hitBoxPad = 1;
+exports.crouchDst = 1;
+exports.recoilMlt = 0.3;
+exports.nameOffset = 0.6;
+exports.nameOffsetHat = 0.8;

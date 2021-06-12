@@ -6,7 +6,6 @@ class Cheat {
 	constructor(utils){
 		this.utils = utils;
 		this.hooked = Symbol();
-		this.config = {};
 		this.skins = [...Array(5000)].map((e, i) => ({ ind: i, cnt: 1 }));
 		this.socket_id = 0;
 		
@@ -27,6 +26,9 @@ class Cheat {
 		this.y_offset_rand = 'head';
 
 		setInterval(() => this.y_offset_rand = this.y_offset_types[~~(Math.random() * this.y_offset_types.length)], 2000);
+	}
+	get config(){
+		return this.ui.config;
 	}
 	add(entity){
 		return entity[this.hooked] || (entity[this.hooked] = new Player(this, entity));

@@ -3,18 +3,24 @@
 var vars = require('./vars'),
 	{ Vector3 } = require('./space');
 
-class Player extends Vector3 {
+class Player {
 	constructor(cheat, entity){
-		super();
-		
 		this.cheat = cheat;
 		this.utils = this.cheat.utils;
 		this.entity = typeof entity == 'object' && entity != null ? entity : {};
 		this.velocity = new Vector3();
+		this.position = new Vector3();
+		
+		this.parts = {
+			hitbox_head: new Vector3(),
+			head: new Vector3(),
+			torso: new Vector3(),
+			legs: new Vector3(),
+		};
 	}
-	distance_to(point){
-		return Math.hypot(this.x - point.x, this.y - point.y, this.z - point.z)
-	}
+	get x(){ console.warn('get X'); return this.position.x }
+	get y(){ console.warn('get Y'); return this.position.y }
+	get z(){ console.warn('get Z'); return this.position.z }
 	scale_rect(sx, sy){
 		var out = {},
 			horiz = [ 'y', 'height', 'top', 'bottom' ];
@@ -45,7 +51,7 @@ class Player extends Vector3 {
 		return this.active && this.can_see && this.enemy && this.in_fov;
 	}
 	get frustum(){
-		return this.active ? this.utils.contains_point(this) : false;
+		return this.is_you || this.active && this.utils.contains_point(this.aim_point);
 	}
 	get hp_color(){
 		var hp_perc = (this.health / this.max_health) * 100,
@@ -67,15 +73,15 @@ class Player extends Vector3 {
 	get clan(){ return this.entity.clan }
 	get alias(){ return this.entity.alias }
 	get weapon(){ return this.entity.weapon }
+	get weapon_auto(){ return !this.weapon.nAuto }
 	get can_slide(){ return this.entity.canSlide }
 	get risk(){ return this.entity.level >= 30 || this.entity.account && (this.entity.account.featured || this.entity.account.premiumT) }
 	get is_you(){ return this.entity[vars.isYou] }
-	get y_vel(){ return this.entity[vars.yVel] }
 	get target(){
 		return this.cheat.target && this.entity == this.cheat.target.entity;
 	}
 	get can_melee(){
-		return this.weapon.melee && this.cheat.target && this.cheat.target.active && this.distance_to(this.cheat.target) <= 18 || false;
+		return this.weapon.melee && this.cheat.target && this.cheat.target.active && this.position.distance_to(this.cheat.target) <= 18 || false;
 	}
 	get reloading(){
 		// reloadTimer in var randomization array
@@ -98,7 +104,7 @@ class Player extends Vector3 {
 		return !this.reloading && this.has_ammo && (this.can_throw || !this.weapon.melee || this.can_melee);
 	}
 	get aim_press(){ return this.cheat.controls[vars.mouseDownR] || this.cheat.controls.keys[this.cheat.controls.binds.aim.val] }
-	get crouch(){ return this.entity[vars.crouchVal] }
+	get crouch(){ return this.entity[vars.crouchVal] || 0 }
 	get box_scale(){
 		var view = this.utils.camera_world(),	
 			center = this.box.getCenter(),
@@ -109,22 +115,20 @@ class Player extends Vector3 {
 	get dist_scale(){
 		var view = this.utils.camera_world(),	
 			center = this.box.getCenter(),
-			scale = Math.max(0.65, 1 - this.utils.getD3D(view.x, view.y, view.z, this.x, this.y, this.z) / 600);
+			scale = Math.max(0.65, 1 - this.utils.getD3D(view.x, view.y, view.z, this.position.x, this.position.y, this.position.z) / 600);
 		
 		return [ scale, scale ];
 	}
 	get distance_camera(){
-		return this.utils.camera_world().distanceTo(this);
-	}
-	test_vec(vector, match){
-		return match.every((value, index) => vector[['x', 'y', 'z'][index]] == value);
+		return this.utils.camera_world().distanceTo(this.position);
 	}
 	get obj(){ return this.is_ai ? this.enity.dat : this.entity[vars.objInstances] }
-	get recoil_y(){ return this.entity[vars.recoilAnimY] }
+	get land_bob_y(){ return this.entity.landBobY || 0 }
+	get recoil_y(){ return this.entity[vars.recoilAnimY] || 0 }
 	get has_ammo(){ return this.ammo || this.ammo == this.max_ammo }
 	get ammo(){ return this.entity[vars.ammos][this.entity[vars.weaponIndex]] || 0 }
 	get max_ammo(){ return this.weapon.ammo || 0 }
-	get height(){ return (this.entity.height || 0) - this.entity[vars.crouchVal] * 3 }
+	get height(){ return this.entity.height || 0 } // (this.entity.height || 0) - this.crouch * 3 }
 	get health(){ return this.entity.health || 0 }
 	get scale(){ return this.entity.scale }
 	get max_health(){ return this.entity[vars.maxHealth] || 100 }
@@ -133,8 +137,6 @@ class Player extends Vector3 {
 	get teammate(){ return this.is_you || this.cheat.player && this.team && this.team == this.cheat.player.team }
 	get enemy(){ return !this.teammate }
 	get team(){ return this.entity.team }
-	get weapon_auto(){ return !this.weapon.nAuto }
-	get weapon_rate(){ return this.weapon.rate + 2 }
 	get did_shoot(){ return this.entity[vars.didShoot] }
 	get chest(){
 		return this.entity.lowerBody ? this.entity.lowerBody.children[0] : null;
@@ -144,9 +146,12 @@ class Player extends Vector3 {
 		return this.chest;
 	}
 	tick(){
-		super.copy(this.entity);
-		
+		this.position.set(this.entity.x, this.entity.y, this.entity.z);
 		this.velocity.set(this.entity.xVel, this.entity.yVel, this.entity.zVel);
+		
+		this.parts.hitbox_head.copy(this.position).set_y(this.position.y + this.height - (this.crouch * vars.crouchDst));
+		
+		if(this.is_you)return;
 		
 		var box = this.box = new this.utils.three.Box3();
 		
@@ -155,7 +160,6 @@ class Player extends Vector3 {
 		var add_obj = obj => obj.visible && obj.traverse(obj => {
 			if(obj.type == 'Mesh' && obj.visible)box.expandByObject(obj);
 		});
-		
 		
 		for(var obj of this.entity.legMeshes)add_obj(obj);
 		for(var obj of this.entity.upperBody.children)add_obj(obj);
@@ -209,14 +213,8 @@ class Player extends Vector3 {
 			chest_size = chest_box.getSize(),
 			chest_pos = chest_box.getCenter();
 		
-		this.parts = {};
-		
 		// parts centered
-		this.parts.torso = new Vector3().copy({
-			x: chest_pos.x,
-			y: chest_pos.y,
-			z: chest_pos.z,
-		}).translate_quaternion(this.chest.getWorldQuaternion(), new Vector3().copy({
+		this.parts.torso.copy(chest_pos).translate_quaternion(this.chest.getWorldQuaternion(), new Vector3().copy({
 			x: 0,
 			y: -head_size / 2,
 			z: 0,
@@ -224,11 +222,7 @@ class Player extends Vector3 {
 		
 		this.parts.torso_height = chest_size.y - head_size;
 		
-		this.parts.head = new Vector3().copy({
-			x: chest_pos.x,
-			y: chest_pos.y,
-			z: chest_pos.z,
-		}).translate_quaternion(this.chest.getWorldQuaternion(), new Vector3().copy({
+		this.parts.head.copy(chest_pos).translate_quaternion(this.chest.getWorldQuaternion(), new Vector3().copy({
 			x: 0,
 			y: this.parts.torso_height / 2,
 			z: 0,
@@ -237,22 +231,13 @@ class Player extends Vector3 {
 		var leg_pos = this.leg[vars.getWorldPosition](),
 			leg_scale = this.leg.getWorldScale();
 		
-		this.parts.legs = new Vector3().copy({
-			x: leg_pos.x,
-			y: leg_pos.y,
-			z: leg_pos.z,
-		}).translate_quaternion(this.leg.getWorldQuaternion(), {
+		this.parts.legs = new Vector3().copy(leg_pos).translate_quaternion(this.leg.getWorldQuaternion(), new Vector3().copy({
 			x: -leg_scale.x / 2,
 			y: -leg_scale.y / 2,
 			z: 0,
-		});
+		}));
 		
-		/* - (this.is_ai ? this.dat.mSize / 2 : this.jump_bob_y * 0.072)*/
-		this.aim_point = this.cheat.aim_part == 'head' ? new Vector3().copy({
-			x: this.x,
-			y: this.y + this.height,
-			z: this.z,
-		}) : (this.parts[this.cheat.aim_part] || (console.error(this.cheat.aim_part, 'not registered'), Vector3.Blank));
+		this.aim_point = this.cheat.aim_part == 'head' ? this.parts.hitbox_head : (this.parts[this.cheat.aim_part] || (console.error(this.cheat.aim_part, 'not registered'), Vector3.Blank));
 		
 		this.world_pos = this.active ? this.obj[vars.getWorldPosition]() : { x: 0, y: 0, z: 0 };
 		

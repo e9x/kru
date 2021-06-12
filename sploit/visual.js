@@ -62,7 +62,7 @@ class Visual {
 		});
 	}
 	axis_join(player){
-		return player && player.active ? ['x', 'y', 'z'].map(axis => axis + ': ' + player[axis].toFixed(2)).join(', ') : null;
+		return player ? ['x', 'y', 'z'].map(axis => axis + ': ' + player[axis].toFixed(2)).join(', ') : null;
 	}
 	overlay(){
 		this.ctx.strokeStyle = '#000'
@@ -71,8 +71,9 @@ class Visual {
 		this.ctx.lineWidth = 2.6;
 		
 		var data = {
-			Player: this.axis_join(cheat.player),
-			Target: this.axis_join(cheat.target),
+			Player: cheat.player ? this.axis_join(cheat.player.position) : null,
+			PlayerV: cheat.player ? this.axis_join(cheat.player.velocity) : null,
+			Target: cheat.target ? this.axis_join(cheat.target.position) : null,
 		};
 		
 		var lines = [];

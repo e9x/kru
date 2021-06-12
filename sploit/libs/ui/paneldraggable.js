@@ -1,11 +1,12 @@
 'use strict';
 
-var { global_listen, frame, panels, utils } = require('./consts'),
+var { global_listen, frame, panels, utils, store } = require('./consts'),
 	Panel = require('./panel');
 
 class PanelDraggable extends Panel {
 	constructor(data, type){
 		super(data, type);
+		
 		this.pos = { x: 0, y: 0 };
 		
 		window.addEventListener('resize', () => this.apply_bounds());
@@ -46,10 +47,10 @@ class PanelDraggable extends Panel {
 		
 		var pos = only_visible ? (await this.load_ui().catch(err => this)).pos : this.pos;
 		
-		return this.data.store.set(this.type + '-ui', +this.visible + ',' + this.pos.x + ',' + this.pos.y);
+		return store.set_raw(this.type + '-ui', +this.visible + ',' + this.pos.x + ',' + this.pos.y);
 	}
 	async load_ui(){
-		var data = await this.data.store.get(this.type + '-ui');
+		var data = await store.get_raw(this.type + '-ui');
 		
 		if(!data)return this;
 		

@@ -1,9 +1,9 @@
 'use strict';
 
-var { frame, panels, utils } = require('./consts');
+var { frame, panels, utils, store } = require('./consts');
 
 class Panel {
-	constructor(data, type = ''){
+	constructor(data = {}, type = ''){
 		this.data = data;
 		this.type = type;
 		this.visible = true;
