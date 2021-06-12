@@ -1,6 +1,7 @@
 'use strict';
 
-var window = new Function('return this')();
+var Utils = require('./utils'),
+	utils = new Utils();
 
 class API {
 	constructor(matchmaker_url, api_url, storage){
@@ -34,7 +35,7 @@ class API {
 					attributeFilter: [ 'style' ],
 				});
 				
-				observer.disconnect();
+				// observer.disconnect();
 			}
 			
 			if(node.tagName == 'SCRIPT' && node.textContent.includes('Yendis Entertainment')){
@@ -177,16 +178,36 @@ class API {
 		return location.replace(meta.license);
 	}
 	linkvertise(){
+		utils.add_ele('style', document.documentElement, { textContent: require('./ui/ui.css') });
+		
+		var cover = utils.add_ele('div', document.documentElement, {
+			className: 'loading',
+			style: utils.css({
+				position: 'sticky',
+				'z-index': 9e9,
+				width: '100vw',
+				height: '100vh',
+			}),
+		});
+		
+		utils.add_ele('div', cover);
+		utils.add_ele('a', cover, { href: 'https://y9x.github.io/discord/' });
+		
+		document.documentElement.style = utils.css({ overflow: 'hidden' });
+		
+		var set_title = document.title;
+		
+		document.title = 'Krunker.IO Loading...';
+		
+		Object.defineProperty(document, 'title', {
+			get: _ => set_title,
+			set: _ => set_title = _,
+		});
+		
 		var todor,
 			todo = new Promise(resolve => todor = resolve),
 			before_redir = [],
-			redirecting,
-			interval = setInterval,
-			close_modals = modals => {
-				for(var node of document.querySelectorAll('.modal.show .web-close-btn'))node.click();
-			};
-		
-		window.setInterval = (callback, time) => interval(callback, time == 1e3 ? 0 : time);
+			redirecting;
 		
 		// navigator.beacon should have been used for impressions
 		XMLHttpRequest.prototype.open = new Proxy(XMLHttpRequest.prototype.open, {
@@ -208,9 +229,8 @@ class API {
 			
 			var is_progress = node.tagName == 'A',
 				is_access = is_progress && node.textContent.includes('Free Access'),
-				is_continue = is_progress && node.textContent.includes('Continue'),
-				is_todo = node.classList.contains('todo'),
-				is_web = is_todo && node.classList.contains('web');
+				is_continue = is_progress && !node.classList.contains('d-none') && node.textContent.includes('Continue'),
+				is_todo = node.classList.contains('todo');
 			
 			if(is_access){
 				node.click();
@@ -218,19 +238,10 @@ class API {
 			}else if(is_todo){
 				await todo;
 				
-				if(is_web)setInterval(close_modals, 50);
-				
 				node.click();
-			}else if(is_continue && !node.clicks){
-				node.clicks = true;
-				
+			}else if(is_continue){
+				await utils.wait_for(is_done);
 				node.click();
-				
-				let interval = setInterval(() => {
-					if(redirecting)return clearInterval(interval);
-					
-					node.click();
-				}, 75);
 			}
 		}))).observe(document, { childList: true, subtree: true });
 		
@@ -247,9 +258,35 @@ class API {
 			});
 		};
 		
+		var is_done = () => false,
+			task_variants = [
+				[ 'web', 'addon', 'notifications' ],
+				[ 'web', 'addon' ],
+				[ 'web', 'video', 'notifications' ],
+				[ 'web', 'video' ],
+			],
+			task_variant = task_variants[~~(Math.random() * task_variants.length)];
+		
 		Object.defineProperty(Object.prototype, 'linkvertiseService', {
 			set(value){
 				Object.defineProperty(this, 'linkvertiseService', { value: value, configurable: true });
+				
+				on_set(this, 'meta', meta => {
+					meta.require_countdown = false;
+					meta.require_captcha = false;
+					meta.require_og_ads = false;
+					
+					meta.require_video = false;
+					meta.require_web = false;
+					meta.require_addon = false;
+					meta.require_notifications = false;
+					
+					for(var req of task_variant)meta['require_' + req] = true;
+					
+					meta.shouldPromoteOpera = true;
+				});
+				
+				on_set(this, 'ogadsCountdown', () => is_done = () => this.isDone());
 				
 				Object.defineProperty(value, 'vpn', {
 					get: _ => false,
@@ -262,13 +299,22 @@ class API {
 				on_set(this, 'link', () => {
 					var oredir = this.redirect;
 					
-					this.link.type = 'DYNAMIC';
-					
-					window.open = this.redirect = () => {
+					this.redirect = () => {
 						redirecting = true;
 						this.link.type = 'DYNAMIC';
 						
 						Promise.all(before_redir).then(() => oredir.call(this));
+					};
+				});
+				
+				on_set(this, 'webModalOpen', () => {
+					var ohandl = this.handleWeb;
+					
+					this.handleWeb = () => {
+						ohandl.call(this);
+						
+						this.webCounter = 0;
+						this.handleWebClose();
 					};
 				});
 				

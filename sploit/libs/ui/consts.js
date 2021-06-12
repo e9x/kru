@@ -1,8 +1,8 @@
 'use strict';
 
 var DataStore = require('../datastore'),
-	DOMUtils = require('../domutils'),
-	utils = new DOMUtils();
+	Utils = require('../utils'),
+	utils = new Utils();
 
 exports.utils = utils;
 exports.keybinds = [];

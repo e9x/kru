@@ -17,28 +17,8 @@ class Utils {
 	dist_center(pos){
 		return Math.hypot((window.innerWidth / 2) - pos.x, (window.innerHeight / 2) - pos.y);
 	}
-	round(n, r){
-		return Math.round(n * Math.pow(10, r)) / Math.pow(10, r);
-	}
 	is_host(url, ...hosts){
 		return hosts.some(host => url.hostname == host || url.hostname.endsWith('.' + host));
-	}
-	wait_for(check, time){
-		return new Promise(resolve => {
-			var interval,
-				run = () => {
-					try{
-						if(check()){
-							if(interval)clearInterval(interval);
-							resolve();
-							
-							return true;
-						}
-					}catch(err){console.log(err)}
-				};
-			
-			interval = run() || setInterval(run, time || 50);
-		});
 	}
 	normal_radian(radian){
 		radian = radian % this.pi2;
@@ -134,9 +114,6 @@ class Utils {
 	getAngleDst(a1, a2){
 		return Math.atan2(Math.sin(a2 - a1), Math.cos(a1 - a2));
 	}
-	add_ele(node_name, parent, attributes){
-		return Object.assign(parent.appendChild(document.createElement(node_name)), attributes);
-	}
 	// box = Box3
 	box_size(obj, box){
 		var vFOV = this.world.camera.fov * Math.PI / 180;
@@ -179,6 +156,56 @@ class Utils {
 	}
 	request_frame(callback){
 		requestAnimationFrame(callback);
+	}
+	round(n, r){
+		return Math.round(n * Math.pow(10, r)) / Math.pow(10, r);
+	}
+	wait_for(check, time){
+		return new Promise(resolve => {
+			var interval,
+				run = () => {
+					try{
+						if(check()){
+							if(interval)clearInterval(interval);
+							resolve();
+							
+							return true;
+						}
+					}catch(err){console.log(err)}
+				};
+			
+			interval = run() || setInterval(run, time || 50);
+		});
+	}
+	css(obj){
+		var string = [];
+		
+		for(var name in obj)string.push(name + ':' + obj[name] + ';');
+		
+		return string.join('\n');
+	}
+	sanitize(string){
+		var node = document.createElement('div');
+		
+		node.textContent = string;
+		
+		return node.innerHTML;
+	}
+	unsanitize(string){
+		var node = document.createElement('div');
+		
+		node.innerHTML = string;
+		
+		return node.textContent;
+	}
+	add_ele(node_name, parent, attributes){
+		return Object.assign(parent.appendChild(document.createElement(node_name)), attributes);
+	}
+	crt_ele(node_name, attributes){
+		return Object.assign(document.createElement(node_name), attributes);
+	}
+	string_key(key){
+		return key.replace(/^(Key|Digit|Numpad)/, '');
 	}
 }
 
