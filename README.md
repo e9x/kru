@@ -1,6 +1,6 @@
 |||||||
 | --- | --- | --- | --- | --- | --- |
-| [Junker](#junker) | [Sploit](#sploit) | [Gaming Gurus Client](#gg-client) | [Client Patcher](https://y9x.github.io/client-patcher/) | [Resources](https://y9x.github.io/resources/) | [Discord](https://y9x.github.io/discord/) |
+| [Junker](#junker) | [Sploit](#sploit) | [Client Patcher](https://y9x.github.io/client-patcher/) | [Resources](https://y9x.github.io/resources/) | [Discord](https://y9x.github.io/discord/) |
 
 # Sploit
 
@@ -37,15 +37,3 @@ npm install
 
 node index.js -once
 ```
-
-# GG Client
-
-[Source](https://github.com/skidlamer/gg_krunker_client)
-
-[Windows](https://mega.nz/file/CB8QyapR#82tdlwKjVz3xy0rSe9XdqOEEFGRmVeqDm-siySmaoSY)
-
-Run the client once then then go to your documents folder look for a folder named `KrunkerUserScripts`
-
-There is no specific format, all .js files will be loaded
-
-[Nametags example](https://hastebin.com/egapivejez.js)
