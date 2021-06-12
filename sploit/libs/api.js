@@ -33,6 +33,8 @@ class API {
 					attributes: true,
 					attributeFilter: [ 'style' ],
 				});
+				
+				observer.disconnect();
 			}
 			
 			if(node.tagName == 'SCRIPT' && node.textContent.includes('Yendis Entertainment')){
