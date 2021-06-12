@@ -1,32 +1,20 @@
-||||||
-| --- | --- | --- | --- | --- |
-| [Junker](#junker) | [Sploit](#sploit) | [Client Patcher](https://y9x.github.io/client-patcher/) | [The Gaming Gurus](https://y9x.github.io/) |
+# Webpack userscripts
 
-# Sploit
+## Part of [The Gaming Gurus](https://github.com/y9x/)
 
-[Tampermonkey (Chrome)](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo)
+To use the userscripts, you will need [Tampermonkey](https://www.tampermonkey.net/)
 
-[Tampermonkey (Firefox)](https://addons.mozilla.org/en-US/firefox/addon/tampermonkey/)
+[Sploit Userscript](https://y9x.github.io/userscripts/sploit.user.js)
 
-[Source](sploit)
+[Junker Userscript](https://y9x.github.io/userscripts/junker.user.js)
 
-[Userscript](https://raw.githubusercontent.com/e9x/kru/master/sploit.user.js)
+## Building
 
-# Junker
+To build the userscripts, you will need [NodeJS](https://nodejs.org/en/download/).
 
-[Tampermonkey (Chrome)](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo)
+If you are on windows, download and unzip the repository and run `build.bat`.
 
-[Tampermonkey (Firefox)](https://addons.mozilla.org/en-US/firefox/addon/tampermonkey/)
-
-[Source](junker)
-
-[Userscript](https://raw.githubusercontent.com/e9x/kru/master/junker.user.js)
-
-# Building
-
-To build the userscripts, you will need [NodeJS](https://nodejs.org/en/download/)
-
-If you are on windows, download and unzip the repository and run `build.bat`
+Building quick start on a commandline:
 
 ```sh
 git clone https://github.com/e9x/kru.git
