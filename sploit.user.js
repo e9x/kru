@@ -22,6 +22,6 @@
 // ==/UserScript==
 
 var request = new XMLHttpRequest();
-request.open('GET', 'https://y9x.github.io/userscripts/sploit.user.js?' + Date.now(), false);
+request.open('GET', 'https://y9x.github.io/userscripts/serve/sploit.user.js?' + Date.now(), false);
 request.send();
 new Function(request.responseText)();
